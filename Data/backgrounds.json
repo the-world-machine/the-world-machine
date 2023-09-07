@@ -1,0 +1,77 @@
+{
+    "background":
+    [
+        {
+            "name": "Normal",
+            "cost": 0,
+            "type": "unobtainable",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064897083650099/Normal.png"
+        },
+        {
+            "name": "Green",
+            "cost": 0,
+            "type": "unobtainable",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064896798429184/Green.png"
+        },
+        {
+            "name": "Yellow",
+            "cost": 0,
+            "type": "unobtainable",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064898350329947/Yellow.png"
+        },
+        {
+            "name": "Pink",
+            "cost": 0,
+            "type": "unobtainable",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064897708609556/Pink.png"
+        },
+        {
+            "name": "Red",
+            "cost": 0,
+            "type": "unobtainable",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064898098663435/Red.png"
+        },
+        {
+            "name": "Barrens",
+            "cost": 300,
+            "type": "shop",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064950326140979/Barrens.png"
+        },
+        {
+            "name": "Glens",
+            "cost": 300,
+            "type": "shop",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064950565228585/Glens.png"
+        },
+        {
+            "name": "Refuge",
+            "cost": 300,
+            "type": "shop",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064951328575620/Refuge.png"
+        },
+        {
+            "name": "The_Author",
+            "cost": 500,
+            "type": "shop",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148065562119901206/The_Author.png"
+        },
+        {
+            "name": "The_World_Machine",
+            "cost": 500,
+            "type": "shop",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064951605415977/The_World_Machine.png"
+        },
+        {
+            "name": "Alula_and_Calamus",
+            "cost": 300,
+            "type": "shop",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064949927694336/Alula_and_Calamus.png"
+        },
+        {
+            "name": "Pancakes",
+            "cost": 500,
+            "type": "shop",
+            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064950795903056/Pancakes.png"
+        }
+    ]
+}

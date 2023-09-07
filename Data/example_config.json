@@ -1,0 +1,18 @@
+{
+    "Token" : "...",
+
+    "OpenAI" : "...",
+
+    "SpotifySecret" : "...",
+    "SpotifyID" : "...",
+    "Music" : {"ip" : "...", "port" : 0},
+
+    "SPARKED" : "...",
+
+    "PHPma-IP" : "...",
+    "PHPma-USERNAME" : "...",
+    "PHPma-PASSWORD" : "...",
+    "PHPma-DBNAME" : "...",
+
+    "SENTRY-TOKEN" : "..."
+}

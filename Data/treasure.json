@@ -1,0 +1,47 @@
+[
+  {
+      "name": "Bottle of Alcohol",
+      "price": 150,
+      "emoji": 1026181560602460160
+  },
+  {
+      "name": "Novelty Shirt",
+      "price": 250,
+      "emoji": 1026207765661761596
+  },
+  {
+      "name": "Mysterious Journal",
+      "price": 350,
+      "emoji": 1026181554919182416
+  },
+  {
+      "name": "Amber Medallion",
+      "price": 500,
+      "emoji": 1026181503597678602
+  },
+  {
+      "name": "Glowing Pen",
+      "price": 600,
+      "emoji": 1026181556051648634
+  },
+  {
+      "name": "\"Real\" Library Card",
+      "price": 650,
+      "emoji": 1026181558392062032
+  },
+  {
+      "name": "Glowing Dice",
+      "price": 800,
+      "emoji": 1026181557230256128
+  },
+  {
+      "name": "Lightbulb",
+      "price": 900,
+      "emoji": 1026207773559619644
+  },
+  {
+      "name": "Golden Clover",
+      "price": 1000,
+      "emoji": 1026199772232695838
+  }
+]

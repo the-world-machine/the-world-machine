@@ -1,0 +1,19 @@
+{
+    "Token" : "MTAyODA1ODA5NzM4MzY0MTExOA.GTRR9r.UiRjsk4T7DrNq75G8PS5nqjjX2PIT1dKWtibD8",
+
+    "OpenAI" : "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",
+
+    "SpotifySecret" : "acdff62d36f94e05ab19f32f89e600a3",
+    "SpotifyID" : "039021074dc24c1fb46044b619e86702",
+    "Music" : {"ip" : "162.248.100.61", "port" : 10333},
+    "Genius" : "q8gkb1vXct4m9qaELvbGMXkhViamIRXvPh9p2RTH7FsI1cq2Pq-L-_8N0pYe5uUw",
+
+    "SPARKED" : "ptlc_ZuMx2hCUcEEqQDkGlEFVDE8Y3L1Vm1cvT6o9hGZE1mb",
+
+    "PHPma-IP" : "54.37.204.19",
+    "PHPma-USERNAME" : "u75974_jkbPG7LJQJ",
+    "PHPma-PASSWORD" : "kHbGaI@TFDktfaaomVpyi^^7",
+    "PHPma-DBNAME" : "s75974_TheWorldMachine",
+
+    "SENTRY-TOKEN" : "https://5d267093640fa60fc131277a607577ed@o4505779294109696.ingest.sentry.io/4505779295879168"
+}
