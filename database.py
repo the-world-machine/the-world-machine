@@ -42,6 +42,9 @@ def get_datatype(data):
 
 async def get_leaderboard(sort_by: str):
 
+    if cursor is None:
+        return
+
     sql = 'SELECT p_key, wool FROM user_data ORDER BY {0} DESC LIMIT 10;'.format(sort_by)
     await cursor.execute(sql)
 
@@ -49,6 +52,9 @@ async def get_leaderboard(sort_by: str):
 
 
 async def get(table: str, primary_key, columns: str):
+
+    if cursor is None:
+        return
 
     p_key = primary_key
 
@@ -92,11 +98,19 @@ async def get(table: str, primary_key, columns: str):
 
 
 async def new_entry(table: str, primary_key: int):
+
+    if cursor is None:
+        return
+
     insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
     await cursor.execute(insert_sql)
 
 
 async def set(table: str, column: str, p_key, data):
+
+    if cursor is None:
+        return
+
     if not p_key:
         raise ValueError("Primary key is not set.")
 
@@ -124,5 +138,9 @@ async def set(table: str, column: str, p_key, data):
 
 
 async def increment_value(table: str, column: str, primary_key: int):
+
+    if cursor is None:
+        return
+
     v: int = await get(table, primary_key, column)
     await set(table, column, primary_key, v + 1)
