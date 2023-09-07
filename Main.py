@@ -21,7 +21,7 @@ client.load_extension("interactions.ext.sentry", token=load_config("SENTRY-TOKEN
 
 
 async def pick_avatar():
-    get_avatars = os.listdir('avatars')
+    get_avatars = os.listdir('Images/Profile Pictures')
     random_avatar = random.choice(get_avatars)
 
     avatar = File('Images/Profile Pictures' + random_avatar)
