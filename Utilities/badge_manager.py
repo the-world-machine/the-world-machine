@@ -112,6 +112,9 @@ async def increment_value(ctx: SlashContext, value_to_increment: str, target: Us
 
     get_user_badges = await db.get('user_data', user.id, 'unlocked_badges')
 
+    if get_user_badges is None:
+        return
+
     await db.increment_value('user_data', value_to_increment, user.id)
     get_value = await db.get('user_data', user.id, value_to_increment)
 

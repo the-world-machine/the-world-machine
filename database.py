@@ -1,33 +1,18 @@
-import aiomysql
-from load_data import *
-from interactions import *
-import asyncio
+import mysql.connector as MySQLdb
+import json
+from load_data import load_config
+from interactions import Snowflake
 
 ip = load_config('PHPma-IP')
 user = load_config('PHPma-USERNAME')
 password = load_config('PHPma-PASSWORD')
 db_name = load_config('PHPma-DBNAME')
 
-cursor: aiomysql.Cursor = None
-
-async def load_database():
-
-    global cursor
-
-    connection: aiomysql.Connection = await aiomysql.connect(
-        host=ip,
-        user=user,
-        password=password,
-        db=db_name,
-        autocommit=True
-    )
-
-    cursor = await connection.cursor()
-
-    print('Database connected.')
+db: MySQLdb.MySQLConnection = MySQLdb.connect(host=ip, user=user, password=password, database=db_name)
+cursor = db.cursor()
 
 
-def get_datatype(data):
+async def get_datatype(data):
     if type(data) == str:
         return f"{data}"
 
@@ -41,34 +26,23 @@ def get_datatype(data):
 
 
 async def get_leaderboard(sort_by: str):
-
-    if cursor is None:
-        return
-
     sql = 'SELECT p_key, wool FROM user_data ORDER BY {0} DESC LIMIT 10;'.format(sort_by)
-    await cursor.execute(sql)
+    cursor.execute(sql)
 
-    return await cursor.fetchall()
+    return cursor.fetchall()
 
 
 async def get(table: str, primary_key, columns: str):
-
-    if cursor is None:
-        return
-
-    p_key = primary_key
-
     if type(primary_key) == Snowflake:
-        p_key = int(primary_key)
+        primary_key = int(primary_key)
 
-    select_sql = f"SELECT * FROM `{table}` WHERE p_key = {p_key}"
-
+    select_sql = f"SELECT * FROM `{table}` WHERE p_key = {primary_key}"
     try:
-        await cursor.execute(select_sql)
+        cursor.execute(select_sql)
     except:
-        await new_entry(table, p_key)
+        await new_entry('server_data', primary_key)
 
-    row = await cursor.fetchone()
+    row = cursor.fetchone()
 
     value = None
 
@@ -93,54 +67,47 @@ async def get(table: str, primary_key, columns: str):
 
         return value
     else:
-        await new_entry(table, p_key)
-        return await get(table, p_key, columns)
+        await new_entry(table, primary_key)
+        return await get(table, primary_key, columns)
 
 
 async def new_entry(table: str, primary_key: int):
-
-    if cursor is None:
-        return
-
     insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
-    await cursor.execute(insert_sql)
+    cursor.execute(insert_sql)
 
 
 async def set(table: str, column: str, p_key, data):
-
-    if cursor is None:
-        return
-
     if not p_key:
         raise ValueError("Primary key is not set.")
 
-    primary_key = p_key
-
     if type(p_key) == Snowflake:
-        primary_key = int(p_key)
+        p_key = int(p_key)
 
-    d_type = get_datatype(data)
+    d_type = await get_datatype(data)
 
     # Check if the primary key already exists in the table
     select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
-    await cursor.execute(select_sql, (primary_key,))
+    cursor.execute(select_sql, (p_key,))
 
-    row = await cursor.fetchone()
+    row = cursor.fetchone()
 
     if row:
         update_sql = f"UPDATE `{table}` SET `{column}` = %s WHERE p_key = %s"
-        await cursor.execute(update_sql, (d_type, primary_key))
+        cursor.execute(update_sql, (d_type, p_key))
     else:
         insert_sql = f"INSERT INTO `{table}` (p_key, `{column}`) VALUES (%s, %s)"
-        await cursor.execute(insert_sql, (primary_key, d_type))
+        cursor.execute(insert_sql, (p_key, d_type))
 
-    return await get(table, primary_key, column)
+    try:
+        db.commit()
+    except Exception as e:
+        print(f"Error committing changes to database: {e}")
+        db.rollback()
+        return False
+
+    return True
 
 
 async def increment_value(table: str, column: str, primary_key: int):
-
-    if cursor is None:
-        return
-
     v: int = await get(table, primary_key, column)
     await set(table, column, primary_key, v + 1)

@@ -36,7 +36,6 @@ async def on_ready():
     await client.change_presence(status=Status.ONLINE, activity=Activity(name="OneShot 💡", type=ActivityType.PLAYING))
     chars.get_characters()
     await view.load_badges()
-    await database.load_database()
 
     if client.user.id == 1015629604536463421:
         await pick_avatar()
