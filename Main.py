@@ -38,7 +38,7 @@ async def on_ready():
     await view.load_badges()
     await database.load_database()
 
-    if client.user.id == '1015629604536463421':
+    if client.user.id == 1015629604536463421:
         await pick_avatar()
     else:
         try:
