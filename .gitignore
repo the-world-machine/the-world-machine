@@ -7,3 +7,5 @@ __pycache__/
 *$py.class
 
 **/.idea/workspace.xml **/.idea/tasks.xml
+
+blob/*
