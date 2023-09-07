@@ -24,7 +24,7 @@ async def pick_avatar():
     get_avatars = os.listdir('Images/Profile Pictures')
     random_avatar = random.choice(get_avatars)
 
-    avatar = File('Images/Profile Pictures' + random_avatar)
+    avatar = File('Images/Profile Pictures/' + random_avatar)
 
     await client.user.edit(avatar=avatar)
 
