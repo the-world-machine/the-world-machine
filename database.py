@@ -125,7 +125,7 @@ async def set(table: str, column: str, p_key, data):
     select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
     await cursor.execute(select_sql, (primary_key,))
 
-    row = cursor.fetchone()
+    row = await cursor.fetchone()
 
     if row:
         update_sql = f"UPDATE `{table}` SET `{column}` = %s WHERE p_key = %s"
