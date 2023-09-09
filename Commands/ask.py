@@ -84,8 +84,10 @@ class Command(Extension):
             if current_limit <= 0:
                 return False, current_limit
 
-            return True, await database.set('user_data', 'gpt_limit', uid, current_limit - 1)
+            await database.set('user_data', 'gpt_limit', uid, current_limit - 1)
+            return True, current_limit - 1
 
         new_day = now + timedelta(days=1)
         await database.set('user_data', 'gpt_timestamp', uid, new_day.strftime('%Y-%m-%d %H:%M:%S.%f'))
-        return True, await database.set('user_data', 'gpt_limit', uid, 14)
+        await database.set('user_data', 'gpt_limit', uid, 14)
+        return True, 14

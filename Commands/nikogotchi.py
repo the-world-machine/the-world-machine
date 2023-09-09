@@ -465,9 +465,7 @@ class Command(Extension):
             dialogue = random.choice(cleaned_dialogue)
 
         if custom_id == 'find_treasure':
-
             dialogue = 'Your Nikogotchi is now finding treasure! Come back later or call them back now to see what loot they found!'
-
             status = await database.set('nikogotchi_data', 'nikogotchi_status', ctx.author.id, 3)
 
         if custom_id == 'call_back':

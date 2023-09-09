@@ -859,12 +859,12 @@ class Music(Extension):
             else:
                 await fancy_message(ctx.channel, f'[ {ctx.author.mention} Resumed. ]')
 
-            await ctx.defer(edit_origin=True)
-
         if ctx.custom_id == 'skip':
             await player.skip()
 
             await fancy_message(ctx.channel, f'[ {ctx.author.mention} Skipped. ]')
+
+        await ctx.defer(edit_origin=True)
 
     @component_callback('shuffle', 'loopqueue', 'left', 'right')
     async def queue_buttons(self, ctx: ComponentContext):
