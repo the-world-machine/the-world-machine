@@ -11,10 +11,14 @@ async def admin_command(raw_command: Message, client: Client):
     if int(raw_command.author.id) not in allowed_users:
         return
 
+    if raw_command.content == '':
+        return
+
     if raw_command.content[0] != '*':
         return
 
     command_data = raw_command.content.split(' ')
+
     command_name = command_data[0].split('*')[1]
 
     try:
