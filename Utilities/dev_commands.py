@@ -1,70 +1,92 @@
+# Import the necessary modules
+from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
+from interactions import Extension
 import database as db
 from load_data import load_config
-from interactions import *
-import os
 import requests
 
 
-async def admin_command(raw_command: Message, client: Client):
+class DevCommands(Extension):
     allowed_users = [302883948424462346]
 
-    if int(raw_command.author.id) not in allowed_users:
-        return
+    @prefixed_command()
+    async def add_wool(self, ctx: PrefixedContext, target: int, amount: int):
+        # Check if the user is allowed to use this command
 
-    if raw_command.content == '':
-        return
+        if ctx.author.id not in self.allowed_users:
+            return
 
-    if raw_command.content[0] != '*':
-        return
+        # Fetch the target user
+        target_user = await ctx.client.fetch_user(target)
 
-    command_data = raw_command.content.split(' ')
+        wool = await db.get('user_data', target, 'wool')
 
-    command_name = command_data[0].split('*')[1]
+        await db.set('user_data', 'wool', target, wool + amount)
 
-    try:
-        arg_1 = command_data[1]
-        arg_2 = command_data[2]
-        arg_3 = command_data[3]
-    except:
-        pass
+        await ctx.send(f'Successfully added {amount} wool to {target_user.mention}. <@{ctx.author.id}>')
 
-    if command_name == 'add_wool':
-        wool = await db.get('user_data', int(arg_1), 'wool')
+    # Define the "set_wool" command using the new system
+    @prefixed_command()
+    async def set_wool(self, ctx: PrefixedContext, target: int, amount: int):
+        # Check if the user is allowed to use this command
 
-        await db.set('user_data', 'wool', int(arg_1), wool + int(arg_2))
+        if ctx.author.id not in self.allowed_users:
+            return
 
-        await raw_command.reply(f'Successfully added {int(arg_2)} wool to target user. <@{int(raw_command.author.id)}>')
+        # Fetch the target user
+        target_user = await ctx.client.fetch_user(target)
 
-    if command_name == 'set_wool':
-        wool = await db.get('user_data', int(arg_1), 'wool')
+        await db.set('user_data', 'wool', target, amount)
 
-        await db.set('user_data', 'wool', int(arg_1), int(arg_2))
+        await ctx.send(f'Successfully set wool to {amount} for {target_user.mention}. {ctx.author.mention}')
 
-        await raw_command.reply(
-            f'Successfully set wool to {int(arg_2)} for target user. <@{int(raw_command.author.id)}>')
+    # Define the "add_badge" command using the new system
+    @prefixed_command()
+    async def add_badge(self, ctx: PrefixedContext, target: int, badge_id: int):
+        # Check if the user is allowed to use this command
 
-    if command_name == 'add_badge':
-        badges = await db.get('user_data', int(arg_1), 'unlocked_badges')
+        if ctx.author.id not in self.allowed_users:
+            return
 
-        badges.append(int(arg_2))
+        # Fetch the target user
+        target_user = await ctx.client.fetch_user(target)
 
-        await db.set('user_data', 'unlocked_badges', int(arg_1), badges)
+        badges = await db.get('user_data', target, 'unlocked_badges')
+        badges.append(badge_id)
 
-        await raw_command.reply(
-            f'Successfully added badge with id {int(arg_2)} to target user. <@{int(raw_command.author.id)}>')
+        await db.set('user_data', 'unlocked_badges', target, badges)
 
-    if command_name == 'remove_badge':
-        badges: list[int] = await db.get('user_data', int(arg_1), 'unlocked_badges')
+        await ctx.send(f'Successfully added badge with id {badge_id} to {target_user.mention}. <@{ctx.author.id}>')
 
-        badges.remove(int(arg_2))
+    # Define the "remove_badge" command using the new system
+    @prefixed_command()
+    async def remove_badge(self, ctx: PrefixedContext, target: int, badge_id: int):
+        # Check if the user is allowed to use this command
 
-        await db.set('user_data', 'unlocked_badges', int(arg_1), badges)
+        if ctx.author.id not in self.allowed_users:
+            return
 
-        await raw_command.reply(
-            f'Successfully removed badge with id {int(arg_2)} to target user. <@{int(raw_command.author.id)}>')
+        # Fetch the target user
+        target_user = await ctx.client.fetch_user(target)
 
-    if command_name == 'restart':
-        await raw_command.reply('Restarting.')
+        badges = await db.get('user_data', target, 'unlocked_badges')
+
+        if badge_id in badges:
+            badges.remove(badge_id)
+
+        await db.set('user_data', 'unlocked_badges', target, badges)
+
+        await ctx.send(f'Successfully removed badge with id {badge_id} from {target_user.mention}. <@{ctx.author.id}>')
+
+    # Define the "restart" command using the new system
+    @prefixed_command()
+    async def restart(self, ctx: PrefixedContext):
+        # Check if the user is allowed to use this command
+
+        if ctx.author.id not in self.allowed_users:
+            return
+
+        await ctx.send('Restarting.')
 
         API_KEY = "Bearer " + load_config('SPARKED')
 
@@ -72,15 +94,20 @@ async def admin_command(raw_command: Message, client: Client):
         r = requests.post('https://control.sparkedhost.us/api/client/servers/92aeea52/power',
                           json={"signal": "restart"}, headers=header)
         print(r.status_code)
-        return
 
-    if command_name == 'stop':
-        await raw_command.reply('Stopping.')
+    # Define the "stop" command using the new system
+    @prefixed_command()
+    async def stop(self, ctx: PrefixedContext):
+        # Check if the user is allowed to use this command
+
+        if ctx.author.id not in self.allowed_users:
+            return
+
+        await ctx.send('Stopping.')
 
         API_KEY = "Bearer " + load_config('SPARKED')
 
         header = {"Authorization": API_KEY}
-        r = requests.post('https://control.sparkedhost.us/api/client/servers/92aeea52/power', json={"signal": "stop"},
-                          headers=header)
+        r = requests.post('https://control.sparkedhost.us/api/client/servers/92aeea52/power',
+                          json={"signal": "stop"}, headers=header)
         print(r.status_code)
-        return

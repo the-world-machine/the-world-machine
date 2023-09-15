@@ -199,10 +199,12 @@ class Command(Extension):
             background_3 = random.choice(backgrounds)
 
             treasure_stocks = []
-            available_treasures = self.get_treasures()
+            available_treasures: list = self.get_treasures()
 
             for _ in range(3):
-                treasure_stocks.append(random.randint(0, len(available_treasures) - 1))
+                treasure = random.randint(0, len(available_treasures) - 1)
+                treasure_stocks.append(treasure)
+                del available_treasures[treasure]
 
             stock_modifier = round(random.uniform(0.5, 1.5), 1)
 
@@ -314,40 +316,41 @@ class Command(Extension):
 
         await ctx.edit_origin(embed=embed, components=buttons)
 
-    @component_callback('buy_pancakes_1', 'buy_pancakes_10', 'buy_pancakes_50')
+    @component_callback('buy_pancakes_1', 'buy_pancakes_golden', 'buy_pancakes_glitched')
     async def buy_pancakes_callback(self, ctx: ComponentContext):
 
         await ctx.defer(edit_origin=True)
 
         wool = await database.get('user_data', ctx.author.id, 'wool')
         pancakes = await database.get('nikogotchi_data', ctx.author.id, 'pancakes')
+        golden_pancakes = await database.get('nikogotchi_data', ctx.author.id, 'golden_pancakes')
         custom_id = ctx.custom_id
 
         footer = ''
 
         if custom_id == 'buy_pancakes_1':
-            if wool < 150:
+            if wool < 200:
                 footer = '[ You do not have enough wool to buy a pancake! ]'
             else:
-                await database.set('user_data', 'wool', ctx.author.id, wool - 150)
+                footer = '[ Successfully bought a pancake! ]'
+                await database.set('user_data', 'wool', ctx.author.id, wool - 200)
                 await database.set('nikogotchi_data', 'pancakes', ctx.author.id, pancakes + 1)
-                footer = f'[ Successfully bought a pancake! ]'
 
-        if custom_id == 'buy_pancakes_10':
-            if wool < 300:
-                footer = '[ You do not have enough wool to buy 10 pancakes! ]'
+        if custom_id == 'buy_pancakes_golden':
+            if wool < 10_000:
+                footer = '[ You do not have enough wool to buy a golden pancake! ]'
             else:
-                await database.set('user_data', 'wool', ctx.author.id, wool - 1000)
-                await database.set('nikogotchi_data', 'pancakes', ctx.author.id, pancakes + 10)
-                footer = f'[ Successfully bought 10 pancakes! ]'
+                footer = '[ Successfully bought a golden pancake! ]'
+                await database.set('user_data', 'wool', ctx.author.id, wool - 10_000)
+                await database.set('nikogotchi_data', 'golden_pancakes', ctx.author.id, golden_pancakes + 1)
 
-        if custom_id == 'buy_pancakes_50':
-            if wool < 500:
-                footer = '[ You do not have enough wool to buy 50 pancakes! ]'
+        if custom_id == 'buy_pancakes_glitched':
+            if wool < 999_999:
+                footer = '[ You do not have enough wool to buy whatever this thing is! ]'
             else:
-                await database.set('user_data', 'wool', ctx.author.id, wool - 5000)
-                await database.set('nikogotchi_data', 'pancakes', ctx.author.id, pancakes + 50)
-                footer = f'[ Successfully bought 50 pancakes! ]'
+                footer = '[ Successfully bought... something? ]'
+                await database.set('user_data', 'wool', ctx.author.id, wool - 999_999)
+                await database.set('nikogotchi_data', 'glitched_pancakes', ctx.author.id, pancakes + 1)
 
         embed, buttons = await self.get_pancakes(int(ctx.author.id))
 
@@ -430,6 +433,8 @@ class Command(Extension):
 
         wool = await database.get('user_data', uid, 'wool')
         pancakes = await database.get('nikogotchi_data', uid, 'pancakes')
+        golden_pancakes = await database.get('nikogotchi_data', uid, 'golden_pancakes')
+        glitched_pancakes = await database.get('nikogotchi_data', uid, 'glitched_pancakes')
 
         embed = Embed(
             title='Buy Pancakes',
@@ -440,31 +445,39 @@ class Command(Extension):
         embed.description = f'''
         Use these pancakes to feed your Nikogotchi!
         
-        1x Pancake - {icons.wool()}150
-        10x Pancakes - {icons.wool()}1000
-        50x Pancakes - {icons.wool()}5000
+        <:any:1147281411854839829> **Pancake** - {icons.wool()}200
+        *+1 Health and +25 Hunger*
+        
+        <:any:1152330988022681821> **Golden Pancake** - {icons.wool()}10,000
+        *+25 Health and +50 Hunger*
+        
+        <:any:1152356972423819436> **???** - {icons.wool()}999,999
+        *I don't even know how this got here.*
 
         ⚪ - Cannot afford
         
         {icons.wool()}**{wool}**
-        <:any:1147281411854839829> **{pancakes}**
+        
+        <:any:1147281411854839829> **x{pancakes}**
+        <:any:1152330988022681821> **x{golden_pancakes}**
+        <:any:1152356972423819436> **x{glitched_pancakes}**
         '''
 
         buttons = [
             Button(
                 style=ButtonStyle.PRIMARY,
-                label='Buy 1x',
+                label='Buy Pancake',
                 custom_id='buy_pancakes_1'
             ),
             Button(
                 style=ButtonStyle.PRIMARY,
-                label='Buy 10x',
-                custom_id='buy_pancakes_10'
+                label='Buy Golden Pancake',
+                custom_id='buy_pancakes_golden'
             ),
             Button(
                 style=ButtonStyle.PRIMARY,
-                label='Buy 50x',
-                custom_id='buy_pancakes_50'
+                label='Buy ???',
+                custom_id='buy_pancakes_glitched'
             ),
             Button(
                 style=ButtonStyle.RED,
@@ -475,21 +488,21 @@ class Command(Extension):
 
         for i, button in enumerate(buttons):
             if i == 0:
-                if wool < 150:
+                if wool < 200:
                     button.disabled = True
                     button.style = ButtonStyle.GREY
                 else:
                     button.disabled = False
                     button.style = ButtonStyle.PRIMARY
             if i == 1:
-                if wool < 1000:
+                if wool < 10_000:
                     button.disabled = True
                     button.style = ButtonStyle.GREY
                 else:
                     button.disabled = False
                     button.style = ButtonStyle.PRIMARY
             if i == 2:
-                if wool < 5000:
+                if wool < 999_999:
                     button.disabled = True
                     button.style = ButtonStyle.GREY
                 else:
@@ -499,6 +512,12 @@ class Command(Extension):
         return embed, buttons
 
     pages = [{"uid": 0, "page": 0}]
+
+    async def open_backgrounds_json(self):
+        async with aiofiles.open('Data/backgrounds.json', 'r') as f:
+            strdata = await f.read()
+
+        return json.loads(strdata)
 
     async def open_backgrounds(self, uid: int, page: int):
 
@@ -518,10 +537,15 @@ class Command(Extension):
         ⚪ - Can't afford
         '''
 
+        all_backgrounds = await self.open_backgrounds_json()
         backgrounds = self.current_background_stock
-        owned_backgrounds = await database.get('user_data', uid, 'unlocked_backgrounds')
+        owned_background_ids = await database.get('user_data', uid, 'unlocked_backgrounds')
+        owned_backgrounds = []
 
-        for i, bg in enumerate(backgrounds):
+        for i in range(len(owned_background_ids)):
+            owned_backgrounds.append(all_backgrounds['background'][owned_background_ids[i]])
+
+        for bg in backgrounds:
 
             buttons[1].disabled = False
             buttons[1].style = ButtonStyle.PRIMARY
@@ -686,7 +710,6 @@ class Command(Extension):
 
         return embed, components
 
-
     @component_callback('move_left', 'move_right', 'buy_background')
     async def background_callbacks(self, ctx: ComponentContext):
 
@@ -735,14 +758,10 @@ class Command(Extension):
 
                 unlocked_background = await database.get('user_data', ctx.author.id, 'unlocked_backgrounds')
 
-                background_index = 0
-
                 for i, bg in enumerate(all_backgrounds):
                     if bg['name'] == background['name']:
-                        unlocked_background.append(background_index)
+                        unlocked_background.append(i)
                         break
-
-                    background_index += 1
 
                 await database.set('user_data', 'wool', ctx.author.id, wool - background['cost'])
                 await database.set('user_data', 'unlocked_backgrounds', ctx.author.id, unlocked_background)

@@ -74,6 +74,7 @@ class Command(Extension):
         cleanliness = await database.get('nikogotchi_data', uid, 'cleanliness')
         emoji = await database.get('nikogotchi_data', uid, 'emoji')
         pancakes = await database.get('nikogotchi_data', uid, 'pancakes')
+        golden_pancakes = await database.get('nikogotchi_data', uid, 'golden_pancakes')
 
         health_value = round((health / 50) * progress_bar_length)
         hunger_value = round((hunger / 50) * progress_bar_length)
@@ -120,15 +121,18 @@ class Command(Extension):
         )
 
         nikogotchi_status = 'Your Nikogotchi seems to be doing okay.'
-        if hunger < 30:
-            nikogotchi_status = f'{name} seems quite hungry.'
-        if attention < 30:
-            nikogotchi_status = f'{name} seems quite lonely.'
-        if cleanliness < 30:
-            nikogotchi_status = f'{name} seems quite dirty.'
+
+        if hunger < attention and hunger < cleanliness:
+            nikogotchi_status = f'🥞 {name} wants to be fed.'
+        elif attention < hunger and attention < cleanliness:
+            nikogotchi_status = f'😔 {name} wants to be pet.'
+        elif cleanliness < hunger and cleanliness < attention:
+            nikogotchi_status = f'🛁 {name} seems quite dirty.'
 
         if status == 3:
-            nikogotchi_status = f'{name} is currently finding treasures!'
+            nikogotchi_status = f'{name} is currently finding treasures for you!'
+
+        treasure_found = ''
 
         if len(found_treasure) > 0:
 
@@ -149,28 +153,27 @@ class Command(Extension):
                 treasures += f'<:any:{treasure["emoji"]}> {treasure["name"]} x{found_treasure.count(index)}\n'
                 looked_over_treasures.append(index)
 
-            nikogotchi_status = f'''
+            treasure_found = f'''
             {name} found some treasures!
             
             {treasures}
             '''
 
-        if health < 30:
-            nikogotchi_status = f'It seems {name} is in poor health.'
+        if health < 20:
+            nikogotchi_status = f'🤒 {name} feels quite unwell. Use Golden Pancakes to restore their health!'
+
+        embed.set_author(name=nikogotchi_status)
 
         embed.description = f'''
-                    {nikogotchi_status}
+        {treasure_found}
+        ❤️  {health_progress_bar} ({health} / 50)
 
-                    **Health:** {health_progress_bar} ({health} / 50)
-
-                    **Hunger:**      {hunger_progress_bar} ({hunger} / 50)
-                    **Attention:**   {attention_progress_bar} ({attention} / 50)
-                    **Cleanliness:** {cleanliness_progress_bar} ({cleanliness} / 50)
-                    
-                    **Age:** {age.years} years, {age.months} months, {age.days} days
-                    
-                    <:pancakes:1147281411854839829> {pancakes}
-                    '''
+        🍴  {hunger_progress_bar} ({hunger} / 50)
+        🫂  {attention_progress_bar} ({attention} / 50)
+        🧽  {cleanliness_progress_bar} ({cleanliness} / 50)
+        
+        ⏰  ***{age.years}*** *years*, ***{age.months}*** *months*, ***{age.days}*** *days*
+        '''
 
         embed.set_image(url=f'https://cdn.discordapp.com/emojis/{emoji}.png')
         embed.set_footer(text=dialogue)
@@ -309,18 +312,25 @@ class Command(Extension):
         current_time = datetime.now()
 
         # Calculate the time difference in hours
-        time_difference = (current_time - last_interacted).total_seconds() / 3600
+        time_difference = (current_time - last_interacted).total_seconds() / 7200
 
         modifier = 1
 
         status = await database.get('nikogotchi_data', uid, 'nikogotchi_status')
 
         if status == 3:
-            modifier = 1.2
+            modifier = 2.5
 
         new_hunger = int(max(0, hunger - time_difference * modifier))
-        new_attention = int(max(0, attention - time_difference * 1.8 * modifier))
-        new_cleanliness = int(max(0, cleanliness - time_difference * 1.25 * modifier))
+        new_attention = int(max(0, attention - time_difference * 1.25 * modifier))
+        new_cleanliness = int(max(0, cleanliness - time_difference * 1.05 * modifier))
+
+        immortal = await database.get('nikogotchi_data', uid, 'immortal')
+
+        if immortal:
+            new_hunger = 9999
+            new_attention = 9999
+            new_cleanliness = 9999
 
         await database.set('nikogotchi_data', 'hunger', ctx.author.id, new_hunger)
         await database.set('nikogotchi_data', 'attention', ctx.author.id, new_attention)
@@ -365,20 +375,21 @@ class Command(Extension):
                 treasures_found = []
 
                 for i in range(int(time_difference)):
-                    value = random.randint(0, 1000)
-                    treasure = -1
-                    if value > 0:
-                        treasure = random.choice([0, 1, 2])
-                    if value > 600:
-                        treasure = random.choice([3, 4, 5])
-                    if value > 900:
-                        treasure = random.choice([6, 7, 8])
+                    if i % 4 == 0:
+                        value = random.randint(0, 1000)
+                        treasure = -1
+                        if value > 0:
+                            treasure = random.choice([0, 1, 2])
+                        if value > 600:
+                            treasure = random.choice([3, 4, 5])
+                        if value > 900:
+                            treasure = random.choice([6, 7, 8])
 
-                    treasures_found.append(treasure)
+                        treasures_found.append(treasure)
 
-                    user_treasures = await database.get('nikogotchi_data', uid, 'treasure')
-                    user_treasures[treasure] += 1
-                    await database.set('nikogotchi_data', 'treasure', uid, user_treasures)
+                        user_treasures = await database.get('nikogotchi_data', uid, 'treasure')
+                        user_treasures[treasure] += 1
+                        await database.set('nikogotchi_data', 'treasure', uid, user_treasures)
 
                 self.buttons[0].disabled = True
                 self.buttons[1].disabled = True
@@ -400,6 +411,8 @@ class Command(Extension):
         await ctx.defer(edit_origin=True)
 
         pancakes = await database.get('nikogotchi_data', ctx.author.id, 'pancakes')
+        golden_pancakes = await database.get('nikogotchi_data', ctx.author.id, 'golden_pancakes')
+        glitched_pancakes = await database.get('nikogotchi_data', ctx.author.id, 'glitched_pancakes')
 
         pancake_dialogue = await database.get('nikogotchi_data', ctx.author.id, 'pancake_dialogue')
         pet_dialogue = await database.get('nikogotchi_data', ctx.author.id, 'pet_dialogue')
@@ -423,64 +436,62 @@ class Command(Extension):
 
         dialogue = '...'
 
-        if custom_id == 'feed':
-            if pancakes <= 0:
-                dialogue = 'You don\'t have any pancakes! Buy some from the shop to feed your Nikogotchi!'
-            else:
+        buttons = self.buttons
 
-                pancakes = await database.set('nikogotchi_data', 'pancakes', ctx.author.id, pancakes - 1)
+        if status == 2:
+            if custom_id == 'feed':
+                if pancakes <= 0:
+                    dialogue = 'You don\'t have any pancakes! Buy some from the shop to feed your Nikogotchi!'
+                else:
+                    buttons = await self.feed_nikogotchi(pancakes, golden_pancakes, glitched_pancakes, ctx)
 
+            if custom_id == 'pet':
                 # Adjust hunger, attention, and cleanliness
-                hunger_increase = 25
+                attention_increase = 20
 
-                current_hunger = await database.get('nikogotchi_data', ctx.author.id, 'hunger')
+                current_attention = await database.get('nikogotchi_data', ctx.author.id, 'attention')
 
-                new_hunger = min(50, current_hunger + hunger_increase)
+                new_attention = min(50, current_attention + attention_increase)
 
-                hunger = await database.set('nikogotchi_data', 'hunger', ctx.author.id, new_hunger)
+                attention = await database.set('nikogotchi_data', 'attention', ctx.author.id, new_attention)
 
-                dialogue = random.choice(pancake_dialogue)
+                dialogue = random.choice(pet_dialogue)
 
-        if custom_id == 'pet':
-            # Adjust hunger, attention, and cleanliness
-            attention_increase = 20
+            if custom_id == 'clean':
+                cleanliness_increase = 30
 
-            current_attention = await database.get('nikogotchi_data', ctx.author.id, 'attention')
+                current_cleanliness = await database.get('nikogotchi_data', ctx.author.id, 'cleanliness')
 
-            new_attention = min(50, current_attention + attention_increase)
+                new_cleanliness = min(50, current_cleanliness + cleanliness_increase)
 
-            attention = await database.set('nikogotchi_data', 'attention', ctx.author.id, new_attention)
+                cleanliness = await database.set('nikogotchi_data', 'cleanliness', ctx.author.id, new_cleanliness)
 
-            dialogue = random.choice(pet_dialogue)
+                dialogue = random.choice(cleaned_dialogue)
 
-        if custom_id == 'clean':
-            cleanliness_increase = 30
-
-            current_cleanliness = await database.get('nikogotchi_data', ctx.author.id, 'cleanliness')
-
-            new_cleanliness = min(50, current_cleanliness + cleanliness_increase)
-
-            cleanliness = await database.set('nikogotchi_data', 'cleanliness', ctx.author.id, new_cleanliness)
-
-            dialogue = random.choice(cleaned_dialogue)
-
-        if custom_id == 'find_treasure':
-            dialogue = 'Your Nikogotchi is now finding treasure! Come back later or call them back now to see what loot they found!'
-            status = await database.set('nikogotchi_data', 'nikogotchi_status', ctx.author.id, 3)
+            if custom_id == 'find_treasure':
+                dialogue = 'Your Nikogotchi is now finding treasure! Just be aware that their stats will decrease faster than normal, so make sure to call them back when they\'re done!'
+                status = await database.set('nikogotchi_data', 'nikogotchi_status', ctx.author.id, 3)
 
         if custom_id == 'call_back':
             status = await database.set('nikogotchi_data', 'nikogotchi_status', ctx.author.id, 2)
 
         embed = await self.get_main_nikogotchi_embed(int(ctx.author.id), age, dialogue)
 
-        self.buttons[0].disabled = False
-        self.buttons[1].disabled = False
-        self.buttons[2].disabled = False
+        if not custom_id == 'feed':
+            if status == 2:
+                self.buttons[0].disabled = False
+                self.buttons[1].disabled = False
+                self.buttons[2].disabled = False
 
-        self.buttons[3].label = 'Find Treasure'
-        self.buttons[3].custom_id = 'find_treasure'
+                self.buttons[3].label = 'Find Treasure'
+                self.buttons[3].custom_id = 'find_treasure'
+            else:
+                self.buttons[0].disabled = True
+                self.buttons[1].disabled = True
+                self.buttons[2].disabled = True
 
-        buttons = self.buttons
+                self.buttons[3].label = 'Call Back'
+                self.buttons[3].custom_id = 'call_back'
 
         embed.set_image(url=f'https://cdn.discordapp.com/emojis/{emoji}.png')
 
@@ -508,13 +519,109 @@ class Command(Extension):
             self.buttons[1].disabled = True
             self.buttons[2].disabled = True
 
-            self.buttons[3].label = 'Call Nikogotchi Back'
+            self.buttons[3].label = 'Call Back'
             self.buttons[3].custom_id = 'call_back'
 
             buttons = self.buttons
 
-            embed = await self.get_main_nikogotchi_embed(ctx.author.id, age, '...', treasures_found)
+            embed = await self.get_main_nikogotchi_embed(ctx.author.id, age, dialogue, treasures_found)
             embed.set_image(url='')
+
+        await ctx.edit_origin(embed=embed, components=buttons)
+
+    async def feed_nikogotchi(self, pancakes, golden_pancakes, glitched_pancakes, ctx):
+        food_options = []
+
+        if glitched_pancakes > 0:
+            food_options.append(
+                StringSelectOption(
+                    label=f'Feed ??? (x{glitched_pancakes})',
+                    emoji=PartialEmoji(1152356972423819436),
+                    value=f'pancake_glitched'
+                )
+            )
+
+        if golden_pancakes > 0:
+            food_options.append(
+                StringSelectOption(
+                    label=f'Feed Golden Pancake (x{golden_pancakes})',
+                    emoji=PartialEmoji(1152330988022681821),
+                    value=f'golden_pancake'
+                )
+            )
+
+        if pancakes > 0:
+            food_options.append(
+                StringSelectOption(
+                    label=f'Feed Pancake (x{pancakes})',
+                    emoji=PartialEmoji(1147281411854839829),
+                    value=f'pancake'
+                )
+            )
+
+        name = await database.get('nikogotchi_data', ctx.author.id, 'name')
+
+        select = StringSelectMenu(
+            *food_options,
+            custom_id='feed_food',
+            placeholder=f'What do you want to feed {name}?'
+        )
+
+        return spread_to_rows(select, Button(label='Cancel', style=ButtonStyle.RED, custom_id='refresh'))
+
+    @component_callback('feed_food')
+    async def feed_food(self, ctx: ComponentContext):
+
+        pancake_dialogue = await database.get('nikogotchi_data', ctx.author.id, 'pancake_dialogue')
+        health = await database.get('nikogotchi_data', ctx.author.id, 'health')
+        value = ctx.values[0]
+
+        golden_pancakes = await database.get('nikogotchi_data', ctx.author.id, 'golden_pancakes')
+        pancakes = await database.get('nikogotchi_data', ctx.author.id, 'pancakes')
+        glitched_pancakes = await database.get('nikogotchi_data', ctx.author.id, 'glitched_pancakes')
+
+        hunger_increase = 0
+        health_increase = 0
+
+        if value == 'golden_pancake':
+            if golden_pancakes <= 0:
+                dialogue = 'You don\'t have any golden pancakes! Buy some from the shop to feed your Nikogotchi!'
+            else:
+                hunger_increase = 50
+                health_increase = 25
+
+                golden_pancakes = await database.set('nikogotchi_data', 'golden_pancakes', ctx.author.id, golden_pancakes - 1)
+                dialogue = random.choice(pancake_dialogue)
+        elif value == 'pancake_glitched':
+            if glitched_pancakes <= 0:
+                dialogue = 'You don\'t have any ☐. You don\'t have any ☐. You don\'t have any ☐. You don\'t have any ☐. You don\'t have any ☐. You don\'t have any ☐. Do you?'
+            else:
+                hunger_increase = 9999
+                health_increase = 9999
+                glitched_pancakes = await database.set('nikogotchi_data', 'glitched_pancakes', ctx.author.id, glitched_pancakes - 1)
+                await database.set('nikogotchi_data', 'immortal', ctx.author.id, True)
+                dialogue = 'Your Nikogotchi is now Immortal.'
+        else:
+            if pancakes <= 0:
+                dialogue = 'You don\'t have any pancakes! Buy some from the shop to feed your Nikogotchi!'
+            else:
+                hunger_increase = 25
+                health_increase = 1
+
+                pancakes = await database.set('nikogotchi_data', 'pancakes', ctx.author.id, pancakes - 1)
+                dialogue = random.choice(pancake_dialogue)
+
+        current_hunger = await database.get('nikogotchi_data', ctx.author.id, 'hunger')
+
+        new_hunger = min(50, current_hunger + hunger_increase)
+        new_health = min(50, health + health_increase)
+
+        await database.set('nikogotchi_data', 'hunger', ctx.author.id, new_hunger)
+        await database.set('nikogotchi_data', 'health', ctx.author.id, new_health)
+
+        buttons = await self.feed_nikogotchi(pancakes, golden_pancakes, glitched_pancakes, ctx)
+
+        embed = await self.get_main_nikogotchi_embed(ctx.author.id, await self.get_nikogotchi_age(ctx.author.id), dialogue)
 
         await ctx.edit_origin(embed=embed, components=buttons)
 
@@ -584,8 +691,8 @@ class Command(Extension):
         )
 
         embed.author = EmbedAuthor(
-            name=f'Owned by {ctx.author.username}',
-            icon_url=ctx.author.avatar_url
+            name=f'Owned by {user.username}',
+            icon_url=user.avatar_url
         )
 
         embed.description = f'''

@@ -1,23 +1,30 @@
 from interactions import *
 from interactions.api.events import MessageCreate
+import interactions.ext.prefixed_commands as prefixed_commands
 from load_data import *
 import load_commands
 import os
 import random
 import Utilities.profile_viewer as view
 import Utilities.badge_manager as badge_manager
-import Utilities.dev_commands as dev_commands
 import Data.capsule_characters as chars
 import database
 
 print('\nStarting The World Machine... 1/4')
-client = Client(intents=Intents.DEFAULT | Intents.MESSAGE_CONTENT, disable_dm_commands=True, send_command_tracebacks=False)
+intents = Intents.DEFAULT |\
+          Intents.MESSAGE_CONTENT |\
+          Intents.GUILDS |\
+          Intents.MESSAGES
+
+client = Client(intents=intents, disable_dm_commands=True, send_command_tracebacks=False)
+prefixed_commands.setup(client, default_prefix='*')
 
 print("\nLoading Commands... 2/4")
 load_commands.load_commands(client)
 
 print('\nLoading Additional Extensions... 3/4')
 client.load_extension("interactions.ext.sentry", token=load_config("SENTRY-TOKEN"))  # Debugging and errors.
+client.load_extension("Utilities.dev_commands")
 
 
 async def pick_avatar():
@@ -56,7 +63,5 @@ async def on_message(event: MessageCreate):
         return
 
     await badge_manager.increment_value(event.message, 'times_messaged', event.message.author)
-
-    await dev_commands.admin_command(event.message, client)
 
 client.start(load_config("Token"))

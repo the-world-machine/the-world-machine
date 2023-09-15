@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from interactions import *
 from Utilities.fancysend import *
-import Utilities.badge_manager as badge_manager
+from Utilities.badge_manager import increment_value
 import Utilities.bot_icons as bot_icons
 import Utilities.text_generation as ai
 import database
@@ -70,6 +70,8 @@ class Command(Extension):
         await ctx.delete()
 
         final_embed.description = f'[ {response} ]'
+
+        await increment_value(ctx, 'times_asked', ctx.user)
 
         await ctx.channel.send(embed=final_embed)
 

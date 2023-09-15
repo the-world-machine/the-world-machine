@@ -14,7 +14,7 @@ from interactions.api.events import Component
 class Command(Extension):
 
     async def open_backgrounds(self):
-        async with aiofiles.open('bot_data/backgrounds.json', 'r') as f:
+        async with aiofiles.open('Data/backgrounds.json', 'r') as f:
             strdata = await f.read()
 
         return json.loads(strdata)

@@ -103,9 +103,9 @@ async def set(table: str, column: str, p_key, data):
     except Exception as e:
         print(f"Error committing changes to database: {e}")
         db.rollback()
-        return False
+        return None
 
-    return True
+    return await get(table, p_key, column)
 
 
 async def increment_value(table: str, column: str, primary_key: int):
