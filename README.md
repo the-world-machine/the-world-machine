@@ -21,7 +21,7 @@
 
 -----------------
 ## Compiling The World Machine
-#### ⚠️ THIS PROJECT IS NOT MEANT TO BE EASY TO FORK OR CHANGE. THIS IS SIMPLY TO ALLOW THIS PROJECT TO BE TRANSPARENT WITH ITS CODE.
+#### ⚠️ THIS PROJECT IS NOT MEANT TO BE EASY TO FORK OR CHANGE. THIS IS SIMPLY TO ALLOW THIS PROJECT TO BE TRANSPARENT WITH ITS CODE AND ALLOW CONTRIBUTORS TO PULL REQUESTS AND SUCH.
 
 ### Step 1: Download Dependencies.
 Download Python 3.11 and set it as your main interpreter in your code editor. To download dependencies, run this in your console:
