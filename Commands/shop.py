@@ -180,7 +180,7 @@ class Command(Extension):
     async def shop_reset(self):
         data = await self.check_if_should_reset()
 
-        current_time_days = int(time.mktime(datetime.now.timetuple())/86400)
+        current_time_days = int(time.mktime(datetime.now().timetuple())/86400)
         reset_time_days = int(time.mktime(datetime.strptime(data['date'], '%Y-%m-%d %H:%M:%S').timetuple())/86400)
 
         if current_time_days != reset_time_days:
