@@ -212,7 +212,8 @@ class Command(Extension):
             self.current_treasure_stock = treasure_stocks
             self.current_stock_price = stock_modifier
 
-            new_time = datetime.now() + timedelta(days=1)
+            # Reset the date to midnight of the next day.
+            new_time = datetime(current_time.year, current_time.month, current_time.day, 00, 00, 00) + timedelta(days=1)
 
             await self.reset_data({
                 "date": datetime.strftime(new_time, '%Y-%m-%d %H:%M:%S'),
