@@ -9,6 +9,7 @@ import database
 import aiofiles
 import json
 import random
+import time
 
 
 class Command(Extension):
@@ -180,9 +181,11 @@ class Command(Extension):
         data = await self.check_if_should_reset()
 
         current_time = datetime.now()
+        current_time_days = int(time.mktime(current_time.timetuple())/86400)
         reset_time = datetime.strptime(data['date'], '%Y-%m-%d %H:%M:%S')
+        reset_time_days = int(time.mktime(reset_time.timetuple())/86400)
 
-        if current_time > reset_time:
+        if current_time_days != reset_time_days:
 
             get_backgrounds: list[dict] = await self.get_backgrounds()
 
@@ -191,6 +194,10 @@ class Command(Extension):
             for bg in get_backgrounds:
                 if bg['type'] == 'shop':
                     backgrounds.append(bg)
+
+            # Seed rng to day - you may wish to XOR the current_time with a secret number, or people could forecast the upcoming changes easily.
+            # random.seed(current_time_days ^ 123456789)
+            random.seed(current_time_days)
 
             background_1 = random.choice(backgrounds)
             backgrounds.remove(background_1)
@@ -212,7 +219,7 @@ class Command(Extension):
             self.current_treasure_stock = treasure_stocks
             self.current_stock_price = stock_modifier
 
-            new_time = datetime.now() + timedelta(days=1)
+            new_time = datetime.fromtimestamp(reset_time_days * 86400) + timedelta(days=1)
 
             await self.reset_data({
                 "date": datetime.strftime(new_time, '%Y-%m-%d %H:%M:%S'),
