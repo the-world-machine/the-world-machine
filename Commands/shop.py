@@ -193,7 +193,7 @@ class Command(Extension):
                 if bg['type'] == 'shop':
                     backgrounds.append(bg)
 
-            # Seed rng to day - you may wish to XOR the current_time with a secret number, or people could forecast the upcoming changes easily.
+            # Seed rng to day - you may wish to XOR the current_time_days with a secret number, or people could forecast the upcoming changes easily.
             # random.seed(current_time_days ^ 123456789)
             random.seed(current_time_days)
 
