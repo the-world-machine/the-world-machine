@@ -186,10 +186,6 @@ class Command(Extension):
 
         if current_time_days != reset_time_days:
 
-            # Seed rng to day - you may wish to XOR the current_time_days with a secret number, or people could forecast the upcoming changes easily.
-            # random.seed(current_time_days ^ 123456789)
-            random.seed(current_time_days)
-
             get_backgrounds: list[dict] = await self.get_backgrounds()
 
             backgrounds = []
