@@ -185,6 +185,10 @@ class Command(Extension):
 
         if current_time_days != reset_time_days:
 
+            # Seed rng to day - you may wish to XOR the current_time_days with a secret number, or people could forecast the upcoming changes easily.
+            # random.seed(current_time_days ^ 123456789)
+            random.seed(current_time_days)
+
             get_backgrounds: list[dict] = await self.get_backgrounds()
 
             backgrounds = []
@@ -192,10 +196,6 @@ class Command(Extension):
             for bg in get_backgrounds:
                 if bg['type'] == 'shop':
                     backgrounds.append(bg)
-
-            # Seed rng to day - you may wish to XOR the current_time_days with a secret number, or people could forecast the upcoming changes easily.
-            # random.seed(current_time_days ^ 123456789)
-            random.seed(current_time_days)
 
             background_1 = random.choice(backgrounds)
             backgrounds.remove(background_1)
