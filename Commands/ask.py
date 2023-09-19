@@ -79,7 +79,11 @@ class Command(Extension):
 
         current_limit = await database.get('user_data', uid, 'gpt_limit')
         timestamp_str = await database.get('user_data', uid, 'gpt_timestamp')
-        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S.%f')
+        try:
+            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S.%f')
+        except:
+            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
+
         now = datetime.now()
 
         if now < timestamp:
