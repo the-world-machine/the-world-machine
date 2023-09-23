@@ -572,6 +572,8 @@ class Command(Extension):
     @component_callback('feed_food')
     async def feed_food(self, ctx: ComponentContext):
 
+        await ctx.defer(edit_origin=True)
+
         pancake_dialogue = await database.get('nikogotchi_data', ctx.author.id, 'pancake_dialogue')
         health = await database.get('nikogotchi_data', ctx.author.id, 'health')
         value = ctx.values[0]
