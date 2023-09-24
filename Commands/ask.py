@@ -15,14 +15,14 @@ class Command(Extension):
 
         can_ask, limit = await self.check(ctx.author.id)
 
-        if not can_ask:
+        if not can_ask and self.bot.user.id != 1028058097383641118:
             return await fancy_message(ctx, "[ You cannot ask anymore questions, you have reached your limit for today! ]", ephemeral=True, color=0xff0000)
 
         thinking_embed = Embed(
             color=0x8b00cc
         )
 
-        thinking_embed.description = f'Thinking how to answer... {bot_icons.loading()}'
+        thinking_embed.description = f'*Thinking how to answer...* {bot_icons.loading()}\n\n``{question}``'
         thinking_embed.set_author(name='⚠️ This command could potentially spoil OneShot!')
         thinking_embed.set_footer(text=f'You have {limit} questions left for today.')
 
@@ -64,8 +64,8 @@ class Command(Extension):
         )
 
         final_embed.set_thumbnail(url=twm)
-        final_embed.set_author(name=question[:4000], icon_url=ctx.author.avatar_url)
-        final_embed.set_footer(text=f'You have {limit} questions left for today.')
+        final_embed.set_author(name=question[:255])
+        final_embed.set_footer(text=f'Asked by {ctx.author.display_name} using /ask.', icon_url=ctx.author.avatar_url)
 
         await ctx.delete()
 
