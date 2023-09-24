@@ -403,13 +403,13 @@ class Command(Extension):
         
         Just keep in mind that you can only have one Nikogotchi at a time. The only way to get another one is to  send away your current one or if it has passed away.
         
-        <:any:1147279938660089898> **Blue Capsule** - Teeming with blue phosphor, this capsule will give you a *common* Nikogotchi. ({icons.wool()}10000)
+        <:any:1147279938660089898> **Blue Capsule** - Teeming with blue phosphor, this capsule will give you a *common* Nikogotchi. ({icons.wool()}3000)
         
-        <:any:1147279943387070494> **Green Capsule** - Teeming with green phosphor, this capsule will give you a *uncommon* Nikogotchi. ({icons.wool()}50000)
+        <:any:1147279943387070494> **Green Capsule** - Teeming with green phosphor, this capsule will give you a *uncommon* Nikogotchi. ({icons.wool()}10000)
         
-        <:any:1147280712328810536> **Red Capsule** - Teeming with red phosphor, this capsule will give you a *rare* Nikogotchi. ({icons.wool()}100000)
+        <:any:1147280712328810536> **Red Capsule** - Teeming with red phosphor, this capsule will give you a *rare* Nikogotchi. ({icons.wool()}50000)
         
-        <:any:1147279947086438431> **Yellow Capsule** - Teeming with yellow phosphor, this capsule will give you an ***extra rare*** Nikogotchi. ({icons.wool()}500000)
+        <:any:1147279947086438431> **Yellow Capsule** - Teeming with yellow phosphor, this capsule will give you an ***extra rare*** Nikogotchi. ({icons.wool()}100000)
         
         ⚪ - Cannot afford
         🔴 - Already owned
