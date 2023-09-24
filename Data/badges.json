@@ -188,25 +188,25 @@
             "name": "Blue Capsule",
             "emoji": 1030967639633301506,
             "type" : "shop",
-            "requirement" : 10000
+            "requirement" : 3000
         },
         {
             "name": "Green Capsule",
             "emoji": 1030967639633301506,
             "type" : "shop",
-            "requirement" : 50000
+            "requirement" : 10000
         },
         {
             "name": "Red Capsule",
             "emoji": 1030967639633301506,
             "type" : "shop",
-            "requirement" : 100000
+            "requirement" : 50000
         },
         {
             "name": "Yellow Capsule",
             "emoji": 1030967639633301506,
             "type" : "shop",
-            "requirement" : 500000
+            "requirement" : 150000
         }
     ]
 }
