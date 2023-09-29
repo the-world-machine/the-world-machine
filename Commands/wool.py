@@ -90,7 +90,7 @@ class Command(Extension):
 
         if now < last_reset_time:
             time_unix = last_reset_time.timestamp()
-            return await fancy_message(ctx, f"[ You've already collected your daily wool. You can collect it again <t:{int(time_unix)}:R>. ]", ephemeral=True, color=0xFF0000)
+            return await fancy_message(ctx, f"[ You've already collected your wool in the past 24 hours. You can collect it again <t:{int(time_unix)}:R>. ]", ephemeral=True, color=0xFF0000)
 
         # reset the limit if it is a new day
         if now >= last_reset_time:
@@ -105,10 +105,10 @@ class Command(Extension):
         message: str
 
         if random.randint(0, 100) == 2:
-            amount = 1000
-            message = f'## Jackpot!\nYou found <:wool:1044668364422918176>**{amount}**!'
+            amount = 500_000
+            message = f'## Jackpot! 🎉\nYou found <:wool:1044668364422918176>**{amount}**!'
         else:
-            amount = random.randint(10, 50)
+            amount = random.randint(100, 300)
             message = f'You found <:wool:1044668364422918176>**{amount}**'
 
         wool: int = await db.get('user_data', ctx.user.id, 'wool')

@@ -206,7 +206,7 @@
             "name": "Yellow Capsule",
             "emoji": 1030967639633301506,
             "type" : "shop",
-            "requirement" : 150000
+            "requirement" : 100000
         }
     ]
 }

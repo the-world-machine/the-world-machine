@@ -201,10 +201,7 @@ class Command(Extension):
             treasure_stocks = []
             available_treasures: list = self.get_treasures()
 
-            for _ in range(3):
-                treasure = random.randint(0, len(available_treasures) - 1)
-                treasure_stocks.append(treasure)
-                del available_treasures[treasure]
+            treasure_stocks = random.sample(range(len(available_treasures)), 3)
 
             stock_modifier = round(random.uniform(0.5, 1.5), 1)
 
@@ -446,39 +443,41 @@ class Command(Extension):
         embed.description = f'''
         Use these pancakes to feed your Nikogotchi!
         
-        <:any:1147281411854839829> **Pancake** - {icons.wool()}200
-        *+1 Health and +25 Hunger*
+        <:any:1147281411854839829> **Pancake**
+        {icons.wool()}200 ``+1 Health and +25 Hunger``
+        You have **{pancakes}** in your inventory.
         
-        <:any:1152330988022681821> **Golden Pancake** - {icons.wool()}10,000
-        *+25 Health and +50 Hunger*
+        <:any:1152330988022681821> **Golden Pancake**
+        {icons.wool()}10,000 - ``+25 Health and +50 Hunger``
+        You have **{golden_pancakes}** in your inventory.
         
-        <:any:1152356972423819436> **???** - {icons.wool()}999,999
-        *I don't even know how this got here.*
+        <:any:1152356972423819436> **???**
+        {icons.wool()}999,999 - ``I don't even know how this got here.``
+        You have **{glitched_pancakes}** in your inventory.
 
         ⚪ - Cannot afford
         
         {icons.wool()}**{wool}**
-        
-        <:any:1147281411854839829> **x{pancakes}**
-        <:any:1152330988022681821> **x{golden_pancakes}**
-        <:any:1152356972423819436> **x{glitched_pancakes}**
         '''
 
         buttons = [
             Button(
                 style=ButtonStyle.PRIMARY,
-                label='Buy Pancake',
-                custom_id='buy_pancakes_1'
+                label='Buy',
+                custom_id='buy_pancakes_1',
+                emoji= PartialEmoji(id=1147281411854839829, name='Pancake')
             ),
             Button(
                 style=ButtonStyle.PRIMARY,
-                label='Buy Golden Pancake',
-                custom_id='buy_pancakes_golden'
+                label='Buy',
+                custom_id='buy_pancakes_golden',
+                emoji= PartialEmoji(id=1152330988022681821, name='Golden Pancake')
             ),
             Button(
                 style=ButtonStyle.PRIMARY,
-                label='Buy ???',
-                custom_id='buy_pancakes_glitched'
+                label='Buy',
+                custom_id='buy_pancakes_glitched',
+                emoji= PartialEmoji(id=1152356972423819436, name='???')
             ),
             Button(
                 style=ButtonStyle.RED,
@@ -546,7 +545,9 @@ class Command(Extension):
         for i in range(len(owned_background_ids)):
             owned_backgrounds.append(all_backgrounds['background'][owned_background_ids[i]])
 
-        for bg in backgrounds:
+        if backgrounds[page] in owned_backgrounds:
+
+            bg = backgrounds[page]
 
             buttons[1].disabled = False
             buttons[1].style = ButtonStyle.PRIMARY
@@ -579,13 +580,21 @@ class Command(Extension):
 
         get_treasures = self.get_treasures()
 
-        first_treasure = get_treasures[self.current_treasure_stock[0]]
-        second_treasure = get_treasures[self.current_treasure_stock[1]]
-        third_treasure = get_treasures[self.current_treasure_stock[2]]
+        treasures = []
 
-        first_treasure_adjusted_price = int(first_treasure['price'] * self.current_stock_price)
-        second_treasure_adjusted_price = int(second_treasure['price'] * self.current_stock_price)
-        third_treasure_adjusted_price = int(third_treasure['price'] * self.current_stock_price)
+        for treasure_id in self.current_treasure_stock:
+            treasure = get_treasures[treasure_id]
+            adjusted_price = int(treasure['price'] * self.current_stock_price)
+            description = f"<:any:{treasure['emoji']}> **{treasure['name']}**\n**{icons.wool()}{adjusted_price}** ``(was {treasure['price']})``"
+
+            treasures.append({
+                'object': treasure,
+                'description': description,
+                'price': adjusted_price
+            })
+
+        descriptions = '\n\n'.join([treasure['description'] for treasure in treasures])
+
         buttons = self.get_treasure_buttons()
         embed = Embed(
             title='Buy Treasures',
@@ -595,15 +604,9 @@ class Command(Extension):
             
             If you have any treasures yourself, I'm more than happy to trade wool for your finds!
             
+            **Current Stock Price:** {price_change_symbol}{abs(int(percentage_difference))}% difference.
             
-            **Current Stock Price:** {self.current_stock_price} ({price_change_symbol}{abs(int(percentage_difference))}% difference.)
-            
-            <:any:{first_treasure['emoji']}> **{first_treasure['name']}** - *{icons.wool()}{first_treasure['price']}* > **{icons.wool()}{first_treasure_adjusted_price}**
-            
-            <:any:{second_treasure['emoji']}> **{second_treasure['name']}** - *{icons.wool()}{second_treasure['price']}* > **{icons.wool()}{second_treasure_adjusted_price}**
-            
-            <:any:{third_treasure['emoji']}> **{third_treasure['name']}** - *{icons.wool()}{third_treasure['price']}* > **{icons.wool()}{third_treasure_adjusted_price}**
-            
+            {descriptions}
             
             ⚪ - Cannot afford
             
@@ -613,21 +616,14 @@ class Command(Extension):
 
         embed.set_thumbnail('https://cdn.discordapp.com/attachments/1040653069794410567/1106652038772830238/Magpie.webp')
 
-        buttons[0].emoji = PartialEmoji(id=first_treasure['emoji'])
-        buttons[1].emoji = PartialEmoji(id=second_treasure['emoji'])
-        buttons[2].emoji = PartialEmoji(id=third_treasure['emoji'])
+        for i, treasure in enumerate(treasures):
+            buttons[i].label = 'Buy'
+            buttons[i].style = ButtonStyle.PRIMARY
+            buttons[i].emoji = PartialEmoji(id=treasure['object']['emoji'])
 
-        if wool < first_treasure_adjusted_price:
-            buttons[0].disabled = True
-            buttons[0].style = ButtonStyle.GREY
-
-        if wool < second_treasure_adjusted_price:
-            buttons[1].disabled = True
-            buttons[1].style = ButtonStyle.GREY
-
-        if wool < third_treasure_adjusted_price:
-            buttons[2].disabled = True
-            buttons[2].style = ButtonStyle.GREY
+            if wool < treasure['price']:
+                buttons[i].disabled = True
+                buttons[i].style = ButtonStyle.GREY
 
         return embed, buttons
 
@@ -767,7 +763,7 @@ class Command(Extension):
                 await database.set('user_data', 'wool', ctx.author.id, wool - background['cost'])
                 await database.set('user_data', 'unlocked_backgrounds', ctx.author.id, unlocked_background)
 
-                embed.set_footer(f'[ Successfully bought {background["name"]}! ]')
+                footer = f'[ Successfully bought {background["name"]}! ]'
 
         embed, buttons = await self.open_backgrounds(int(ctx.author.id), current_page['page'])
 

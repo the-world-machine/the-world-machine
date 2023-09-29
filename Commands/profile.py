@@ -56,7 +56,7 @@ class Command(Extension):
         await bm.increment_value(ctx, 'suns')
         await bm.increment_value(ctx, 'suns', user)
 
-        await fancy_message(ctx, f"[ {ctx.author.mention} gave {user.mention} a sun! <:Sun:1026207773559619644> ]")
+        await ctx.send(f'[ {ctx.author.mention} gave {user.mention} a sun! <:Sun:1026207773559619644> ]')
 
     @profile.subcommand(sub_cmd_description='Edit your profile.')
     async def edit(self, ctx: SlashContext):
