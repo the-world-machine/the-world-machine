@@ -1,5 +1,4 @@
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
-import Data.capsule_characters as chars
 import aiohttp
 import aiofiles
 import json
@@ -29,23 +28,14 @@ async def load_badges():
         emoji = PartialEmoji(id=stamp['emoji'])
         images.append(f'https://cdn.discordapp.com/emojis/{emoji.id}.webp?size=96&quality=lossless')
 
-    for character in chars.get_characters():
-        emoji = PartialEmoji(id=character.emoji)
-        shop_images.append(f'https://cdn.discordapp.com/emojis/{emoji.id}.webp?size=96&quality=lossless')
-
     wool_ = await DownloadImage('https://cdn.discordapp.com/emojis/1044668364422918176.png', 'wool')
     sun_ = await DownloadImage('https://cdn.discordapp.com/emojis/1026207773559619644.png', 'sun')
 
     for item in images:
         img = await DownloadImage(item, 'icon')
         img = img.convert('RGBA')
-        img = img.resize((25, 25), Image.Resampling.NEAREST)
+        img = img.resize((35, 35), Image.NEAREST)
         icons.append(img)
-    for item in shop_images:
-        img = await DownloadImage(item, 'icon')
-        img = img.convert('RGBA')
-        img = img.resize((25, 33), Image.Resampling.NEAREST)
-        shop_icons.append(img)
 
 
 async def open_badges():
@@ -70,10 +60,10 @@ async def DrawBadges(ctx, user: User):
     user_id = user.id
     user_pfp = user.avatar_url
 
-    profile_background = await db.get('user_data', user_id, 'equipped_background')
-    profile_description = await db.get('user_data', user_id, 'profile_description')
-    user_badges = await db.get('user_data', user_id, 'unlocked_badges')
-    shop_badges = await db.get('user_data', user_id, 'unlocked_nikogotchis')
+    profile_background = db.get('user_data', user_id, 'equipped_background')
+    profile_description = db.get('user_data', user_id, 'profile_description')
+    user_badges = db.get('user_data', user_id, 'unlocked_badges')
+    shop_badges = db.get('user_data', user_id, 'unlocked_nikogotchis')
     profile_description = profile_description.strip("'")
 
     bgs = await open_backgrounds()
@@ -100,86 +90,56 @@ async def DrawBadges(ctx, user: User):
 
     bg.paste(pfp, (42, 80), pfp.convert('RGBA'))
 
-    init_index = 390
-    index = init_index
-    i = 0
-    pos_y = 320
+    init_x = 60  # Start with the first column (adjust as needed)
+    init_y = 310
 
-    current_badge_id = 0
+    x = init_x
+    y = init_y
 
-    for icon in shop_icons:
-        i += 1
+    x_increment = 45
+    y_increment = 50
 
+    current_row = 0
+    current_column = 1
+
+    for i, icon in enumerate(icons):
         enhancer = ImageEnhance.Brightness(icon)
         icon = enhancer.enhance(0)
 
-        if current_badge_id in shop_badges:
+        if i in user_badges:
             icon = enhancer.enhance(1)
 
-        bg.paste(icon, (index, pos_y), icon.convert('RGBA'))
-        index += 30
+        bg.paste(icon, (x, y), icon)
 
-        # loop through until we get to the end of the maximum amount of badges to show horizontally
-        if (i > 8):
-            index = init_index
-            pos_y += 30
-            i = 0
+        x += x_increment  # Move to the next column
 
-        current_badge_id += 1
+        # If we have reached the end of a row
+        if (i + 1) % 5 == 0:
+            x = init_x  # Reset to the first column
+            y += y_increment  # Move to the next row
+            current_row += 1
 
-    init_index = 55
-    index = init_index
-    i = 0
-    pos_y = 320
+        # If we have displayed all the rows, start the next one.
+        if current_row == 3:
+            init_x = (init_x + x_increment * 5) * current_column + 10
 
-    current_badge_id = 0
+            x = init_x
+            y = init_y
 
-    height_index = 0
+            current_column += 1
+            current_row = 0
 
-    for icon in icons:
-        i += 1
-
-        # ! I don't know what the fuck this means, what the hell were you on, past axiinyaa
-        # * after a small amount of debugging i think i understand now, but it is still so stupid but i'm too lazy to refactor teehee
-
-        enhancer = ImageEnhance.Brightness(icon)
-        icon = enhancer.enhance(0)
-
-        if current_badge_id in user_badges:
-            icon = enhancer.enhance(1)
-
-        bg.paste(icon, (index, pos_y), icon.convert('RGBA'))
-        index += 30
-
-        # loop through until we get to the end of the maximum amount of badges to show horizontally
-        if (i > 4):
-
-            if height_index == 3:
-                pos_y = 290
-                init_index = 220
-
-            index = init_index
-            pos_y += 30
-
-            height_index += 1
-            i = 0
-
-        current_badge_id += 1
-
-    coins = await db.get('user_data', user_id, 'wool')
-    sun = await db.get('user_data', user_id, 'suns')
-    d.text((648, 250), f'{coins} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
+    coins = db.get('user_data', user_id, 'wool')
+    sun = db.get('user_data', user_id, 'suns')
+    d.text((648, 70), f'{coins} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
-    bg.paste(wool_, (659, 243), wool_.convert('RGBA'))
+    bg.paste(wool_, (659, 63), wool_.convert('RGBA'))
 
     d.text((648, 32), f'{sun} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
     bg.paste(sun_, (659, 25), sun_.convert('RGBA'))
 
-    d.text((42, 251), 'Unlocked Items:', font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000)
-
-    d.text((50, 290), 'Achievements:', font=fnt_small, fill=(255, 255, 255), stroke_width=1, stroke_fill=0x000000)
-    d.text((385, 290), 'Nikogotchis:', font=fnt_small, fill=(255, 255, 255), stroke_width=1, stroke_fill=0x000000)
+    d.text((42, 251), 'Unlocked Achievements:', font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000)
 
     bg.save('Images/Profile Viewer/result.png')
 

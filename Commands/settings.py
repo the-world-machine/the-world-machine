@@ -21,14 +21,14 @@ class Command(Extension):
     @slash_option(description='DEFAULT: True', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def badge_notifications(self, ctx: SlashContext, value: bool):
 
-        await db.set('user_data', 'unlock_notifications', ctx.user.id, value)
+        db.update('user_data', 'unlock_notifications', ctx.user.id, value)
         await fancy_message(ctx, f'[ Successfully set badge notifications to ``{value}``. ]', ephemeral=True)
 
     @user_settings.subcommand(sub_cmd_description='Change the language you wish to translate to.')
     @slash_option(description='DEFAULT: English', max_length=30, name='language', opt_type=OptionType.STRING, required=True)
     async def translate_language(self, ctx: SlashContext, value: str):
 
-        await db.set('user_data', 'translation_language', ctx.user.id, value)
+        db.update('user_data', 'translation_language', ctx.user.id, value)
         await fancy_message(ctx, f'[ Successfully set translation language to ``{value}``. ]', ephemeral=True)
 
     @server_settings.subcommand(
@@ -36,8 +36,8 @@ class Command(Extension):
     @slash_option(description='DEFAULT: NO CHANNEL SET', name='channel', opt_type=OptionType.CHANNEL)
     async def change_transmission_channel(self, ctx: SlashContext, channel):
         if channel is None:
-            await db.set('server_data', 'transmit_channel', ctx.guild_id, None)
+            db.update('server_data', 'transmit_channel', ctx.guild_id, None)
             return await fancy_message(ctx, '[ Successfully disabled transmission calls. ]', ephemeral=True)
 
-        await db.set('server_data', 'transmit_channel', ctx.guild_id, int(channel.id))
+        db.update('server_data', 'transmit_channel', ctx.guild_id, int(channel.id))
         return await fancy_message(ctx, f'[ Successfully allowed other servers to call to {channel.mention}. ]', ephemeral=True)

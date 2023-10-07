@@ -8,7 +8,6 @@ import random
 import Utilities.profile_viewer as view
 import Utilities.badge_manager as badge_manager
 import Data.capsule_characters as chars
-import database
 
 print('\nStarting The World Machine... 1/4')
 intents = Intents.DEFAULT |\
@@ -40,7 +39,7 @@ async def pick_avatar():
 async def on_ready():
     print("\nFinalizing... 4/4")
 
-    await client.change_presence(status=Status.ONLINE, activity=Activity(name="OneShot 💡", type=ActivityType.PLAYING))
+    await client.change_presence(status=Status.ONLINE, activity=Activity(name=load_config("MOTD"), type=ActivityType.PLAYING))
     chars.get_characters()
     await view.load_badges()
 

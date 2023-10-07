@@ -1,4 +1,4 @@
-from interactions import Embed, SlashContext, Message, BaseComponent, ComponentContext, GuildText
+from interactions import Embed, Message, BaseComponent
 from enum import Enum
 
 

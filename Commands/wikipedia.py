@@ -1,8 +1,6 @@
 from interactions import *
 from Utilities.fancysend import fancy_message
 import aiohttp
-import json
-import random
 
 
 class Command(Extension):
@@ -17,7 +15,6 @@ class Command(Extension):
                     result = get_search['content_urls']['desktop']['page']
 
                     await fancy_message(ctx, f'[ [Here]({result}) is your random wikipedia article. ]')
-
 
     @slash_command(description='bogus')
     async def amogus(self, ctx: SlashContext):

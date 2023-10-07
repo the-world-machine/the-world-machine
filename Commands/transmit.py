@@ -1,6 +1,7 @@
 from interactions import *
 from interactions.api.events import MessageCreate, Component
 import database as db
+import load_data
 from Utilities.fancysend import *
 from Utilities.badge_manager import increment_value
 import asyncio
@@ -22,7 +23,7 @@ class Transmit(Extension):
 
     async def change_status_normal(self):
         await self.client.change_presence(status=Status.ONLINE,
-                                          activity=Activity(name="OneShot 💡", type=ActivityType.PLAYING))
+                                          activity=Activity(name=load_data.load_config('MOTD'), type=ActivityType.PLAYING))
 
     @slash_command(description='Transmit to over servers!')
     async def transmit(self, ctx: SlashContext):
@@ -37,8 +38,8 @@ class Transmit(Extension):
         self.initial_connected_server = {"server_id": 1, "channel_id": 2}
         self.next_connected_server = {"server_id": 1, "channel_id": 2}
 
-        servers = await db.get('server_data', ctx.guild.id, 'transmittable_servers')
-        can_transmit = await db.get('server_data', ctx.guild.id, 'transmit_channel')
+        servers = db.get('server_data', ctx.guild.id, 'transmittable_servers')
+        can_transmit = db.get('server_data', ctx.guild.id, 'transmit_channel')
 
         if can_transmit is None:
             self.initial_connected_server = None
@@ -80,7 +81,7 @@ class Transmit(Extension):
 
         other_server = int(select_results.ctx.values[0])
 
-        get_channel = await db.get('server_data', other_server, 'transmit_channel')
+        get_channel = db.get('server_data', other_server, 'transmit_channel')
 
         if get_channel is None:
             self.initial_connected_server = None
@@ -246,13 +247,13 @@ class Transmit(Extension):
 
         get_guild_id = self.initial_connected_server['server_id']
 
-        servers: list = await db.get('server_data', get_guild_id, 'transmittable_servers')
+        servers: list = db.get('server_data', get_guild_id, 'transmittable_servers')
 
         if servers is None:
             guild = await self.client.fetch_guild(self.next_connected_server['server_id'])
 
-            await db.set('server_data', 'transmittable_servers', get_guild_id,
-                         json.dumps([{'name': guild.name, 'id': int(guild.id)}]))
+            db.update('server_data', 'transmittable_servers', get_guild_id,
+                      json.dumps([{'name': guild.name, 'id': int(guild.id)}]))
         else:
             for server in servers:
                 if server['id'] == self.next_connected_server['server_id']:
@@ -262,7 +263,7 @@ class Transmit(Extension):
 
                 servers.append({'name': guild.name, 'id': int(guild.id)})
 
-                await db.set('server_data', 'transmittable_servers', get_guild_id, servers)
+                db.update('server_data', 'transmittable_servers', get_guild_id, servers)
 
         btn_id = uuid.uuid4()
 
@@ -350,13 +351,13 @@ class Transmit(Extension):
 
         get_guild_id = self.next_connected_server['server_id']
 
-        servers: list = await db.get('server_data', get_guild_id, 'transmittable_servers')
+        servers: list = db.get('server_data', get_guild_id, 'transmittable_servers')
 
         if servers == None:
             guild = await self.client.fetch_guild(self.initial_connected_server['server_id'])
 
-            await db.set('server_data', 'transmittable_servers', get_guild_id,
-                         json.dumps([{'name': guild.name, 'id': int(guild.id)}]))
+            db.update('server_data', 'transmittable_servers', get_guild_id,
+                      json.dumps([{'name': guild.name, 'id': int(guild.id)}]))
         else:
             for server in servers:
                 if server['id'] == self.initial_connected_server['server_id']:
@@ -366,7 +367,7 @@ class Transmit(Extension):
 
                 servers.append({'name': guild.name, 'id': int(guild.id)})
 
-                await db.set('server_data', 'transmittable_servers', get_guild_id, servers)
+                db.update('server_data', 'transmittable_servers', get_guild_id, servers)
 
         btn_id = uuid.uuid4()
 

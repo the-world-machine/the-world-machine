@@ -35,7 +35,7 @@ class Command(Extension):
             await fancy_message(ctx, "[ Can't give yourself a sun! ]", color=0xFF0000, ephemeral=True)
             return
 
-        get_sun_reset_time = await db.get('user_data', ctx.user.id, 'daily_sun_timestamp')
+        get_sun_reset_time = db.get('user_data', ctx.user.id, 'daily_sun_timestamp')
 
         if get_sun_reset_time is None:
             last_reset_time = datetime(2000, 1, 1, 0, 0, 0)
@@ -51,7 +51,7 @@ class Command(Extension):
         # reset the limit if it is a new day
         if now >= last_reset_time:
             reset_time = now + timedelta(days=1)
-            await db.set('user_data', 'daily_sun_timestamp', ctx.user.id, reset_time.strftime('%Y-%m-%d %H:%M:%S'))
+            db.update('user_data', 'daily_sun_timestamp', ctx.user.id, reset_time.strftime('%Y-%m-%d %H:%M:%S'))
 
         await bm.increment_value(ctx, 'suns')
         await bm.increment_value(ctx, 'suns', user)
@@ -92,7 +92,7 @@ class Command(Extension):
 
             if (data == f'background{uid}'):
 
-                user_backgrounds = await db.get('user_data', ctx.user.id, 'unlocked_backgrounds')
+                user_backgrounds = db.get('user_data', ctx.user.id, 'unlocked_backgrounds')
 
                 backgrounds = await self.open_backgrounds()
 
@@ -122,7 +122,7 @@ class Command(Extension):
 
                 get_bg = backgrounds['background'][int(bg_id)]
 
-                await db.set('user_data', 'equipped_background', ctx.user.id, int(bg_id))
+                db.update('user_data', 'equipped_background', ctx.user.id, int(bg_id))
 
                 await button_ctx.send(
                     f'[ Successfully set profile background to: ``{get_bg["name"]}``, use </profile view:8328932897324897> to view your changes. ]',
@@ -151,7 +151,7 @@ class Command(Extension):
     async def set_description(self, ctx: ModalContext, description: str):
         id_ = int(ctx.user.id)
 
-        await db.set('user_data', 'profile_description', id_, description)
+        db.update('user_data', 'profile_description', id_, description)
 
         await ctx.send(
             f'[ Successfully set profile description to: ``{description}``, use </profile view:8328932897324897> to view your changes. ]',
@@ -170,7 +170,7 @@ class Command(Extension):
     @slash_option(description='The badge to view.', name='badge', opt_type=OptionType.STRING, choices=choices, required=True)
     async def next_badge(self, ctx: SlashContext, badge: str):
 
-        amount = await db.get('user_data', ctx.user.id, badge)
+        amount = db.get('user_data', ctx.user.id, badge)
 
         badges = await bm.open_badges()
 
@@ -201,12 +201,12 @@ class Command(Extension):
 
     @profile.subcommand(sub_cmd_description="Recover your badges if they've been reset.")
     async def recover_badges(self, ctx: SlashContext):
-        wool_amount = await db.get('user_data', ctx.user.id, 'wool')
-        sun_amount = await db.get('user_data', ctx.user.id, 'suns')
-        times_shattered = await db.get('user_data', ctx.user.id, 'times_shattered')
-        times_asked = await db.get('user_data', ctx.user.id, 'times_asked')
-        times_transmitted = await db.get('user_data', ctx.user.id, 'times_transmitted')
-        times_messaged = await db.get('user_data', ctx.user.id, 'times_messaged')
+        wool_amount = db.get('user_data', ctx.user.id, 'wool')
+        sun_amount = db.get('user_data', ctx.user.id, 'suns')
+        times_shattered = db.get('user_data', ctx.user.id, 'times_shattered')
+        times_asked = db.get('user_data', ctx.user.id, 'times_asked')
+        times_transmitted = db.get('user_data', ctx.user.id, 'times_transmitted')
+        times_messaged = db.get('user_data', ctx.user.id, 'times_messaged')
 
         get_badges = await bm.open_badges()
         get_badges = get_badges['Badges']
@@ -233,6 +233,6 @@ class Command(Extension):
                 if badge['requirement'] < times_messaged:
                     badges.append(i)
 
-        await db.set('user_data', 'unlocked_badges', ctx.user.id, badges)
+        db.update('user_data', 'unlocked_badges', ctx.user.id, badges)
 
         await ctx.send('[ Successfully recovered your badges. ]', ephemeral=True)

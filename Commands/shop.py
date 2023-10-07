@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 from interactions import *
-from interactions.api.events import Component
 from Utilities.fancysend import *
 import Utilities.badge_manager as badge_manager
 import Utilities.bot_icons as icons
@@ -263,7 +262,8 @@ class Command(Extension):
     @component_callback('buy_blue', 'buy_green', 'buy_red', 'buy_yellow')
     async def buy_capsules_callback(self, ctx: ComponentContext):
 
-        wool = await database.get('user_data', ctx.author.id, 'wool')
+        wool = database.get('user_data', ctx.author.id, 'wool')
+        available = database.get('nikogotchi_data', ctx.author.id, 'nikogotchi_available')
 
         badges = await badge_manager.open_badges()
         badges = badges['shop']
@@ -276,36 +276,36 @@ class Command(Extension):
             if wool < badges[0]['requirement']:
                 footer = '[ Not enough wool. ]'
             else:
-                await database.set('user_data', 'wool', ctx.author.id, wool - badges[0]['requirement'])
-                await database.set('nikogotchi_data', 'nikogotchi_status', ctx.author.id, 1)
-                await database.set('nikogotchi_data', 'rarity', ctx.author.id, 0)
+                database.update('user_data', 'wool', ctx.author.id, wool - badges[0]['requirement'])
+                database.update('nikogotchi_data', 'nikogotchi_available', ctx.author.id, available + 1)
+                database.update('nikogotchi_data', 'rarity', ctx.author.id, 0)
                 footer = '[ Successfully bought a Blue Capsule! ]'
 
         if custom_id == 'buy_green':
             if wool < badges[1]['requirement']:
                 footer = '[ Not enough wool. ]'
             else:
-                await database.set('user_data', 'wool', ctx.author.id, wool - badges[1]['requirement'])
-                await database.set('nikogotchi_data', 'nikogotchi_status', ctx.author.id, 1)
-                await database.set('nikogotchi_data', 'rarity', ctx.author.id, 1)
+                database.update('user_data', 'wool', ctx.author.id, wool - badges[1]['requirement'])
+                database.update('nikogotchi_data', 'nikogotchi_available', ctx.author.id, available + 1)
+                database.update('nikogotchi_data', 'rarity', ctx.author.id, 1)
                 footer = '[ Successfully bought a Green Capsule! ]'
 
         if custom_id == 'buy_red':
             if wool < badges[2]['requirement']:
                 footer = '[ Not enough wool. ]'
             else:
-                await database.set('user_data', 'wool', ctx.author.id, wool - badges[2]['requirement'])
-                await database.set('nikogotchi_data', 'nikogotchi_status', ctx.author.id, 1)
-                await database.set('nikogotchi_data', 'rarity', ctx.author.id, 2)
+                database.update('user_data', 'wool', ctx.author.id, wool - badges[2]['requirement'])
+                database.update('nikogotchi_data', 'nikogotchi_available', ctx.author.id, available + 1)
+                database.update('nikogotchi_data', 'rarity', ctx.author.id, 2)
                 footer = '[ Successfully bought a Red Capsule! ]'
 
         if custom_id == 'buy_yellow':
             if wool < badges[3]['requirement']:
                 footer = '[ Not enough wool. ]'
             else:
-                await database.set('user_data', 'wool', ctx.author.id, wool - badges[3]['requirement'])
-                await database.set('nikogotchi_data', 'nikogotchi_status', ctx.author.id, 1)
-                await database.set('nikogotchi_data', 'rarity', ctx.author.id, 3)
+                database.update('user_data', 'wool', ctx.author.id, wool - badges[3]['requirement'])
+                database.update('nikogotchi_data', 'nikogotchi_available', ctx.author.id, available + 1)
+                database.update('nikogotchi_data', 'rarity', ctx.author.id, 3)
                 footer = '[ Successfully bought a Yellow Capsule! ]'
 
         embed, buttons = await self.get_capsules(int(ctx.author.id))
@@ -319,9 +319,9 @@ class Command(Extension):
 
         await ctx.defer(edit_origin=True)
 
-        wool = await database.get('user_data', ctx.author.id, 'wool')
-        pancakes = await database.get('nikogotchi_data', ctx.author.id, 'pancakes')
-        golden_pancakes = await database.get('nikogotchi_data', ctx.author.id, 'golden_pancakes')
+        wool = database.get('user_data', ctx.author.id, 'wool')
+        pancakes = database.get('nikogotchi_data', ctx.author.id, 'pancakes')
+        golden_pancakes = database.get('nikogotchi_data', ctx.author.id, 'golden_pancakes')
         custom_id = ctx.custom_id
 
         footer = ''
@@ -331,24 +331,24 @@ class Command(Extension):
                 footer = '[ You do not have enough wool to buy a pancake! ]'
             else:
                 footer = '[ Successfully bought a pancake! ]'
-                await database.set('user_data', 'wool', ctx.author.id, wool - 200)
-                await database.set('nikogotchi_data', 'pancakes', ctx.author.id, pancakes + 1)
+                database.update('user_data', 'wool', ctx.author.id, wool - 200)
+                database.update('nikogotchi_data', 'pancakes', ctx.author.id, pancakes + 1)
 
         if custom_id == 'buy_pancakes_golden':
             if wool < 10_000:
                 footer = '[ You do not have enough wool to buy a golden pancake! ]'
             else:
                 footer = '[ Successfully bought a golden pancake! ]'
-                await database.set('user_data', 'wool', ctx.author.id, wool - 10_000)
-                await database.set('nikogotchi_data', 'golden_pancakes', ctx.author.id, golden_pancakes + 1)
+                database.update('user_data', 'wool', ctx.author.id, wool - 10_000)
+                database.update('nikogotchi_data', 'golden_pancakes', ctx.author.id, golden_pancakes + 1)
 
         if custom_id == 'buy_pancakes_glitched':
             if wool < 999_999:
                 footer = '[ You do not have enough wool to buy whatever this thing is! ]'
             else:
                 footer = '[ Successfully bought... something? ]'
-                await database.set('user_data', 'wool', ctx.author.id, wool - 999_999)
-                await database.set('nikogotchi_data', 'glitched_pancakes', ctx.author.id, pancakes + 1)
+                database.update('user_data', 'wool', ctx.author.id, wool - 999_999)
+                database.update('nikogotchi_data', 'glitched_pancakes', ctx.author.id, pancakes + 1)
 
         embed, buttons = await self.get_pancakes(int(ctx.author.id))
 
@@ -372,7 +372,7 @@ class Command(Extension):
         Feel free to browse through the categories by clicking on one of the buttons, or simply exit the shop by dismissing this message.
         As a seasoned merchant and purveyor of fine goods, I can assure you that my stock is always worth checking out.
 
-        {icons.wool()}**{await database.get('user_data', uid, 'wool')}**
+        {icons.wool()}**{database.get('user_data', uid, 'wool')}**
         '''
 
         embed.set_thumbnail('https://cdn.discordapp.com/attachments/1040653069794410567/1106652038772830238/Magpie.webp')
@@ -382,7 +382,7 @@ class Command(Extension):
 
     async def get_capsules(self, uid: int):
 
-        wool = await database.get('user_data', uid, 'wool')
+        wool = database.get('user_data', uid, 'wool')
         badges = await badge_manager.open_badges()
         badges = badges['shop']
 
@@ -409,7 +409,7 @@ class Command(Extension):
         <:any:1147279947086438431> **Yellow Capsule** - Teeming with yellow phosphor, this capsule will give you an ***extra rare*** Nikogotchi. ({icons.wool()}100000)
         
         ⚪ - Cannot afford
-        🔴 - Already owned
+        🔴 - Not enough Wool
         
         {icons.wool()}**{wool}**
         '''
@@ -418,7 +418,7 @@ class Command(Extension):
             if badge['requirement'] > wool:
                 buttons[i].disabled = True
                 buttons[i].style = ButtonStyle.GREY
-            elif await database.get('nikogotchi_data', uid, 'nikogotchi_status') >= 1:
+            elif database.get('nikogotchi_data', uid, 'nikogotchi_available') >= 1:
                 buttons[i].disabled = True
                 buttons[i].style = ButtonStyle.DANGER
             else:
@@ -429,10 +429,10 @@ class Command(Extension):
 
     async def get_pancakes(self, uid: int):
 
-        wool = await database.get('user_data', uid, 'wool')
-        pancakes = await database.get('nikogotchi_data', uid, 'pancakes')
-        golden_pancakes = await database.get('nikogotchi_data', uid, 'golden_pancakes')
-        glitched_pancakes = await database.get('nikogotchi_data', uid, 'glitched_pancakes')
+        wool = database.get('user_data', uid, 'wool')
+        pancakes = database.get('nikogotchi_data', uid, 'pancakes')
+        golden_pancakes = database.get('nikogotchi_data', uid, 'golden_pancakes')
+        glitched_pancakes = database.get('nikogotchi_data', uid, 'glitched_pancakes')
 
         embed = Embed(
             title='Buy Pancakes',
@@ -521,7 +521,7 @@ class Command(Extension):
 
     async def open_backgrounds(self, uid: int, page: int):
 
-        wool = await database.get('user_data', uid, 'wool')
+        wool = database.get('user_data', uid, 'wool')
 
         embed = self.buy_background_embed
         buttons = self.get_background_buttons()
@@ -539,7 +539,7 @@ class Command(Extension):
 
         all_backgrounds = await self.open_backgrounds_json()
         backgrounds = self.current_background_stock
-        owned_background_ids = await database.get('user_data', uid, 'unlocked_backgrounds')
+        owned_background_ids = database.get('user_data', uid, 'unlocked_backgrounds')
         owned_backgrounds = []
 
         for i in range(len(owned_background_ids)):
@@ -566,7 +566,7 @@ class Command(Extension):
 
     async def open_treasures(self, uid: int):
 
-        wool = await database.get('user_data', uid, 'wool')
+        wool = database.get('user_data', uid, 'wool')
 
         percentage_difference = ((self.current_stock_price - 1) / 1) * 100
 
@@ -629,8 +629,8 @@ class Command(Extension):
 
     async def open_sell_treasures(self, uid: int):
 
-        wool = await database.get('user_data', uid, 'wool')
-        user_treasures = await database.get('nikogotchi_data', uid, 'treasure')
+        wool = database.get('user_data', uid, 'wool')
+        user_treasures = database.get('nikogotchi_data', uid, 'treasure')
 
         percentage_difference = ((self.current_stock_price - 1) / 1) * 100
 
@@ -746,22 +746,22 @@ class Command(Extension):
 
         if custom_id == 'buy_background':
             background = self.current_background_stock[current_page['page']]
-            wool = await database.get('user_data', ctx.author.id, 'wool')
+            wool = database.get('user_data', ctx.author.id, 'wool')
 
             if wool < background['cost']:
                 footer = "[ You don't have enough wool for this! ]"
             else:
                 all_backgrounds = await self.get_backgrounds()
 
-                unlocked_background = await database.get('user_data', ctx.author.id, 'unlocked_backgrounds')
+                unlocked_background = database.get('user_data', ctx.author.id, 'unlocked_backgrounds')
 
                 for i, bg in enumerate(all_backgrounds):
                     if bg['name'] == background['name']:
                         unlocked_background.append(i)
                         break
 
-                await database.set('user_data', 'wool', ctx.author.id, wool - background['cost'])
-                await database.set('user_data', 'unlocked_backgrounds', ctx.author.id, unlocked_background)
+                database.update('user_data', 'wool', ctx.author.id, wool - background['cost'])
+                database.update('user_data', 'unlocked_backgrounds', ctx.author.id, unlocked_background)
 
                 footer = f'[ Successfully bought {background["name"]}! ]'
 
@@ -778,8 +778,8 @@ class Command(Extension):
 
         embed, components = await self.open_treasures(ctx.author.id)
 
-        wool = await database.get('user_data', ctx.author.id, 'wool')
-        user_treasures = await database.get('nikogotchi_data', ctx.author.id, 'treasure')
+        wool = database.get('user_data', ctx.author.id, 'wool')
+        user_treasures = database.get('nikogotchi_data', ctx.author.id, 'treasure')
         get_treasures = self.get_treasures()
 
         footer = ''
@@ -793,8 +793,8 @@ class Command(Extension):
                 footer = "[ You don't have enough wool for this! ]"
             else:
                 user_treasures[self.current_treasure_stock[0]] += 1
-                await database.set('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
-                await database.set('user_data', 'wool', ctx.author.id, wool - treasure_1_price)
+                database.update('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
+                database.update('user_data', 'wool', ctx.author.id, wool - treasure_1_price)
                 footer = f'[ Successfully bought {get_treasures[self.current_treasure_stock[0]]["name"]}! ]'
 
         if custom_id == 'buy_treasure_2':
@@ -802,8 +802,8 @@ class Command(Extension):
                 footer = "[ You don't have enough wool for this! ]"
             else:
                 user_treasures[self.current_treasure_stock[1]] += 1
-                await database.set('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
-                await database.set('user_data', 'wool', ctx.author.id, wool - treasure_2_price)
+                database.update('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
+                database.update('user_data', 'wool', ctx.author.id, wool - treasure_2_price)
                 footer = f'[ Successfully bought {get_treasures[self.current_treasure_stock[1]]["name"]}! ]'
 
         if custom_id == 'buy_treasure_3':
@@ -811,8 +811,8 @@ class Command(Extension):
                 footer = "[ You don't have enough wool for this! ]"
             else:
                 user_treasures[self.current_treasure_stock[2]] += 1
-                await database.set('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
-                await database.set('user_data', 'wool', ctx.author.id, wool - treasure_3_price)
+                database.update('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
+                database.update('user_data', 'wool', ctx.author.id, wool - treasure_3_price)
                 footer = f'[ Successfully bought {get_treasures[self.current_treasure_stock[2]]["name"]}! ]'
 
         if custom_id != 'sell_treasures':
@@ -829,8 +829,8 @@ class Command(Extension):
 
         value = int(ctx.values[0])
 
-        wool = await database.get('user_data', ctx.author.id, 'wool')
-        user_treasures = await database.get('nikogotchi_data', ctx.author.id, 'treasure')
+        wool = database.get('user_data', ctx.author.id, 'wool')
+        user_treasures = database.get('nikogotchi_data', ctx.author.id, 'treasure')
         get_treasures = self.get_treasures()
 
         footer = ''
@@ -839,8 +839,8 @@ class Command(Extension):
             footer = "[ You don't have any treasures to sell! ]"
         else:
             user_treasures[value] -= 1
-            await database.set('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
-            await database.set('user_data', 'wool', ctx.author.id, wool + get_treasures[value]['price'] * self.current_stock_price)
+            database.update('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
+            database.update('user_data', 'wool', ctx.author.id, wool + get_treasures[value]['price'] * self.current_stock_price)
 
             footer = f'[ Successfully sold {get_treasures[value]["name"]}! ]'
 

@@ -19,9 +19,9 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        wool = await db.get('user_data', target, 'wool')
+        wool = db.get('user_data', target, 'wool')
 
-        await db.set('user_data', 'wool', target, wool + amount)
+        db.update('user_data', 'wool', target, wool + amount)
 
         await ctx.send(f'Successfully added {amount} wool to {target_user.mention}. <@{ctx.author.id}>')
 
@@ -36,7 +36,7 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        await db.set('user_data', 'wool', target, amount)
+        db.update('user_data', 'wool', target, amount)
 
         await ctx.send(f'Successfully set wool to {amount} for {target_user.mention}. {ctx.author.mention}')
 
@@ -51,10 +51,10 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        badges = await db.get('user_data', target, 'unlocked_badges')
+        badges = db.get('user_data', target, 'unlocked_badges')
         badges.append(badge_id)
 
-        await db.set('user_data', 'unlocked_badges', target, badges)
+        db.update('user_data', 'unlocked_badges', target, badges)
 
         await ctx.send(f'Successfully added badge with id {badge_id} to {target_user.mention}. <@{ctx.author.id}>')
 
@@ -69,12 +69,12 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        badges = await db.get('user_data', target, 'unlocked_badges')
+        badges = db.get('user_data', target, 'unlocked_badges')
 
         if badge_id in badges:
             badges.remove(badge_id)
 
-        await db.set('user_data', 'unlocked_badges', target, badges)
+        db.update('user_data', 'unlocked_badges', target, badges)
 
         await ctx.send(f'Successfully removed badge with id {badge_id} from {target_user.mention}. <@{ctx.author.id}>')
 

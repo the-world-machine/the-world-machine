@@ -5,25 +5,22 @@ import uuid
 from interactions import *
 from interactions.api.events import *
 from Utilities.fancysend import *
+import Utilities.bot_icons as icons
 from agenius import Genius
 from load_data import load_config
 
 from interactions_lavalink import Lavalink, Player
 import lavalink
 from interactions_lavalink.events import TrackStart
-from spotipy import SpotifyClientCredentials, Spotify
-import pytube
+from Utilities.spotifyapi import Spotify
+from Utilities.CustomMusicLoaders import CustomSearch
+from lavalink.models import LoadResult
 
 import re
 
-credentials = SpotifyClientCredentials(
-    client_id=load_config('SpotifyID'),
-    client_secret=load_config('SpotifySecret')
-)
-
-Spotify = Spotify(client_credentials_manager=credentials)
-
 Lyrics = Genius(load_config('Genius'))
+
+spotify = Spotify(client_id=load_config("SpotifyID"), secret=load_config("SpotifySecret"))
 
 class Music(Extension):
 
@@ -40,6 +37,8 @@ class Music(Extension):
 
         # Connecting to local lavalink server
         self.lavalink.add_node(node_information['ip'], node_information['port'], "youshallnotpass", "us")
+
+        self.lavalink.client.register_source(CustomSearch())
 
         print("Music Command Loaded.")
 
@@ -94,7 +93,7 @@ class Music(Extension):
 
         embed = Embed(title=track.title, description=description, url=track.uri, color=0x8b00cc)
         embed.set_author(name=player_status)
-        embed.set_thumbnail(track.source_name)
+        embed.set_thumbnail(self.get_cover_image(track.identifier))
 
         requester = await self.client.fetch_user(track.requester)
 
@@ -125,194 +124,10 @@ class Music(Extension):
         queue_embed = Embed(title='**Currently Playing:**', description=description, color=0x8b00cc)
 
         queue_embed.set_author(name=f'Queue for {guild.name}', icon_url=guild.icon.url)
-        queue_embed.set_thumbnail(url=track.source_name)
-        queue_embed.set_footer(text='[ Navigation buttons not working? Try re-opening the queue! ]')
+        queue_embed.set_thumbnail(url=self.get_cover_image(track.identifier))
+        queue_embed.set_footer(text='Use /music_queue remove to remove a track.\nUse /music_queue jump to jump to a track.')
 
         return queue_embed
-
-    class TrackDetails:
-        title: str
-        url: str
-        cover: str
-        artists: str
-
-    @staticmethod
-    async def search_soundcloud(url: str, player: Player):
-
-        new_search = url.split('/')
-
-        try:
-            artist = new_search[3]
-            name = new_search[4]
-        except:
-            return []
-
-        name = name.split('?')[0]
-
-        tracks = await player.search_youtube(f'{artist} {name}')
-
-        if len(tracks) == 0:
-            return []
-
-        track = tracks[0]
-
-        new_track = Music.TrackDetails()
-        new_track.title = track.title
-        new_track.url = url
-        new_track.cover = f'https://img.youtube.com/vi/{track.identifier}/hqdefault.jpg'
-        new_track.artists = track.author
-
-        return [new_track]
-
-    @staticmethod
-    async def search_spotify_playlist(url: str, album: bool, ctx: SlashContext):
-
-        message = await fancy_message(ctx.channel, f'[ Loading Spotify album/playlist. This may take a while. ]')
-
-        if album:
-            search_ = Spotify.album(url)
-        else:
-            search_ = Spotify.playlist(url)
-
-        found_tracks = search_['tracks']['items']
-
-        tracks: list[Music.TrackDetails] = []
-
-        for get_track in found_tracks:
-
-            result = None
-
-            if album:
-                result = get_track
-            else:
-                result = get_track['track']
-
-            try:
-                track = Music.search_spotify(result['external_urls']['spotify'])
-
-                tracks.append(track[0])
-            except:
-                continue
-
-        await message.delete()
-        return tracks
-
-    @staticmethod
-    def search_spotify(q: str):
-        if 'http://open.spotify.com/track/' in q or 'https://open.spotify.com/track/' in q:
-            try:
-                result = Spotify.track(q)
-            except:
-                return []
-        else:
-            search_: dict = Spotify.search(q, type='track')
-            search = search_['tracks']['items']
-
-            if len(search) == 0:
-                return []
-
-            result = search[0]
-
-        song_name = result['name']
-        url = result['external_urls']['spotify']
-        cover = result['album']['images'][0]['url']
-        artists = result['artists'][0]['name']
-
-        new_track = Music.TrackDetails()
-        new_track.title = song_name
-        new_track.url = url
-        new_track.cover = cover
-        new_track.artists = artists
-
-        return [new_track]
-
-    @staticmethod
-    async def play_youtube(search: str, ctx: SlashContext):
-
-        is_playlist = False
-
-        if search.startswith('https://www.youtube.com/playlist'):
-            is_playlist = True
-
-        message = None
-
-        if is_playlist:
-
-            message = await fancy_message(ctx.channel, f'[ Loading Youtube playlist. This may take a while. ]')
-
-            tracks = pytube.Playlist(search)
-
-            if len(tracks) > 50:
-                embed = await fancy_embed(f'[ Playlist has more than 50 tracks. Only the first 50 will be played. ]')
-                await message.edit(embed=embed)
-                tracks = tracks[:50]
-
-        else:
-            tracks = [search]
-
-        track_infos = []
-
-        for url in tracks:
-            track = pytube.YouTube(url)
-
-            if track.channel_id is None:
-                return []
-
-            track_info = Music.TrackDetails()
-            track_info.title = track.title
-            track_info.url = track.watch_url
-            track_info.cover = track.thumbnail_url
-            track_info.artists = track.author
-
-            track_infos.append(track_info)
-
-        if is_playlist:
-            await message.delete()
-
-        return track_infos
-
-    @staticmethod
-    async def play_song(ctx: SlashContext, player: Player, requester: User, track_details: list[TrackDetails] = None, file: bool = False):
-
-        message: Message = await fancy_message(ctx, f'Loading Tracks... <a:loading:1026207773559619644>')
-
-        tracks: list[lavalink.AudioTrack] = []
-
-        for i, track_detail in enumerate(track_details):
-
-            if (i % 5) == 0:
-                embed = await fancy_embed(f'Added {i + 1} out of {len(track_details)} tracks... <a:loading:1026207773559619644>')
-                await message.edit(embed=embed)
-
-            search = f'{track_detail.title} by {track_detail.artists}'
-
-            found_tracks = await player.search_youtube(search)
-
-            track = None
-
-            max_song_length = 600000
-
-            for t in found_tracks:
-                t: lavalink.AudioTrack
-
-                if t.duration < max_song_length:
-                    track = t
-                    break
-
-            if len(found_tracks) == 0:
-                continue
-
-            track.requester = int(requester.id)
-            track.title = track_detail.title
-            track.uri = track_detail.url
-            track.source_name = track_detail.cover
-            track.author = track_detail.artists
-
-            player.add(track)
-            tracks.append(track)
-
-        embed = await fancy_embed(f'Finished adding {len(track_details)} out of {len(track_details)} tracks.')
-        return tracks, await message.edit(embed=embed)
 
     async def check(self, player: Player, author: Member):
 
@@ -332,7 +147,7 @@ class Music(Extension):
     @slash_option(name="song", description="Input a search term, or paste a link.", opt_type=OptionType.STRING, required=True, autocomplete=True)
     async def play(self, ctx: SlashContext, song: str):
 
-        await ctx.defer()
+        message = await fancy_message(ctx, f"Loading search results... {icons.loading()}")
 
         # Getting user's voice state
         voice_state = ctx.author.voice
@@ -342,26 +157,15 @@ class Music(Extension):
         # Connecting to voice channel and getting player instance
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
 
-        if 'open.spotify.com/playlist/' in song:
-            track_info = await Music.search_spotify_playlist(song, False, ctx)
-        elif 'open.spotify.com/album/' in song:
-            track_info = await Music.search_spotify_playlist(song, True, ctx)
-        elif 'https://soundcloud.com' in song:
-            track_info = await Music.search_soundcloud(song, player)
-        elif 'https://youtu.be' in song or 'https://www.youtube.com' in song or 'https://m.youtube.com' in song or 'https://youtube.com' in song:
-            track_info = await Music.play_youtube(song, ctx)
-        else:
-            track_info = Music.search_spotify(song)  # Default search.
-
-        tracks, message = await self.play_song(ctx, player, ctx.author, track_info)
-        tracks: list[lavalink.AudioTrack] = tracks
-
-        await message.delete()
+        result: LoadResult = await self.lavalink.client.get_tracks(song, check_local=True)  # type: ignore
+        tracks = result.tracks
 
         if len(tracks) == 0:
             return await fancy_message(ctx, "[ No results found. ]", color=0xff0000, ephemeral=True)
 
         player.store('Channel', ctx.channel)
+
+        [player.add(track, requester=int(ctx.author.id)) for track in tracks]
 
         if player.is_playing:
             add_to_queue_embed = Embed(
@@ -373,12 +177,13 @@ class Music(Extension):
 
             add_to_queue_embed.set_author(name="Added to Queue", )
 
-            add_to_queue_embed.set_thumbnail(tracks[0].source_name)
+            add_to_queue_embed.set_thumbnail(self.get_cover_image(tracks[0].identifier))
             add_to_queue_embed.set_footer(text='Requested by ' + ctx.author.user.username, icon_url=ctx.author.user.avatar_url)
 
             return await ctx.channel.send(embeds=add_to_queue_embed)
-
-        await player.play()
+        else:
+            await message.delete()
+            await player.play()
 
     @music.subcommand(sub_cmd_description="Play a file!")
     @slash_option(name="file", description="Input a file to play.", opt_type=OptionType.ATTACHMENT, required=True)
@@ -402,7 +207,7 @@ class Music(Extension):
 
         track.title = file.filename
         track.uri = file.url
-        track.source_name = file.url
+        track.identifier = file.url
         track.author = 'Uploaded file.'
         track.requester = int(ctx.author.id)
 
@@ -570,7 +375,7 @@ class Music(Extension):
         await ctx.send(choices)
 
     async def load_spotify_search(self, content):
-        search_: dict = Spotify.search(content, limit=25, type='track')
+        search_: dict = await spotify.search(content, limit=25, type='track')
 
         tracks = []
 
@@ -806,7 +611,7 @@ class Music(Extension):
         )
 
         embed.set_author(name="Stopped Playing...")
-        embed.set_thumbnail(stopped_track.source_name)
+        embed.set_thumbnail(self.get_cover_image(stopped_track.identifier))
 
         requester = await self.bot.fetch_user(stopped_track.requester)
 
@@ -843,6 +648,8 @@ class Music(Extension):
             await fancy_message(ctx, '[ You cannot modify the player. ]', ephemeral=True, color=0xff0d13)
             return
 
+        await ctx.defer(edit_origin=True)
+
         if ctx.custom_id == 'loop':
             if not player.loop:
                 player.set_loop(1)
@@ -863,8 +670,6 @@ class Music(Extension):
             await player.skip()
 
             await fancy_message(ctx.channel, f'[ {ctx.author.mention} Skipped. ]')
-
-        await ctx.defer(edit_origin=True)
 
     @component_callback('shuffle', 'loopqueue', 'left', 'right')
     async def queue_buttons(self, ctx: ComponentContext):
@@ -908,3 +713,9 @@ class Music(Extension):
         if message is not None:
             await asyncio.sleep(5)
             await message.delete()
+
+    def get_cover_image(self, uid: str):
+        if 'https://i.scdn.co/' in uid:
+            return uid
+        else:
+            return f"https://img.youtube.com/vi/{uid}/hqdefault.jpg"

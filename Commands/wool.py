@@ -40,7 +40,7 @@ class Command(Extension):
         if user is None:
             user = ctx.user
 
-        wool: int = await db.get('user_data', user.id, 'wool')
+        wool: int = db.get('user_data', user.id, 'wool')
 
         if user is None:
             await fancy_message(ctx, f'[ You have <:wool:1044668364422918176>**{wool}**. ]')
@@ -79,7 +79,7 @@ class Command(Extension):
     @wool.subcommand(sub_cmd_description='Grab your daily wool.')
     async def daily(self, ctx: SlashContext):
 
-        get_time = await db.get('user_data', ctx.user.id, 'daily_wool_timestamp')
+        get_time = db.get('user_data', ctx.user.id, 'daily_wool_timestamp')
 
         if get_time is None:
             last_reset_time = datetime(2000, 1, 1, 0, 0, 0)
@@ -95,7 +95,7 @@ class Command(Extension):
         # reset the limit if it is a new day
         if now >= last_reset_time:
             reset_time = datetime.combine(now.date(), now.time()) + timedelta(days=1)
-            await db.set('user_data', 'daily_wool_timestamp', ctx.user.id, reset_time.strftime("%Y-%m-%d %H:%M:%S"))
+            db.update('user_data', 'daily_wool_timestamp', ctx.user.id, reset_time.strftime("%Y-%m-%d %H:%M:%S"))
 
         random.shuffle(self.wool_finds)
 
@@ -111,8 +111,8 @@ class Command(Extension):
             amount = random.randint(100, 300)
             message = f'You found <:wool:1044668364422918176>**{amount}**'
 
-        wool: int = await db.get('user_data', ctx.user.id, 'wool')
-        await db.set('user_data', 'wool', ctx.user.id, wool + amount)
+        wool: int = db.get('user_data', ctx.user.id, 'wool')
+        db.update('user_data', 'wool', ctx.user.id, wool + amount)
         await badge_manager.check_wool_value(ctx, wool + amount)
 
         await fancy_message(ctx, f'*{response}*\n\n{message}.')

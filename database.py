@@ -12,7 +12,7 @@ db: MySQLdb.MySQLConnection = MySQLdb.connect(host=ip, user=user, password=passw
 cursor = db.cursor()
 
 
-async def get_datatype(data):
+def get_datatype(data):
     if type(data) == str:
         return f"{data}"
 
@@ -32,7 +32,7 @@ async def get_leaderboard(sort_by: str):
     return cursor.fetchall()
 
 
-async def get(table: str, primary_key, columns: str):
+def get(table: str, primary_key, columns: str):
     if type(primary_key) == Snowflake:
         primary_key = int(primary_key)
 
@@ -40,7 +40,7 @@ async def get(table: str, primary_key, columns: str):
     try:
         cursor.execute(select_sql)
     except:
-        await new_entry('server_data', primary_key)
+        new_entry('server_data', primary_key)
 
     row = cursor.fetchone()
 
@@ -67,23 +67,23 @@ async def get(table: str, primary_key, columns: str):
 
         return value
     else:
-        await new_entry(table, primary_key)
-        return await get(table, primary_key, columns)
+        new_entry(table, primary_key)
+        return get(table, primary_key, columns)
 
 
-async def new_entry(table: str, primary_key: int):
+def new_entry(table: str, primary_key: int):
     insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
     cursor.execute(insert_sql)
 
 
-async def set(table: str, column: str, p_key, data):
+def update(table: str, column: str, p_key, data):
     if not p_key:
         raise ValueError("Primary key is not set.")
 
     if type(p_key) == Snowflake:
         p_key = int(p_key)
 
-    d_type = await get_datatype(data)
+    d_type = get_datatype(data)
 
     # Check if the primary key already exists in the table
     select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
@@ -105,9 +105,9 @@ async def set(table: str, column: str, p_key, data):
         db.rollback()
         return None
 
-    return await get(table, p_key, column)
+    return get(table, p_key, column)
 
 
-async def increment_value(table: str, column: str, primary_key: int):
-    v: int = await get(table, primary_key, column)
-    await set(table, column, primary_key, v + 1)
+def increment_value(table: str, column: str, primary_key: int):
+    v: int = get(table, primary_key, column)
+    update(table, column, primary_key, v + 1)

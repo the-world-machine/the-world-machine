@@ -8,8 +8,6 @@ from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import aiohttp
 import aiofiles
-import asyncio
-
 
 class Command(Extension):
 

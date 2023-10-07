@@ -12,7 +12,7 @@ class Command(Extension):
 
         await ctx.defer(ephemeral=True)
 
-        target_language = await database.get('user_data', ctx.author.id, 'translation_language')
+        target_language = database.get('user_data', ctx.author.id, 'translation_language')
 
         message = await generate_text(f'Translate this message to {target_language} with new lines intact and no quotation marks: "{ctx.target.content}".')
         message = message.strip('\n')
