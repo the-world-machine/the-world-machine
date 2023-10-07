@@ -167,6 +167,7 @@ class Music(Extension):
 
         [player.add(track, requester=int(ctx.author.id)) for track in tracks]
 
+        await message.delete()
         if player.is_playing:
             add_to_queue_embed = Embed(
                 title=tracks[0].title,
@@ -182,7 +183,6 @@ class Music(Extension):
 
             return await ctx.channel.send(embeds=add_to_queue_embed)
         else:
-            await message.delete()
             await player.play()
 
     @music.subcommand(sub_cmd_description="Play a file!")
@@ -637,12 +637,12 @@ class Music(Extension):
             embed = await self.get_queue_embed(player, 1)
 
             components = await Music.get_queue_buttons()
-            await ctx.send(embed=embed, components=components, ephemeral=True)
+            return await ctx.send(embed=embed, components=components, ephemeral=True)
 
         if ctx.custom_id == 'lyrics':
             message = await fancy_message(ctx, f'[ Searching Lyrics for this track... ]', ephemeral=True)
             embed = await self.get_lyrics(player.current)
-            await ctx.edit(message, embed=embed)
+            return await ctx.edit(message, embed=embed)
 
         if not await self.check(player, ctx.author):
             await fancy_message(ctx, '[ You cannot modify the player. ]', ephemeral=True, color=0xff0d13)
