@@ -613,7 +613,7 @@ class Command(Extension):
                 health_increase = 9999
                 glitched_pancakes = database.update('nikogotchi_data', 'glitched_pancakes', ctx.author.id,
                                                     glitched_pancakes - 1)
-                database.update('nikogotchi_data', 'immortal', ctx.author.id, True)
+                nikogotchi.immortal = True
                 dialogue = 'Your Nikogotchi is now Immortal.'
         else:
             if pancakes <= 0:
