@@ -42,22 +42,22 @@ class Command(Extension):
 
         emotion = await ai.generate_text(f'{response} from a list of possible answers, choose the best fitting emotion: Happy Sad Excited Disgusted Tired Angry Confused.')
 
-        twm = 'https://cdn.discordapp.com/attachments/1028022857877422120/1139694391833935892/1.png'
+        twm = 'https://cdn.discordapp.com/emojis/1023573456664662066.webp?size=128&quality=lossless'
 
         if emotion == 'Happy':
-            twm = 'https://cdn.discordapp.com/attachments/1028022857877422120/1139694392064606379/2.png'
+            twm = 'https://cdn.discordapp.com/emojis/1023573455456698368.webp?size=128&quality=lossless'
         if emotion == 'Excited':
-            twm = 'https://cdn.discordapp.com/attachments/1028022857877422120/1139694828502909040/8.png'
+            twm = 'https://cdn.discordapp.com/emojis/1023573458296246333.webp?size=128&quality=lossless'
         if emotion == 'Angry':
-            twm = 'https://cdn.discordapp.com/attachments/1028022857877422120/1139694392366608475/3.png'
+            twm = 'https://cdn.discordapp.com/emojis/1023573452944322560.webp?size=128&quality=lossless'
         if emotion == 'Confused':
-            twm = 'https://cdn.discordapp.com/attachments/1028022857877422120/1139694393150947489/6.png'
+            twm = 'https://cdn.discordapp.com/emojis/1023573456664662066.webp?size=128&quality=lossless'
         if emotion == 'Sad':
-            twm = 'https://cdn.discordapp.com/attachments/1028022857877422120/1139695873085931601/9.png'
+            twm = 'https://cdn.discordapp.com/emojis/1023573454307463338.webp?size=128&quality=lossless'
         if emotion == 'Tired':
-            twm = 'https://cdn.discordapp.com/attachments/1028022857877422120/1139694393415172237/7.png'
+            twm = 'https://cdn.discordapp.com/emojis/1023573452944322560.webp?size=128&quality=lossless'
         if emotion == 'Disgusted':
-            twm = 'https://cdn.discordapp.com/attachments/1028022857877422120/1139695850965180496/10.png'
+            twm = 'https://cdn.discordapp.com/emojis/1023573452944322560.webp?size=128&quality=lossless'
 
         final_embed = Embed(
             color=0x8b00cc
