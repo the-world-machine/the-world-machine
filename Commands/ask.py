@@ -77,8 +77,8 @@ class Command(Extension):
 
     async def check(self, uid: int):
 
-        current_limit = database.get('user_data', uid, 'gpt_limit')
-        timestamp_str = database.get('user_data', uid, 'gpt_timestamp')
+        current_limit = database.fetch('user_data', 'gpt_limit', uid)
+        timestamp_str = database.fetch('user_data', 'gpt_timestamp', uid)
         try:
             timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S.%f')
         except:

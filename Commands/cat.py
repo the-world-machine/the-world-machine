@@ -2,7 +2,7 @@ from interactions import *
 from Utilities.fancysend import *
 
 import random
-import requests
+import aiohttp
 import json
 
 
@@ -23,7 +23,9 @@ class Command(Extension):
             embed.set_footer('A 1 in 100 chance! Lucky!')
             return await ctx.send(embed=embed)
 
-        data = requests.get('https://api.thecatapi.com/v1/images/search')
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.thecatapi.com/v1/images/search') as response:
+                data = await response.json()
 
         json_data = json.loads(data.text)
 

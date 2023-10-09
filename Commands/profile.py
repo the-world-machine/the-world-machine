@@ -3,6 +3,7 @@ import Utilities.badge_manager as bm
 import database as db
 from Utilities.fancysend import *
 import Utilities.profile_viewer as view
+import Utilities.bot_icons as icons
 import aiofiles
 import json
 from datetime import datetime, timedelta
@@ -23,9 +24,13 @@ class Command(Extension):
     async def profile(self, ctx):
         pass
 
-    @profile.subcommand(sub_cmd_description='Give someone a sun!')
+    @slash_command(description='All things to do with Suns.')
+    async def sun(self, ctx):
+        pass
+
+    @sun.subcommand(sub_cmd_description='Give someone a sun!')
     @slash_option(description='Who you want to give it to.', name='user', opt_type=OptionType.USER, required=True)
-    async def give_sun(self, ctx: SlashContext, user: User):
+    async def give(self, ctx: SlashContext, user: User):
 
         if user.bot:
             await fancy_message(ctx, "[ Can't send bots suns! ]", color=0xFF0000, ephemeral=True)
@@ -35,7 +40,7 @@ class Command(Extension):
             await fancy_message(ctx, "[ Can't give yourself a sun! ]", color=0xFF0000, ephemeral=True)
             return
 
-        get_sun_reset_time = db.get('user_data', ctx.user.id, 'daily_sun_timestamp')
+        get_sun_reset_time = db.fetch('user_data', 'daily_sun_timestamp', ctx.user.id)
 
         if get_sun_reset_time is None:
             last_reset_time = datetime(2000, 1, 1, 0, 0, 0)
@@ -57,6 +62,38 @@ class Command(Extension):
         await bm.increment_value(ctx, 'suns', user)
 
         await ctx.send(f'[ {ctx.author.mention} gave {user.mention} a sun! <:Sun:1026207773559619644> ]')
+
+    @sun.subcommand(sub_cmd_description='View who has the most suns!')
+    async def leaderboard(self, ctx: SlashContext):
+        msg = await ctx.send(
+            embeds=Embed(description=f'[ Getting Entries... {icons.loading()} ]', color=0x8b00cc))
+
+        lb: tuple[int, int] = db.get_leaderboard('suns')
+
+        usernames: str = ''
+        value = ''
+
+        msg = await msg.edit(
+            embeds=Embed(description=f'[ Fetching Usernames... {icons.loading()} ]', color=0x8b00cc))
+
+        index = 1
+        for entry in lb:
+            user = await self.bot.fetch_user(entry[0])
+            sun = entry[1]
+            usernames += f'{index}. **{user.username}**\n'
+            value += f'- {icons.sun()} **{sun}**\n'
+            index += 1
+
+        embed = Embed(
+            title='Sun Leaderboard',
+            color=0x8b00cc
+        )
+
+        embed.add_field(name='Users', value=usernames, inline=True)
+        embed.add_field(name='Suns', value=value, inline=True)
+        embed.set_footer(text='Give suns using /sun give <user>!')
+
+        await msg.edit(embeds=embed)
 
     @profile.subcommand(sub_cmd_description='Edit your profile.')
     async def edit(self, ctx: SlashContext):
@@ -92,7 +129,7 @@ class Command(Extension):
 
             if (data == f'background{uid}'):
 
-                user_backgrounds = db.get('user_data', ctx.user.id, 'unlocked_backgrounds')
+                user_backgrounds = db.fetch('user_data', 'unlocked_backgrounds', ctx.user.id)
 
                 backgrounds = await self.open_backgrounds()
 
@@ -170,7 +207,7 @@ class Command(Extension):
     @slash_option(description='The badge to view.', name='badge', opt_type=OptionType.STRING, choices=choices, required=True)
     async def next_badge(self, ctx: SlashContext, badge: str):
 
-        amount = db.get('user_data', ctx.user.id, badge)
+        amount = db.fetch('user_data', badge, ctx.user.id)
 
         badges = await bm.open_badges()
 
@@ -201,12 +238,12 @@ class Command(Extension):
 
     @profile.subcommand(sub_cmd_description="Recover your badges if they've been reset.")
     async def recover_badges(self, ctx: SlashContext):
-        wool_amount = db.get('user_data', ctx.user.id, 'wool')
-        sun_amount = db.get('user_data', ctx.user.id, 'suns')
-        times_shattered = db.get('user_data', ctx.user.id, 'times_shattered')
-        times_asked = db.get('user_data', ctx.user.id, 'times_asked')
-        times_transmitted = db.get('user_data', ctx.user.id, 'times_transmitted')
-        times_messaged = db.get('user_data', ctx.user.id, 'times_messaged')
+        wool_amount = db.fetch('user_data', 'wool', ctx.user.id)
+        sun_amount = db.fetch('user_data', 'suns', ctx.user.id)
+        times_shattered = db.fetch('user_data', 'times_shattered', ctx.user.id)
+        times_asked = db.fetch('user_data', 'times_asked', ctx.user.id)
+        times_transmitted = db.fetch('user_data', 'times_transmitted', ctx.user.id)
+        times_messaged = db.fetch('user_data', 'times_messaged', ctx.user.id)
 
         get_badges = await bm.open_badges()
         get_badges = get_badges['Badges']

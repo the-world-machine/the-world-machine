@@ -38,8 +38,8 @@ class Transmit(Extension):
         self.initial_connected_server = {"server_id": 1, "channel_id": 2}
         self.next_connected_server = {"server_id": 1, "channel_id": 2}
 
-        servers = db.get('server_data', ctx.guild.id, 'transmittable_servers')
-        can_transmit = db.get('server_data', ctx.guild.id, 'transmit_channel')
+        servers = db.fetch('server_data', 'transmittable_servers', ctx.guild.id)
+        can_transmit = db.fetch('server_data', 'transmit_channel', ctx.guild.id)
 
         if can_transmit is None:
             self.initial_connected_server = None
@@ -81,7 +81,7 @@ class Transmit(Extension):
 
         other_server = int(select_results.ctx.values[0])
 
-        get_channel = db.get('server_data', other_server, 'transmit_channel')
+        get_channel = db.fetch('server_data', 'transmit_channel', other_server)
 
         if get_channel is None:
             self.initial_connected_server = None
@@ -247,7 +247,7 @@ class Transmit(Extension):
 
         get_guild_id = self.initial_connected_server['server_id']
 
-        servers: list = db.get('server_data', get_guild_id, 'transmittable_servers')
+        servers: list = db.fetch('server_data', 'transmittable_servers', get_guild_id)
 
         if servers is None:
             guild = await self.client.fetch_guild(self.next_connected_server['server_id'])
@@ -351,7 +351,7 @@ class Transmit(Extension):
 
         get_guild_id = self.next_connected_server['server_id']
 
-        servers: list = db.get('server_data', get_guild_id, 'transmittable_servers')
+        servers: list = db.fetch('server_data', 'transmittable_servers', get_guild_id)
 
         if servers == None:
             guild = await self.client.fetch_guild(self.initial_connected_server['server_id'])

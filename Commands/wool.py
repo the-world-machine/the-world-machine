@@ -40,7 +40,7 @@ class Command(Extension):
         if user is None:
             user = ctx.user
 
-        wool: int = db.get('user_data', user.id, 'wool')
+        wool: int = db.fetch('user_data', 'wool', user.id)
 
         if user is None:
             await fancy_message(ctx, f'[ You have <:wool:1044668364422918176>**{wool}**. ]')
@@ -54,9 +54,10 @@ class Command(Extension):
         msg = await ctx.send(
             embeds=Embed(description=f'[ Getting Entries... {icons.loading()} ]', color=0x8b00cc))
 
-        lb: tuple[int, int] = await db.get_leaderboard('wool')
+        lb: tuple[int, int] = db.get_leaderboard('wool')
 
-        current_leaderboard: str = ''
+        usernames: str = ''
+        value = ''
 
         msg = await msg.edit(
             embeds=Embed(description=f'[ Fetching Usernames... {icons.loading()} ]', color=0x8b00cc))
@@ -65,21 +66,24 @@ class Command(Extension):
         for entry in lb:
             user = await self.bot.fetch_user(entry[0])
             wool = entry[1]
-            current_leaderboard += f'{index}. **{user.username}** - <:wool:1044668364422918176>**{wool}**\n'
+            usernames += f'{index}. **{user.username}**\n'
+            value += f'- {icons.wool()} **{wool}**\n'
             index += 1
 
         embed = Embed(
             title='Wool Leaderboard',
-            description=current_leaderboard,
             color=0x8b00cc
         )
+
+        embed.add_field(name='Users', value=usernames, inline=True)
+        embed.add_field(name='Wool', value=value, inline=True)
 
         await msg.edit(embeds=embed)
 
     @wool.subcommand(sub_cmd_description='Grab your daily wool.')
     async def daily(self, ctx: SlashContext):
 
-        get_time = db.get('user_data', ctx.user.id, 'daily_wool_timestamp')
+        get_time = db.fetch('user_data', 'daily_wool_timestamp', ctx.user.id)
 
         if get_time is None:
             last_reset_time = datetime(2000, 1, 1, 0, 0, 0)
@@ -111,7 +115,7 @@ class Command(Extension):
             amount = random.randint(100, 300)
             message = f'You found <:wool:1044668364422918176>**{amount}**'
 
-        wool: int = db.get('user_data', ctx.user.id, 'wool')
+        wool: int = db.fetch('user_data', 'wool', ctx.user.id)
         db.update('user_data', 'wool', ctx.user.id, wool + amount)
         await badge_manager.check_wool_value(ctx, wool + amount)
 

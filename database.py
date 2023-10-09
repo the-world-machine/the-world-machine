@@ -25,14 +25,14 @@ def get_datatype(data):
     return data
 
 
-async def get_leaderboard(sort_by: str):
-    sql = 'SELECT p_key, wool FROM user_data ORDER BY {0} DESC LIMIT 10;'.format(sort_by)
+def get_leaderboard(sort_by: str):
+    sql = 'SELECT p_key, {0} FROM user_data ORDER BY {0} DESC LIMIT 10;'.format(sort_by, sort_by)
     cursor.execute(sql)
 
     return cursor.fetchall()
 
 
-def get(table: str, primary_key, columns: str):
+def fetch(table: str, columns: str, primary_key):
     if type(primary_key) == Snowflake:
         primary_key = int(primary_key)
 
@@ -68,7 +68,7 @@ def get(table: str, primary_key, columns: str):
         return value
     else:
         new_entry(table, primary_key)
-        return get(table, primary_key, columns)
+        return fetch(table, columns, primary_key)
 
 
 def new_entry(table: str, primary_key: int):
@@ -105,9 +105,9 @@ def update(table: str, column: str, p_key, data):
         db.rollback()
         return None
 
-    return get(table, p_key, column)
+    return fetch(table, column, p_key)
 
 
 def increment_value(table: str, column: str, primary_key: int):
-    v: int = get(table, primary_key, column)
+    v: int = fetch(table, column, primary_key)
     update(table, column, primary_key, v + 1)

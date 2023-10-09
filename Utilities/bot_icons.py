@@ -4,3 +4,7 @@ def loading():
 
 def wool():
     return '<:wool:1044668364422918176>'
+
+
+def sun():
+    return '<:sun:1026207773559619644>'

@@ -262,8 +262,8 @@ class Command(Extension):
     @component_callback('buy_blue', 'buy_green', 'buy_red', 'buy_yellow')
     async def buy_capsules_callback(self, ctx: ComponentContext):
 
-        wool = database.get('user_data', ctx.author.id, 'wool')
-        available = database.get('nikogotchi_data', ctx.author.id, 'nikogotchi_available')
+        wool = database.fetch('user_data', 'wool', ctx.author.id)
+        available = database.fetch('nikogotchi_data', 'nikogotchi_available', ctx.author.id)
 
         badges = await badge_manager.open_badges()
         badges = badges['shop']
@@ -319,9 +319,9 @@ class Command(Extension):
 
         await ctx.defer(edit_origin=True)
 
-        wool = database.get('user_data', ctx.author.id, 'wool')
-        pancakes = database.get('nikogotchi_data', ctx.author.id, 'pancakes')
-        golden_pancakes = database.get('nikogotchi_data', ctx.author.id, 'golden_pancakes')
+        wool = database.fetch('user_data', 'wool', ctx.author.id)
+        pancakes = database.fetch('nikogotchi_data', 'pancakes', ctx.author.id)
+        golden_pancakes = database.fetch('nikogotchi_data', 'golden_pancakes', ctx.author.id)
         custom_id = ctx.custom_id
 
         footer = ''
@@ -372,7 +372,7 @@ class Command(Extension):
         Feel free to browse through the categories by clicking on one of the buttons, or simply exit the shop by dismissing this message.
         As a seasoned merchant and purveyor of fine goods, I can assure you that my stock is always worth checking out.
 
-        {icons.wool()}**{database.get('user_data', uid, 'wool')}**
+        {icons.wool()}**{database.fetch('user_data', 'wool', uid)}**
         '''
 
         embed.set_thumbnail('https://cdn.discordapp.com/attachments/1040653069794410567/1106652038772830238/Magpie.webp')
@@ -382,7 +382,7 @@ class Command(Extension):
 
     async def get_capsules(self, uid: int):
 
-        wool = database.get('user_data', uid, 'wool')
+        wool = database.fetch('user_data', 'wool', uid)
         badges = await badge_manager.open_badges()
         badges = badges['shop']
 
@@ -418,7 +418,7 @@ class Command(Extension):
             if badge['requirement'] > wool:
                 buttons[i].disabled = True
                 buttons[i].style = ButtonStyle.GREY
-            elif database.get('nikogotchi_data', uid, 'nikogotchi_available') >= 1:
+            elif database.fetch('nikogotchi_data', 'nikogotchi_available', uid) >= 1:
                 buttons[i].disabled = True
                 buttons[i].style = ButtonStyle.DANGER
             else:
@@ -429,10 +429,10 @@ class Command(Extension):
 
     async def get_pancakes(self, uid: int):
 
-        wool = database.get('user_data', uid, 'wool')
-        pancakes = database.get('nikogotchi_data', uid, 'pancakes')
-        golden_pancakes = database.get('nikogotchi_data', uid, 'golden_pancakes')
-        glitched_pancakes = database.get('nikogotchi_data', uid, 'glitched_pancakes')
+        wool = database.fetch('user_data', 'wool', uid)
+        pancakes = database.fetch('nikogotchi_data', 'pancakes', uid)
+        golden_pancakes = database.fetch('nikogotchi_data', 'golden_pancakes', uid)
+        glitched_pancakes = database.fetch('nikogotchi_data', 'glitched_pancakes', uid)
 
         embed = Embed(
             title='Buy Pancakes',
@@ -521,7 +521,7 @@ class Command(Extension):
 
     async def open_backgrounds(self, uid: int, page: int):
 
-        wool = database.get('user_data', uid, 'wool')
+        wool = database.fetch('user_data', 'wool', uid)
 
         embed = self.buy_background_embed
         buttons = self.get_background_buttons()
@@ -539,7 +539,7 @@ class Command(Extension):
 
         all_backgrounds = await self.open_backgrounds_json()
         backgrounds = self.current_background_stock
-        owned_background_ids = database.get('user_data', uid, 'unlocked_backgrounds')
+        owned_background_ids = database.fetch('user_data', 'unlocked_backgrounds', uid)
         owned_backgrounds = []
 
         for i in range(len(owned_background_ids)):
@@ -566,7 +566,7 @@ class Command(Extension):
 
     async def open_treasures(self, uid: int):
 
-        wool = database.get('user_data', uid, 'wool')
+        wool = database.fetch('user_data', 'wool', uid)
 
         percentage_difference = ((self.current_stock_price - 1) / 1) * 100
 
@@ -629,8 +629,8 @@ class Command(Extension):
 
     async def open_sell_treasures(self, uid: int):
 
-        wool = database.get('user_data', uid, 'wool')
-        user_treasures = database.get('nikogotchi_data', uid, 'treasure')
+        wool = database.fetch('user_data', 'wool', uid)
+        user_treasures = database.fetch('nikogotchi_data', 'treasure', uid)
 
         percentage_difference = ((self.current_stock_price - 1) / 1) * 100
 
@@ -746,14 +746,14 @@ class Command(Extension):
 
         if custom_id == 'buy_background':
             background = self.current_background_stock[current_page['page']]
-            wool = database.get('user_data', ctx.author.id, 'wool')
+            wool = database.fetch('user_data', 'wool', ctx.author.id)
 
             if wool < background['cost']:
                 footer = "[ You don't have enough wool for this! ]"
             else:
                 all_backgrounds = await self.get_backgrounds()
 
-                unlocked_background = database.get('user_data', ctx.author.id, 'unlocked_backgrounds')
+                unlocked_background = database.fetch('user_data', 'unlocked_backgrounds', ctx.author.id)
 
                 for i, bg in enumerate(all_backgrounds):
                     if bg['name'] == background['name']:
@@ -778,8 +778,8 @@ class Command(Extension):
 
         embed, components = await self.open_treasures(ctx.author.id)
 
-        wool = database.get('user_data', ctx.author.id, 'wool')
-        user_treasures = database.get('nikogotchi_data', ctx.author.id, 'treasure')
+        wool = database.fetch('user_data', 'wool', ctx.author.id)
+        user_treasures = database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
         get_treasures = self.get_treasures()
 
         footer = ''
@@ -829,8 +829,8 @@ class Command(Extension):
 
         value = int(ctx.values[0])
 
-        wool = database.get('user_data', ctx.author.id, 'wool')
-        user_treasures = database.get('nikogotchi_data', ctx.author.id, 'treasure')
+        wool = database.fetch('user_data', 'wool', ctx.author.id)
+        user_treasures = database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
         get_treasures = self.get_treasures()
 
         footer = ''

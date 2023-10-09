@@ -5,7 +5,7 @@
             "name": "The Journal",
             "emoji": 1026181554919182416,
             "type" : "times_messaged",
-            "requirement" : 1000
+            "requirement" : 300
         },
         {
             "name": "The Coin",

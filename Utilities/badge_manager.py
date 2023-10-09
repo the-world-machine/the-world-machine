@@ -17,7 +17,7 @@ async def buy_badge(ctx: Message, badge_id: int, target: User):
     badge_data = await open_badges()
     badge = badge_data['shop'][badge_id]
 
-    badge_list = db.get('user_data', target.id, 'unlocked_shop_badges')
+    badge_list = db.fetch('user_data', 'unlocked_shop_badges', target.id)
 
     badge_list.append(badge_id)
 
@@ -42,7 +42,7 @@ async def earn_badge(ctx: GuildChannel, badge_id: int, target: User, send_messag
     badge_data = await open_badges()
     badge = badge_data['Badges'][badge_id]
 
-    badge_list = db.get('user_data', target.id, 'unlocked_badges')
+    badge_list = db.fetch('user_data', 'unlocked_badges', target.id)
 
     badge_list.append(badge_id)
 
@@ -68,7 +68,7 @@ async def earn_badge(ctx: GuildChannel, badge_id: int, target: User, send_messag
 
     embed.set_footer('You can change this notification using "/settings badge_notifications"')
 
-    can_notify = db.get('user_data', target.id, 'unlock_notifications')
+    can_notify = db.fetch('user_data', 'unlock_notifications', target.id)
 
     if (badge['type'] == 'shop' or can_notify) and send_message:
         return await channel.send(embeds=embed)
@@ -83,7 +83,7 @@ async def check_wool_value(ctx: SlashContext, wool_amount: int):
     if guild.type == ChannelType.DM:
         return
 
-    get_user_badges = db.get('user_data', ctx.author.id, 'unlocked_badges')
+    get_user_badges = db.fetch('user_data', 'unlocked_badges', ctx.author.id)
 
     for i, badge in enumerate(get_badges):
         if badge['type'] == 'wool':
@@ -110,13 +110,13 @@ async def increment_value(ctx: SlashContext, value_to_increment: str, target: Us
     else:
         user = ctx.author
 
-    get_user_badges = db.get('user_data', user.id, 'unlocked_badges')
+    get_user_badges = db.fetch('user_data', 'unlocked_badges', user.id)
 
     if get_user_badges is None:
         return
 
     db.increment_value('user_data', value_to_increment, user.id)
-    get_value = db.get('user_data', user.id, value_to_increment)
+    get_value = db.fetch('user_data', value_to_increment, user.id)
 
     for i, badge in enumerate(get_badges):
         if badge['type'] == value_to_increment:

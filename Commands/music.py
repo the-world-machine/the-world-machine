@@ -1,24 +1,23 @@
 import asyncio
 import random
 import uuid
+from urllib import parse
 
+import aiohttp
 from interactions import *
 from interactions.api.events import *
-from Utilities.fancysend import *
-import Utilities.bot_icons as icons
-from agenius import Genius
 from load_data import load_config
 
 from interactions_lavalink import Lavalink, Player
 import lavalink
 from interactions_lavalink.events import TrackStart
-from Utilities.spotifyapi import Spotify
-from Utilities.CustomMusicLoaders import CustomSearch
 from lavalink.models import LoadResult
 
-import re
-
-Lyrics = Genius(load_config('Genius'))
+# Utilities
+from Utilities.spotifyapi import Spotify
+from Utilities.CustomMusicLoaders import CustomSearch
+from Utilities.fancysend import *
+import Utilities.bot_icons as icons
 
 spotify = Spotify(client_id=load_config("SpotifyID"), secret=load_config("SpotifySecret"))
 
@@ -36,7 +35,7 @@ class Music(Extension):
         node_information: dict = load_config("Music")
 
         # Connecting to local lavalink server
-        self.lavalink.add_node(node_information['ip'], node_information['port'], "youshallnotpass", "us")
+        self.lavalink.add_node(node_information['ip'], node_information['port'], node_information['password'], "us")
 
         self.lavalink.client.register_source(CustomSearch())
 
@@ -112,16 +111,16 @@ class Music(Extension):
             title = song.title
             author = song.author
 
-            queue_list = f'{queue_list}**{i}**. ***{title}*** *-* **{author}**\n'
+            queue_list = f'{queue_list}**{i}**. ***{title}*** by {author}\n'
 
             i += 1
 
         track = player.current
         guild = await self.bot.fetch_guild(player.guild_id)
 
-        description = f'**{track.title}** from **{track.author}** <:Sun:1026207773559619644>\n\n**Next Up...**\n{queue_list}'
+        description = f'### Currently Playing:\n**{track.title}** from **{track.author}** <:Sun:1026207773559619644>\n\n*There are currently* ***{len(player.queue)}*** *songs in the queue.*\n### Next Up...\n{queue_list}'
 
-        queue_embed = Embed(title='**Currently Playing:**', description=description, color=0x8b00cc)
+        queue_embed = Embed(description=description, color=0x8b00cc)
 
         queue_embed.set_author(name=f'Queue for {guild.name}', icon_url=guild.icon.url)
         queue_embed.set_thumbnail(url=self.get_cover_image(track.identifier))
@@ -538,22 +537,23 @@ class Music(Extension):
     @staticmethod
     async def get_lyrics(track: lavalink.AudioTrack):
 
-        song = await Lyrics.search_song(track.title, track.author)
+        parsed_title = parse.quote(f'{track.title} {track.author}')
 
-        if song is None:
+        api_url = f'https://some-random-api.com/lyrics?title={parsed_title}'
+
+        async with aiohttp.ClientSession() as lyricsSession:
+            async with lyricsSession.get(api_url) as jsondata:
+                lyrics: dict = await jsondata.json()
+
+        if 'error' in lyrics.keys():
             return Embed(title=f'{track.title} Lyrics', description='No Lyrics found.', color=0xFF0000)
 
-        cleaned_lyrics = re.sub(rf'\d+Embed', '', song.lyrics)  # Remove Embed at the end of the lyrics
-        cleaned_lyrics = re.sub(r'^.*?\[', '[', cleaned_lyrics)  # Remove any text before the first bracket.
-        cleaned_lyrics = re.sub(r'You might also like', '\n', cleaned_lyrics)  # Risky, but necessary for clean lyrics
+        lyrics = lyrics['lyrics']
 
-        if cleaned_lyrics.endswith('Embed'):
-            cleaned_lyrics = cleaned_lyrics[:-len('Embed')].rstrip()
+        if len(lyrics) > 4080:
+            song = f'{lyrics[:2080]}...\n\nGet the full lyrics [here.]({lyrics.url})'
 
-        if len(cleaned_lyrics) > 2095:
-            cleaned_lyrics = cleaned_lyrics[:2095]
-
-        return Embed(title=f'{track.title} Lyrics', description=cleaned_lyrics, color=0x8b00cc)
+        return Embed(title=f'{track.title} Lyrics', description=lyrics, color=0x8b00cc, footer=EmbedFooter(text=f'Lyrics provided by Some Random API'))
 
     async def on_player(self, player: Player, channel: GuildText):
 

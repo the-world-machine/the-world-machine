@@ -35,7 +35,7 @@ class Nikogotchi:
 class Command(Extension):
 
     async def get_nikogotchi(self, uid: int):
-        data = database.get('nikogotchi_data', uid, 'data')
+        data = database.fetch('nikogotchi_data', 'data', uid)
 
         if data is None:
             return None
@@ -104,7 +104,7 @@ class Command(Extension):
     ]
 
     async def get_nikogotchi_age(self, uid: int):
-        date_hatched_str = database.get('nikogotchi_data', uid, 'hatched')
+        date_hatched_str = database.fetch('nikogotchi_data', 'hatched', uid)
         date_hatched = datetime.strptime(date_hatched_str, '%Y-%m-%d %H:%M:%S')
 
         return relativedelta.relativedelta(datetime.now(), date_hatched)
@@ -206,9 +206,7 @@ class Command(Extension):
                 looked_over_treasures.append(index)
 
             treasure_found = f'''
-            {n.name} found some treasures!
-            
-            {treasures}
+            {n.name} found some treasures!\n\n{treasures}
             '''
 
         if n.health < 20:
@@ -217,14 +215,8 @@ class Command(Extension):
         embed.set_author(name=nikogotchi_status)
 
         description = f'''
-        {treasure_found}
-        ❤️  {health_progress_bar} ({n.health} / 50)
-
-        🍴  {hunger_progress_bar} ({n.hunger} / 50)
-        🫂  {attention_progress_bar} ({n.attention} / 50)
-        🧽  {cleanliness_progress_bar} ({n.cleanliness} / 50)
-        
-        ⏰  ***{age.years}*** *years*, ***{age.months}*** *months*, ***{age.days}*** *days*
+        {treasure_found}\n
+        ❤️  {health_progress_bar} ({n.health} / 50)\n\n🍴  {hunger_progress_bar} ({n.hunger} / 50)\n🫂  {attention_progress_bar} ({n.attention} / 50)\n🧽  {cleanliness_progress_bar} ({n.cleanliness} / 50)\n\n⏰  ***{age.years}*** *years*, ***{age.months}*** *months*, ***{age.days}*** *days*
         '''
 
         embed.description = description
@@ -251,8 +243,8 @@ class Command(Extension):
             await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]', ephemeral=True)
 
         else:
-            is_available = database.get('nikogotchi_data', uid, 'nikogotchi_available')
-            rarity = database.get('nikogotchi_data', uid, 'rarity')
+            is_available = database.fetch('nikogotchi_data', 'nikogotchi_available', uid)
+            rarity = database.fetch('nikogotchi_data', 'rarity', uid)
 
             if is_available == 0:
                 return await fancy_message(ctx,
@@ -269,7 +261,7 @@ class Command(Extension):
 
             selected_nikogotchi: chars.Nikogotchi = random.choice(viable_nikogotchi)
 
-            owned_nikogotchi = database.get('user_data', ctx.author.id, 'unlocked_nikogotchis')
+            owned_nikogotchi = database.fetch('user_data', 'unlocked_nikogotchis', ctx.author.id)
             owned_nikogotchi.append(nikogotchi_list.index(selected_nikogotchi))
 
             database.update('nikogotchi_data', 'data', ctx.author.id, json.dumps({
@@ -363,7 +355,7 @@ class Command(Extension):
         nikogotchi.attention = int(max(0, nikogotchi.attention - time_difference * 1.25 * modifier))
         nikogotchi.cleanliness = int(max(0, nikogotchi.cleanliness - time_difference * 1.05 * modifier))
 
-        immortal = database.get('nikogotchi_data', uid, 'immortal')
+        immortal = database.fetch('nikogotchi_data', 'immortal', uid)
 
         if immortal:
             nikogotchi.hunger = 9999
@@ -418,7 +410,7 @@ class Command(Extension):
 
                         treasures_found.append(treasure)
 
-                        user_treasures = database.get('nikogotchi_data', uid, 'treasure')
+                        user_treasures = database.fetch('nikogotchi_data', 'treasure', uid)
                         user_treasures[treasure] += 1
                         database.update('nikogotchi_data', 'treasure', uid, user_treasures)
 
@@ -442,9 +434,9 @@ class Command(Extension):
 
         await ctx.defer(edit_origin=True)
 
-        pancakes = database.get('nikogotchi_data', ctx.author.id, 'pancakes')
-        golden_pancakes = database.get('nikogotchi_data', ctx.author.id, 'golden_pancakes')
-        glitched_pancakes = database.get('nikogotchi_data', ctx.author.id, 'glitched_pancakes')
+        pancakes = database.fetch('nikogotchi_data', 'pancakes', ctx.author.id)
+        golden_pancakes = database.fetch('nikogotchi_data', 'golden_pancakes', ctx.author.id)
+        glitched_pancakes = database.fetch('nikogotchi_data', 'glitched_pancakes', ctx.author.id)
 
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
 
@@ -521,7 +513,7 @@ class Command(Extension):
 
                 treasures_found.append(treasure)
 
-                user_treasures = database.get('user_data', ctx.author.id, 'treasures')
+                user_treasures = database.fetch('user_data', 'treasures', ctx.author.id)
                 user_treasures[treasure] += 1
                 database.update('user_data', 'treasures', ctx.author.id, user_treasures)
 
@@ -588,9 +580,9 @@ class Command(Extension):
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
         value = ctx.values[0]
 
-        golden_pancakes = database.get('nikogotchi_data', ctx.author.id, 'golden_pancakes')
-        pancakes = database.get('nikogotchi_data', ctx.author.id, 'pancakes')
-        glitched_pancakes = database.get('nikogotchi_data', ctx.author.id, 'glitched_pancakes')
+        golden_pancakes = database.fetch('nikogotchi_data', 'golden_pancakes', ctx.author.id)
+        pancakes = database.fetch('nikogotchi_data', 'pancakes', ctx.author.id)
+        glitched_pancakes = database.fetch('nikogotchi_data', 'glitched_pancakes', ctx.author.id)
 
         hunger_increase = 0
         health_increase = 0
@@ -712,7 +704,7 @@ class Command(Extension):
         Age: {age.years} years, {age.months} months, and {age.days} days.
         
         Health: {nikogotchi.health}/50
-        <:dfd:1147281411854839829> {database.get('nikogotchi_data', uid, 'pancakes')}
+        <:dfd:1147281411854839829> {database.fetch('nikogotchi_data', 'pancakes', uid)}
         '''
 
         embed.set_image(url=f'https://cdn.discordapp.com/emojis/{nikogotchi.emoji}.png?v=1')
@@ -798,7 +790,7 @@ class Command(Extension):
         treasure = json.loads(data)
         treasure_string = ''
 
-        user_treasure = database.get('nikogotchi_data', user.id, 'treasure')
+        user_treasure = database.fetch('nikogotchi_data', 'treasure', user.id)
 
         for i, item in enumerate(treasure):
             treasure_string += f'<:emoji:{item["emoji"]}> {item["name"]}: **{user_treasure[i]}x**\n\n'

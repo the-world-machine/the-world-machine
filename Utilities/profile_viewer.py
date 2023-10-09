@@ -60,10 +60,10 @@ async def DrawBadges(ctx, user: User):
     user_id = user.id
     user_pfp = user.avatar_url
 
-    profile_background = db.get('user_data', user_id, 'equipped_background')
-    profile_description = db.get('user_data', user_id, 'profile_description')
-    user_badges = db.get('user_data', user_id, 'unlocked_badges')
-    shop_badges = db.get('user_data', user_id, 'unlocked_nikogotchis')
+    profile_background = db.fetch('user_data', 'equipped_background', user_id)
+    profile_description = db.fetch('user_data', 'profile_description', user_id)
+    user_badges = db.fetch('user_data', 'unlocked_badges', user_id)
+    shop_badges = db.fetch('user_data', 'unlocked_nikogotchis', user_id)
     profile_description = profile_description.strip("'")
 
     bgs = await open_backgrounds()
@@ -129,8 +129,8 @@ async def DrawBadges(ctx, user: User):
             current_column += 1
             current_row = 0
 
-    coins = db.get('user_data', user_id, 'wool')
-    sun = db.get('user_data', user_id, 'suns')
+    coins = db.fetch('user_data', 'wool', user_id)
+    sun = db.fetch('user_data', 'suns', user_id)
     d.text((648, 70), f'{coins} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
     bg.paste(wool_, (659, 63), wool_.convert('RGBA'))

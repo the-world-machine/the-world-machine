@@ -3,7 +3,7 @@ from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
 from interactions import Extension
 import database as db
 from load_data import load_config
-import requests
+import aiohttp
 
 
 class DevCommands(Extension):
@@ -19,7 +19,7 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        wool = db.get('user_data', target, 'wool')
+        wool = db.fetch('user_data', 'wool', target)
 
         db.update('user_data', 'wool', target, wool + amount)
 
@@ -51,7 +51,7 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        badges = db.get('user_data', target, 'unlocked_badges')
+        badges = db.fetch('user_data', 'unlocked_badges', target)
         badges.append(badge_id)
 
         db.update('user_data', 'unlocked_badges', target, badges)
@@ -69,7 +69,7 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        badges = db.get('user_data', target, 'unlocked_badges')
+        badges = db.fetch('user_data', 'unlocked_badges', target)
 
         if badge_id in badges:
             badges.remove(badge_id)
@@ -80,7 +80,7 @@ class DevCommands(Extension):
 
     # Define the "restart" command using the new system
     @prefixed_command()
-    async def restart(self, ctx: PrefixedContext):
+    async def restart_(self, ctx: PrefixedContext):
         # Check if the user is allowed to use this command
 
         if ctx.author.id not in self.allowed_users:
@@ -91,9 +91,10 @@ class DevCommands(Extension):
         API_KEY = "Bearer " + load_config('SPARKED')
 
         header = {"Authorization": API_KEY}
-        r = requests.post('https://control.sparkedhost.us/api/client/servers/92aeea52/power',
-                          json={"signal": "restart"}, headers=header)
-        print(r.status_code)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.request('POST','https://control.sparkedhost.us/api/client/servers/92aeea52/power', json={"signal": "restart"}, headers=header):
+                print('Successfully Restarted.')
 
     # Define the "stop" command using the new system
     @prefixed_command()
@@ -108,6 +109,7 @@ class DevCommands(Extension):
         API_KEY = "Bearer " + load_config('SPARKED')
 
         header = {"Authorization": API_KEY}
-        r = requests.post('https://control.sparkedhost.us/api/client/servers/92aeea52/power',
-                          json={"signal": "stop"}, headers=header)
-        print(r.status_code)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.request('POST','https://control.sparkedhost.us/api/client/servers/92aeea52/power', json={"signal": "stop"}, headers=header):
+                print('Successfully Stopped.')
