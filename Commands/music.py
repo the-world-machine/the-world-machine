@@ -465,6 +465,9 @@ class Music(Extension):
 
         channel = event.channel
 
+        if not channel.id == player.channel_id:
+            return
+
         if len(channel.voice_members) <= 2:
             text_channel = player.fetch('Channel')
 
