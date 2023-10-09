@@ -80,8 +80,7 @@ class Command(Extension):
         for entry in lb:
             user = await self.bot.fetch_user(entry[0])
             sun = entry[1]
-            usernames += f'{index}. **{user.username}**\n'
-            value += f'- {icons.sun()} **{sun}**\n'
+            usernames += f'{index}. **{user.username}** - {icons.sun()} **{sun}**\n'
             index += 1
 
         embed = Embed(
@@ -90,7 +89,6 @@ class Command(Extension):
         )
 
         embed.add_field(name='Users', value=usernames, inline=True)
-        embed.add_field(name='Suns', value=value, inline=True)
         embed.set_footer(text='Give suns using /sun give <user>!')
 
         await msg.edit(embeds=embed)

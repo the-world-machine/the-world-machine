@@ -66,8 +66,7 @@ class Command(Extension):
         for entry in lb:
             user = await self.bot.fetch_user(entry[0])
             wool = entry[1]
-            usernames += f'{index}. **{user.username}**\n'
-            value += f'- {icons.wool()} **{wool}**\n'
+            usernames += f'{index}. **{user.username}** - {icons.wool()} **{wool}**\n'
             index += 1
 
         embed = Embed(
@@ -76,7 +75,6 @@ class Command(Extension):
         )
 
         embed.add_field(name='Users', value=usernames, inline=True)
-        embed.add_field(name='Wool', value=value, inline=True)
 
         await msg.edit(embeds=embed)
 
@@ -109,14 +107,14 @@ class Command(Extension):
         message: str
 
         if random.randint(0, 100) == 2:
-            amount = 500_000
-            message = f'## Jackpot! 🎉\nYou found <:wool:1044668364422918176>**{amount}**!'
+            amount = 50_000
+            message = f'## Jackpot! 🎉You found <:wool:1044668364422918176>**{amount}**!'
         else:
             amount = random.randint(100, 300)
-            message = f'You found <:wool:1044668364422918176>**{amount}**'
+            message = f'You found <:wool:1044668364422918176>**{amount}**.'
 
         wool: int = db.fetch('user_data', 'wool', ctx.user.id)
         db.update('user_data', 'wool', ctx.user.id, wool + amount)
         await badge_manager.check_wool_value(ctx, wool + amount)
 
-        await fancy_message(ctx, f'*{response}*\n\n{message}.')
+        await fancy_message(ctx, f'*{response}*\n{message}')
