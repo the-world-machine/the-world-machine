@@ -5,7 +5,7 @@
 
     "SpotifySecret" : "...",
     "SpotifyID" : "...",
-    "Music" : {"ip" : "...", "port" : 0},
+    "Music" : {"ip" : "...", "port" : 0, "password" : "..."},
 
     "SPARKED" : "...",
 
