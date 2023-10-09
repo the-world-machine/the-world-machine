@@ -82,18 +82,23 @@ class Spotify:
                 tracks = []
 
                 while True:
+
                     async with session.get(url, headers=headers) as resp:
-                        data = await resp.json()
 
-                        for item in data['items']:
-                            track = create_track(item['track'])
+                        try:
+                            data = await resp.json()
 
-                            tracks.append(track)
+                            for item in data['items']:
+                                track = create_track(item['track'])
 
-                        url = data['next']
+                                tracks.append(track)
 
-                        if url is None:
-                            break
+                            url = data['next']
+
+                            if url is None:
+                                break
+                        except:
+                            pass
 
                 return tracks
         else:
