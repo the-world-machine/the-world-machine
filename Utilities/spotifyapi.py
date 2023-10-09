@@ -70,6 +70,7 @@ class Spotify:
                     data = await resp.json()
                     track = data['tracks']['items'][0]
                     return create_track(track)
+
     async def get_playlist(self, url):
         access_token = await self.get_access_token()
         headers = {'Authorization': f'Bearer {access_token}'}
@@ -78,7 +79,7 @@ class Spotify:
             url = url.replace('https://open.spotify.com/playlist/', '')
             async with aiohttp.ClientSession() as session:
 
-                url = f"https://api.spotify.com/v1/playlists/{url}/tracks"
+                url = f"https://api.spotify.com/v1/playlists/{url}"
                 tracks = []
 
                 while True:
@@ -87,18 +88,24 @@ class Spotify:
 
                         try:
                             data = await resp.json()
-
-                            for item in data['items']:
-                                track = create_track(item['track'])
-
-                                tracks.append(track)
-
-                            url = data['next']
-
-                            if url is None:
-                                break
                         except:
-                            pass
+                            return None
+
+                        try:
+                            get_items = data['tracks']
+                        except:
+                            get_items = data
+
+                        for item in get_items['items']:
+                            track = create_track(item['track'])
+
+                            tracks.append(track)
+                            print(track.name)
+
+                        url = get_items['next']
+
+                        if url is None:
+                            break
 
                 return tracks
         else:

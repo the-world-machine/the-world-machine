@@ -41,6 +41,9 @@ class CustomSearch(Source):
 
             get_tracks = []
 
+            if tracks is None:
+                return LoadResult(load_type, get_tracks, playlist_info=PlaylistInfo.none())
+
             for t in tracks:
                 get_tracks.append(
                     CustomAudioTrack({  # Create an instance of our CustomAudioTrack.
