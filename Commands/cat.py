@@ -27,9 +27,7 @@ class Command(Extension):
             async with session.get('https://api.thecatapi.com/v1/images/search') as response:
                 data = await response.json()
 
-        json_data = json.loads(data.text)
-
-        image = json_data[0]['url']
+        image = data[0]['url']
 
         embed.description = 'a cat!'
         embed.set_image(image)
