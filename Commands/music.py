@@ -118,7 +118,15 @@ class Music(Extension):
         track = player.current
         guild = await self.bot.fetch_guild(player.guild_id)
 
-        description = f'### Currently Playing:\n**{track.title}** from **{track.author}** <:Sun:1026207773559619644>\n\n*There are currently* ***{len(player.queue)}*** *songs in the queue.*\n### Next Up...\n{queue_list}'
+        time = 0
+
+        for t in player.queue:
+            time = time + t.duration / 1000
+
+        hours = int(time / 3600)
+        minutes = int((time % 3600) / 60)
+
+        description = f'### Currently Playing:\n**{track.title}** from **{track.author}** <:Sun:1026207773559619644>\n\n*There are currently* ***{len(player.queue)}*** *songs in the queue.*\n*Approximately* ***{hours} hours*** and ***{minutes} minutes*** *left.*\n### Next Up...\n{queue_list}'
 
         queue_embed = Embed(description=description, color=0x8b00cc)
 
