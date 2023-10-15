@@ -5,73 +5,86 @@
             "name": "Normal",
             "cost": 0,
             "type": "unobtainable",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064897083650099/Normal.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886393211662377/Normal.png"
         },
         {
             "name": "Green",
             "cost": 0,
             "type": "unobtainable",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064896798429184/Green.png"
+            "image": "https://media.discordapp.net/attachments/1162885547749023784/1162886392964186262/Green.png"
         },
         {
             "name": "Yellow",
             "cost": 0,
             "type": "unobtainable",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064898350329947/Yellow.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886393954054215/Yellow.png"
         },
         {
             "name": "Pink",
             "cost": 0,
             "type": "unobtainable",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064897708609556/Pink.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886393446551662/Pink.png"
         },
         {
             "name": "Red",
             "cost": 0,
             "type": "unobtainable",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064898098663435/Red.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886393693995178/Red.png"
+        },
+        {
+            "name": "Blue",
+            "cost": 0,
+            "type": "unobtainable",
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886392704159864/Blue.png"
         },
         {
             "name": "Barrens",
             "cost": 1000,
             "type": "shop",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064950326140979/Barrens.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886473654227135/Barrens.png",
+            "description": "A place in the Barrens."
         },
         {
             "name": "Glens",
             "cost": 1000,
             "type": "shop",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064950565228585/Glens.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886473939423272/Glens.png",
+            "description": "Niko overlooking the Glens."
         },
         {
             "name": "Refuge",
             "cost": 1000,
             "type": "shop",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064951328575620/Refuge.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886474560196818/Refuge.png",
+            "description": "Skyscrapers in the Refuge."
         },
         {
             "name": "The Author",
             "cost": 5000,
             "type": "shop",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148065562119901206/The_Author.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886474849587272/The_Author.png",
+            "description": "Chronicler of a place and time that no longer exists."
         },
         {
             "name": "The World Machine",
             "cost": 10000,
             "type": "shop",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064951605415977/The_World_Machine.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886475134816386/The_World_Machine.png",
+            "description": "An ambitious project."
         },
         {
             "name": "Alula and Calamus",
             "cost": 1000,
             "type": "shop",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064949927694336/Alula_and_Calamus.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886473360613426/Alula_and_Calamus.png",
+            "description": "Niko, Alula and Calamus on a river in the Glens."
         },
         {
             "name": "Pancakes",
             "cost": 2500,
             "type": "shop",
-            "image": "https://cdn.discordapp.com/attachments/1014158020000874568/1148064950795903056/Pancakes.png"
+            "image": "https://cdn.discordapp.com/attachments/1162885547749023784/1162886474233028648/Pancakes.png",
+            "description": "Niko enjoying some pancakes."
         }
     ]
 }

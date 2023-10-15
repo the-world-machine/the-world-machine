@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 
 from interactions import *
 from Utilities.fancysend import *
+from Commands.shop_callbacks import setup_callbacks
+from Utilities.FetchShopData import fetch_shop_data
 import Utilities.badge_manager as badge_manager
 import Utilities.bot_icons as icons
 import database
@@ -174,7 +176,6 @@ class Command(Extension):
             data = f.read()
 
         return json.loads(data)
-
     async def shop_reset(self):
         data = await self.check_if_should_reset()
 
@@ -226,6 +227,7 @@ class Command(Extension):
     @listen()
     async def on_ready(self):
         await self.shop_reset()
+        setup_callbacks(self)
 
     @slash_command(description='Open the shop!')
     async def shop(self, ctx: SlashContext):
@@ -259,108 +261,6 @@ class Command(Extension):
 
         await ctx.edit_origin(embed=embed, components=components)
 
-    @component_callback('buy_blue', 'buy_green', 'buy_red', 'buy_yellow')
-    async def buy_capsules_callback(self, ctx: ComponentContext):
-
-        wool = database.fetch('user_data', 'wool', ctx.author.id)
-        available = database.fetch('nikogotchi_data', 'nikogotchi_available', ctx.author.id)
-
-        badges = await badge_manager.open_badges()
-        badges = badges['shop']
-
-        custom_id = ctx.custom_id
-
-        footer = ''
-
-        if custom_id == 'buy_blue':
-            if wool < badges[0]['requirement']:
-                footer = '[ Not enough wool. ]'
-            else:
-                database.update('user_data', 'wool', ctx.author.id, wool - badges[0]['requirement'])
-                database.update('nikogotchi_data', 'nikogotchi_available', ctx.author.id, available + 1)
-                database.update('nikogotchi_data', 'rarity', ctx.author.id, 0)
-                footer = '[ Successfully bought a Blue Capsule! ]'
-
-        if custom_id == 'buy_green':
-            if wool < badges[1]['requirement']:
-                footer = '[ Not enough wool. ]'
-            else:
-                database.update('user_data', 'wool', ctx.author.id, wool - badges[1]['requirement'])
-                database.update('nikogotchi_data', 'nikogotchi_available', ctx.author.id, available + 1)
-                database.update('nikogotchi_data', 'rarity', ctx.author.id, 1)
-                footer = '[ Successfully bought a Green Capsule! ]'
-
-        if custom_id == 'buy_red':
-            if wool < badges[2]['requirement']:
-                footer = '[ Not enough wool. ]'
-            else:
-                database.update('user_data', 'wool', ctx.author.id, wool - badges[2]['requirement'])
-                database.update('nikogotchi_data', 'nikogotchi_available', ctx.author.id, available + 1)
-                database.update('nikogotchi_data', 'rarity', ctx.author.id, 2)
-                footer = '[ Successfully bought a Red Capsule! ]'
-
-        if custom_id == 'buy_yellow':
-            if wool < badges[3]['requirement']:
-                footer = '[ Not enough wool. ]'
-            else:
-                database.update('user_data', 'wool', ctx.author.id, wool - badges[3]['requirement'])
-                database.update('nikogotchi_data', 'nikogotchi_available', ctx.author.id, available + 1)
-                database.update('nikogotchi_data', 'rarity', ctx.author.id, 3)
-                footer = '[ Successfully bought a Yellow Capsule! ]'
-
-        embed, buttons = await self.get_capsules(int(ctx.author.id))
-
-        embed.set_footer(text=footer)
-
-        await ctx.edit_origin(embed=embed, components=buttons)
-
-    @component_callback('buy_pancakes_1', 'buy_pancakes_golden', 'buy_pancakes_glitched')
-    async def buy_pancakes_callback(self, ctx: ComponentContext):
-
-        await ctx.defer(edit_origin=True)
-
-        wool = database.fetch('user_data', 'wool', ctx.author.id)
-        pancakes = database.fetch('nikogotchi_data', 'pancakes', ctx.author.id)
-        golden_pancakes = database.fetch('nikogotchi_data', 'golden_pancakes', ctx.author.id)
-        custom_id = ctx.custom_id
-
-        footer = ''
-
-        if custom_id == 'buy_pancakes_1':
-            if wool < 200:
-                footer = '[ You do not have enough wool to buy a pancake! ]'
-            else:
-                footer = '[ Successfully bought a pancake! ]'
-                database.update('user_data', 'wool', ctx.author.id, wool - 200)
-                database.update('nikogotchi_data', 'pancakes', ctx.author.id, pancakes + 1)
-
-        if custom_id == 'buy_pancakes_golden':
-            if wool < 10_000:
-                footer = '[ You do not have enough wool to buy a golden pancake! ]'
-            else:
-                footer = '[ Successfully bought a golden pancake! ]'
-                database.update('user_data', 'wool', ctx.author.id, wool - 10_000)
-                database.update('nikogotchi_data', 'golden_pancakes', ctx.author.id, golden_pancakes + 1)
-
-        if custom_id == 'buy_pancakes_glitched':
-            if wool < 999_999:
-                footer = '[ You do not have enough wool to buy whatever this thing is! ]'
-            else:
-                footer = '[ Successfully bought... something? ]'
-                database.update('user_data', 'wool', ctx.author.id, wool - 999_999)
-                database.update('nikogotchi_data', 'glitched_pancakes', ctx.author.id, pancakes + 1)
-
-        embed, buttons = await self.get_pancakes(int(ctx.author.id))
-
-        embed.set_footer(text=footer)
-
-        await ctx.edit_origin(embed=embed, components=buttons)
-
-    @component_callback('go_back')
-    async def go_back(self, ctx: ComponentContext):
-        embed, buttons = await self.get_main_shop(int(ctx.author.id))
-        await ctx.edit_origin(embed=embed, components=buttons)
-
     async def get_main_shop(self, uid: int):
 
         embed = self.main_shop_embed
@@ -386,6 +286,8 @@ class Command(Extension):
         badges = await badge_manager.open_badges()
         badges = badges['shop']
 
+        shop_data = await fetch_shop_data()
+        capsule_data = shop_data['Capsules']
         embed = self.buy_capsules_embed
         buttons = self.get_capsules_buttons()
 
@@ -400,16 +302,20 @@ class Command(Extension):
         
         Just keep in mind that you can only have one Nikogotchi at a time. The only way to get another one is to  send away your current one or if it has passed away.
         
-        <:any:1147279938660089898> **Blue Capsule** - Teeming with blue phosphor, this capsule will give you a *common* Nikogotchi. ({icons.wool()}3000)
+        <:any:{capsule_data['Blue Capsule']['icon']}> **Blue Capsule** - ({icons.wool()}{capsule_data['Blue Capsule']['cost']})
+        {capsule_data['Blue Capsule']['description']}
         
-        <:any:1147279943387070494> **Green Capsule** - Teeming with green phosphor, this capsule will give you a *uncommon* Nikogotchi. ({icons.wool()}10000)
+        <:any:{capsule_data['Green Capsule']['icon']}> **Green Capsule** - ({icons.wool()}{capsule_data['Green Capsule']['cost']})
+        {capsule_data['Green Capsule']['description']}
         
-        <:any:1147280712328810536> **Red Capsule** - Teeming with red phosphor, this capsule will give you a *rare* Nikogotchi. ({icons.wool()}50000)
+        <:any:{capsule_data['Red Capsule']['icon']}> **Red Capsule** - ({icons.wool()}{capsule_data['Red Capsule']['cost']})
+        {capsule_data['Red Capsule']['description']}
         
-        <:any:1147279947086438431> **Yellow Capsule** - Teeming with yellow phosphor, this capsule will give you an ***extra rare*** Nikogotchi. ({icons.wool()}100000)
+        <:any:{capsule_data['Yellow Capsule']['icon']}> **Yellow Capsule** - ({icons.wool()}{capsule_data['Yellow Capsule']['cost']})
+        {capsule_data['Yellow Capsule']['description']}
         
         ⚪ - Cannot afford
-        🔴 - Not enough Wool
+        🔴 - Already owned
         
         {icons.wool()}**{wool}**
         '''
@@ -418,7 +324,7 @@ class Command(Extension):
             if badge['requirement'] > wool:
                 buttons[i].disabled = True
                 buttons[i].style = ButtonStyle.GREY
-            elif database.fetch('nikogotchi_data', 'nikogotchi_available', uid) >= 1:
+            elif database.fetch('nikogotchi_data', 'data', uid) is not None:
                 buttons[i].disabled = True
                 buttons[i].style = ButtonStyle.DANGER
             else:
@@ -439,21 +345,21 @@ class Command(Extension):
             color=0x8b00cc
         )
 
+        shop_data = await fetch_shop_data()
+        pancake_data = shop_data['Pancakes']
+
         embed.set_thumbnail('https://cdn.discordapp.com/attachments/1040653069794410567/1106652038772830238/Magpie.webp')
         embed.description = f'''
         Use these pancakes to feed your Nikogotchi!
         
-        <:any:1147281411854839829> **Pancake**
-        {icons.wool()}200 ``+1 Health and +25 Hunger``
-        You have **{pancakes}** in your inventory.
+        <:any:{pancake_data['Pancake']['icon']}> **Pancake** - ({icons.wool()}{pancake_data['Pancake']['cost']})
+        {pancake_data['Pancake']['description']} - Owned: **{pancakes}**
         
-        <:any:1152330988022681821> **Golden Pancake**
-        {icons.wool()}10,000 - ``+25 Health and +50 Hunger``
-        You have **{golden_pancakes}** in your inventory.
+        <:any:{pancake_data['Golden Pancake']['icon']}> **Golden Pancake** - ({icons.wool()}{pancake_data['Golden Pancake']['cost']})
+        {pancake_data['Golden Pancake']['description']} - Owned: **{golden_pancakes}**
         
-        <:any:1152356972423819436> **???**
-        {icons.wool()}999,999 - ``I don't even know how this got here.``
-        You have **{glitched_pancakes}** in your inventory.
+        <:any:{pancake_data['???']['icon']}> **???** - ({icons.wool()}{pancake_data['???']['cost']})
+        {pancake_data['???']['description']} - Owned: **{glitched_pancakes}**
 
         ⚪ - Cannot afford
         
@@ -511,8 +417,6 @@ class Command(Extension):
 
         return embed, buttons
 
-    pages = [{"uid": 0, "page": 0}]
-
     async def open_backgrounds_json(self):
         async with aiofiles.open('Data/backgrounds.json', 'r') as f:
             strdata = await f.read()
@@ -528,10 +432,14 @@ class Command(Extension):
 
         current_background = self.current_background_stock[page]
 
+        try:
+            description = current_background['description']
+        except KeyError:
+            description = ''
+
         embed.description = f'''
-        **{current_background['name']}**
-        
-        Will you buy this background for {icons.wool()}{current_background['cost']}?
+        **{current_background['name']}** - ({icons.wool()}{current_background['cost']})
+        {description}
         
         🔴 - Already owned
         ⚪ - Can't afford
@@ -585,7 +493,7 @@ class Command(Extension):
         for treasure_id in self.current_treasure_stock:
             treasure = get_treasures[treasure_id]
             adjusted_price = int(treasure['price'] * self.current_stock_price)
-            description = f"<:any:{treasure['emoji']}> **{treasure['name']}**\n**{icons.wool()}{adjusted_price}** ``(was {treasure['price']})``"
+            description = f"<:any:{treasure['emoji']}> **{treasure['name']}** - (**{icons.wool()}{adjusted_price}** *was {icons.wool()}{treasure['price']}*)\n{treasure['description']}"
 
             treasures.append({
                 'object': treasure,
@@ -706,146 +614,3 @@ class Command(Extension):
         components = spread_to_rows(select, *buttons)
 
         return embed, components
-
-    @component_callback('move_left', 'move_right', 'buy_background')
-    async def background_callbacks(self, ctx: ComponentContext):
-
-        custom_id = ctx.custom_id
-
-        i = 0
-        for page in self.pages:
-            if page['uid'] == str(ctx.author.id):
-                break
-
-            i += 1
-
-        if i == len(self.pages):
-            self.pages.append({'uid': str(ctx.author.id), 'page': 0})
-            current_page = self.pages[-1]
-            i = self.pages.index(current_page)
-        else:
-            current_page = self.pages[i]
-
-        if custom_id == 'move_left':
-
-            if current_page['page'] <= 0:
-                current_page['page'] = 2
-            else:
-                current_page['page'] -= 1
-
-        if custom_id == 'move_right':
-
-            if current_page['page'] >= 2:
-                current_page['page'] = 0
-            else:
-                current_page['page'] += 1
-
-        embed, buttons = await self.open_backgrounds(int(ctx.author.id), current_page['page'])
-
-        footer = ''
-
-        if custom_id == 'buy_background':
-            background = self.current_background_stock[current_page['page']]
-            wool = database.fetch('user_data', 'wool', ctx.author.id)
-
-            if wool < background['cost']:
-                footer = "[ You don't have enough wool for this! ]"
-            else:
-                all_backgrounds = await self.get_backgrounds()
-
-                unlocked_background = database.fetch('user_data', 'unlocked_backgrounds', ctx.author.id)
-
-                for i, bg in enumerate(all_backgrounds):
-                    if bg['name'] == background['name']:
-                        unlocked_background.append(i)
-                        break
-
-                database.update('user_data', 'wool', ctx.author.id, wool - background['cost'])
-                database.update('user_data', 'unlocked_backgrounds', ctx.author.id, unlocked_background)
-
-                footer = f'[ Successfully bought {background["name"]}! ]'
-
-        embed, buttons = await self.open_backgrounds(int(ctx.author.id), current_page['page'])
-
-        embed.set_footer(footer)
-
-        await ctx.edit_origin(embed=embed, components=buttons)
-
-    @component_callback('buy_treasure_1', 'buy_treasure_2', 'buy_treasure_3', 'sell_treasures')
-    async def treasure_callbacks(self, ctx: ComponentContext):
-
-        custom_id = ctx.custom_id
-
-        embed, components = await self.open_treasures(ctx.author.id)
-
-        wool = database.fetch('user_data', 'wool', ctx.author.id)
-        user_treasures = database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
-        get_treasures = self.get_treasures()
-
-        footer = ''
-
-        treasure_1_price = get_treasures[self.current_treasure_stock[0]]['price'] * self.current_stock_price
-        treasure_2_price = get_treasures[self.current_treasure_stock[1]]['price'] * self.current_stock_price
-        treasure_3_price = get_treasures[self.current_treasure_stock[2]]['price'] * self.current_stock_price
-
-        if custom_id == 'buy_treasure_1':
-            if wool < treasure_1_price:
-                footer = "[ You don't have enough wool for this! ]"
-            else:
-                user_treasures[self.current_treasure_stock[0]] += 1
-                database.update('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
-                database.update('user_data', 'wool', ctx.author.id, wool - treasure_1_price)
-                footer = f'[ Successfully bought {get_treasures[self.current_treasure_stock[0]]["name"]}! ]'
-
-        if custom_id == 'buy_treasure_2':
-            if wool < treasure_2_price:
-                footer = "[ You don't have enough wool for this! ]"
-            else:
-                user_treasures[self.current_treasure_stock[1]] += 1
-                database.update('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
-                database.update('user_data', 'wool', ctx.author.id, wool - treasure_2_price)
-                footer = f'[ Successfully bought {get_treasures[self.current_treasure_stock[1]]["name"]}! ]'
-
-        if custom_id == 'buy_treasure_3':
-            if wool < treasure_3_price:
-                footer = "[ You don't have enough wool for this! ]"
-            else:
-                user_treasures[self.current_treasure_stock[2]] += 1
-                database.update('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
-                database.update('user_data', 'wool', ctx.author.id, wool - treasure_3_price)
-                footer = f'[ Successfully bought {get_treasures[self.current_treasure_stock[2]]["name"]}! ]'
-
-        if custom_id != 'sell_treasures':
-            embed, components = await self.open_treasures(ctx.author.id)
-        else:
-            embed, components = await self.open_sell_treasures(ctx.author.id)
-
-        embed.set_footer(text=footer)
-
-        await ctx.edit_origin(embed=embed, components=components)
-
-    @component_callback('sell_treasures_menu')
-    async def sell_treasures_menu(self, ctx: ComponentContext):
-
-        value = int(ctx.values[0])
-
-        wool = database.fetch('user_data', 'wool', ctx.author.id)
-        user_treasures = database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
-        get_treasures = self.get_treasures()
-
-        footer = ''
-
-        if user_treasures[value] == 0:
-            footer = "[ You don't have any treasures to sell! ]"
-        else:
-            user_treasures[value] -= 1
-            database.update('nikogotchi_data', 'treasure', ctx.author.id, user_treasures)
-            database.update('user_data', 'wool', ctx.author.id, wool + get_treasures[value]['price'] * self.current_stock_price)
-
-            footer = f'[ Successfully sold {get_treasures[value]["name"]}! ]'
-
-        embed, components = await self.open_sell_treasures(ctx.author.id)
-
-        embed.set_footer(text=footer)
-
-        await ctx.edit_origin(embed=embed, components=components)
