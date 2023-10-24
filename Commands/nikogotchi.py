@@ -703,8 +703,7 @@ class Command(Extension):
         embed.description = f'''
         Age: {age.years} years, {age.months} months, and {age.days} days.
         
-        Health: {nikogotchi.health}/50
-        <:dfd:1147281411854839829> {database.fetch('nikogotchi_data', 'pancakes', uid)}
+        Health: {int(nikogotchi.health)}/50
         '''
 
         embed.set_image(url=f'https://cdn.discordapp.com/emojis/{nikogotchi.emoji}.png?v=1')
