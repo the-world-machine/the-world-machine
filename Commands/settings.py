@@ -26,10 +26,10 @@ class Command(Extension):
 
     @user_settings.subcommand(sub_cmd_description='Change the language you wish to translate to.')
     @slash_option(description='DEFAULT: English', max_length=30, name='language', opt_type=OptionType.STRING, required=True)
-    async def translate_language(self, ctx: SlashContext, value: str):
+    async def translate_language(self, ctx: SlashContext, language: str):
 
-        db.update('user_data', 'translation_language', ctx.user.id, value)
-        await fancy_message(ctx, f'[ Successfully set translation language to ``{value}``. ]', ephemeral=True)
+        db.update('user_data', 'translation_language', ctx.user.id, language)
+        await fancy_message(ctx, f'[ Successfully set translation language to ``{language}``. ]', ephemeral=True)
 
     @server_settings.subcommand(
         sub_cmd_description='The transmission channel to use to allow other servers to call. Leave blank to disable.')
