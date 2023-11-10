@@ -1,16 +1,15 @@
 import json
 import random
+from datetime import datetime
 
+from dateutil import relativedelta
 from interactions import *
 from interactions.api.events import Component
-from Utilities.fancysend import *
+
 import Data.capsule_characters as chars
 import database
-
-from datetime import datetime
-from dateutil import relativedelta
-
 from Utilities.bot_icons import loading
+from Utilities.fancysend import *
 
 
 class Nikogotchi:
@@ -191,15 +190,13 @@ class Command(Extension):
             treasures = ''
             looked_over_treasures = []
 
+            get_treasure = database.get_treasures()
+
             for index in found_treasure:
 
                 if index in looked_over_treasures:
                     continue
 
-                with open('Data/treasure.json', 'r') as f:
-                    data = f.read()
-
-                get_treasure = json.loads(data)
                 treasure = get_treasure[index]
 
                 treasures += f'<:any:{treasure["emoji"]}> {treasure["name"]} x{found_treasure.count(index)}\n'
@@ -210,13 +207,13 @@ class Command(Extension):
             '''
 
         if n.health < 20:
-            nikogotchi_status = f'🤒 {n.name} feels quite unwell. Use Golden Pancakes to restore their health!'
+            nikogotchi_status = f'🚨 {n.name} is at low health! Use Golden Pancakes to restore their health! 🚨'
 
         embed.set_author(name=nikogotchi_status)
 
         description = f'''
         {treasure_found}\n
-        ❤️  {health_progress_bar} ({n.health} / 50)\n\n🍴  {hunger_progress_bar} ({n.hunger} / 50)\n🫂  {attention_progress_bar} ({n.attention} / 50)\n🧽  {cleanliness_progress_bar} ({n.cleanliness} / 50)\n\n⏰  ***{age.years}*** *years*, ***{age.months}*** *months*, ***{age.days}*** *days*
+        ❤️  {health_progress_bar} ({int(n.health)} / 50)\n\n🍴  {hunger_progress_bar} ({n.hunger} / 50)\n🫂  {attention_progress_bar} ({n.attention} / 50)\n🧽  {cleanliness_progress_bar} ({n.cleanliness} / 50)\n\n⏰  ***{age.years}*** *years*, ***{age.months}*** *months*, ***{age.days}*** *days*
         '''
 
         embed.description = description
@@ -783,16 +780,14 @@ class Command(Extension):
             color=0x8b00cc,
         )
 
-        with open('Data/treasure.json', 'r') as f:
-            data = f.read()
+        treasures = database.get_treasures()
 
-        treasure = json.loads(data)
         treasure_string = ''
 
         user_treasure = database.fetch('nikogotchi_data', 'treasure', user.id)
 
-        for i, item in enumerate(treasure):
-            treasure_string += f'<:emoji:{item["emoji"]}> {item["name"]}: **{user_treasure[i]}x**\n\n'
+        for i, item in enumerate(treasures):
+            treasure_string += f'<:emoji:{item["image"]}> {item["name"]}: **{user_treasure[i]}x**\n\n'
 
         embed.description = f'''
         Here is {user.mention}'s treasure!

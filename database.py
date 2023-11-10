@@ -1,7 +1,10 @@
-import mysql.connector as MySQLdb
 import json
-from load_data import load_config
+from typing import Union
+
+import mysql.connector as MySQLdb
 from interactions import Snowflake
+
+from load_data import load_config
 
 ip = load_config('PHPma-IP')
 user = load_config('PHPma-USERNAME')
@@ -16,11 +19,8 @@ def get_datatype(data):
     if type(data) == str:
         return f"{data}"
 
-    if type(data) == list:
+    if type(data) == list or type(data) == bool:
         return json.dumps(data)
-
-    if type(data) == bool:
-        return json.dumps({'bool_value': data})
 
     return data
 
@@ -32,11 +32,29 @@ def get_leaderboard(sort_by: str):
     return cursor.fetchall()
 
 
-def fetch(table: str, columns: str, primary_key):
+def get_treasures():
+    sql = f'SELECT * FROM Treasures'
+    cursor.execute(sql)
+
+    rv = cursor.fetchall()
+
+    row_headers = [x[0] for x in cursor.description]
+
+    json_data = []
+    for result in rv:
+        json_data.append(dict(zip(row_headers, result)))
+    data = json.dumps(json_data)
+
+    return data
+
+
+def fetch(table: str, column: str, primary_key: Union[int, Snowflake]):
     if type(primary_key) == Snowflake:
         primary_key = int(primary_key)
 
-    select_sql = f"SELECT * FROM `{table}` WHERE p_key = {primary_key}"
+    select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
+    column_sql = f"DESCRIBE {table} {column}"
+
     try:
         cursor.execute(select_sql)
     except:
@@ -44,31 +62,21 @@ def fetch(table: str, columns: str, primary_key):
 
     row = cursor.fetchone()
 
-    value = None
+    cursor.execute(column_sql)
+    column_data = cursor.fetchone()
 
     if row:
 
-        for i, column_name in enumerate(cursor.description):
+        value = row[0]
 
-            if column_name[0] == columns:
-
-                value = row[i]
-
-                # List Handling.
-                try:
-                    value = json.loads(value)
-
-                    if 'bool_value' in value:
-                        value = value['bool_value']
-                except:
-                    pass
-
-                break
+        # List Handling.
+        if column_data[1] == 'longtext':
+            value = json.loads(value)
 
         return value
     else:
         new_entry(table, primary_key)
-        return fetch(table, columns, primary_key)
+        return fetch(table, column, primary_key)
 
 
 def new_entry(table: str, primary_key: int):

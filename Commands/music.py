@@ -4,20 +4,19 @@ import uuid
 from urllib import parse
 
 import aiohttp
+import lavalink
 from interactions import *
 from interactions.api.events import *
-from load_data import load_config
-
 from interactions_lavalink import Lavalink, Player
-import lavalink
 from interactions_lavalink.events import TrackStart
 from lavalink.models import LoadResult
 
-# Utilities
-from Utilities.spotifyapi import Spotify
+import Utilities.bot_icons as icons
 from Utilities.CustomMusicLoaders import CustomSearch
 from Utilities.fancysend import *
-import Utilities.bot_icons as icons
+# Utilities
+from Utilities.spotifyapi import Spotify
+from load_data import load_config
 
 spotify = Spotify(client_id=load_config("SpotifyID"), secret=load_config("SpotifySecret"))
 
@@ -136,16 +135,19 @@ class Music(Extension):
 
         return queue_embed
 
-    async def check(self, player: Player, author: Member):
+    async def can_modify(self, player: Player, author: User, guild_id: Snowflake):
 
-        requester_member: Member = await self.bot.fetch_member(player.current.requester, author.guild.id)
+        requester_member: Member = await self.bot.fetch_member(player.current.requester, guild_id)
 
         voice_state = requester_member.voice
 
-        if not voice_state or not voice_state.channel:
+        if Permissions.MANAGE_CHANNELS in author.guild_permissions:
             return True
 
-        if Permissions.MANAGE_CHANNELS in author.guild_permissions:
+        if not voice_state or not voice_state.channel:
+            return False
+
+        if int(author.id) == player.current.requester:
             return True
 
         return False
@@ -154,12 +156,15 @@ class Music(Extension):
     @slash_option(name="song", description="Input a search term, or paste a link.", opt_type=OptionType.STRING, required=True, autocomplete=True)
     async def play(self, ctx: SlashContext, song: str):
 
-        message = await fancy_message(ctx, f"Loading search results... {icons.loading()}")
-
         # Getting user's voice state
         voice_state = ctx.author.voice
         if not voice_state or not voice_state.channel:
-            return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000, ephemeral=True)
+            return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
+                                       ephemeral=True)
+
+        print(song)
+
+        message = await fancy_message(ctx, f"[ Loading search results... {icons.loading()} ]")
 
         # Connecting to voice channel and getting player instance
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
@@ -168,6 +173,7 @@ class Music(Extension):
         tracks = result.tracks
 
         if len(tracks) == 0:
+            await message.delete()
             return await fancy_message(ctx, "[ No results found. ]", color=0xff0000, ephemeral=True)
 
         player.store('Channel', ctx.channel)
@@ -176,65 +182,65 @@ class Music(Extension):
 
         await message.delete()
         if player.is_playing:
-            add_to_queue_embed = Embed(
-                title=tracks[0].title,
-                url=tracks[0].uri,
-                description=f'From **{tracks[0].author}**\n\n*Was this a mistake? Run ``/music remove_last`` to quickly remove.*',
-                color=0x1fef2f
-            )
-
-            add_to_queue_embed.set_author(name="Added to Queue", )
-
-            add_to_queue_embed.set_thumbnail(self.get_cover_image(tracks[0].identifier))
-            add_to_queue_embed.set_footer(text='Requested by ' + ctx.author.user.username, icon_url=ctx.author.user.avatar_url)
+            add_to_queue_embed = self.added_to_playlist_embed(ctx, player, tracks[0])
 
             return await ctx.channel.send(embeds=add_to_queue_embed)
         else:
             await player.play()
 
+    def added_to_playlist_embed(self, ctx: SlashContext, player: Player, track: lavalink.AudioTrack):
+        add_to_queue_embed = Embed(
+            title=track.title,
+            url=track.uri,
+            description=f'From **{track.author}** was added to the queue.',
+            color=0x1fef2f
+        )
+
+        add_to_queue_embed.set_author(name='Requested by ' + ctx.author.user.username,
+                                      icon_url=ctx.author.user.avatar_url)
+
+        add_to_queue_embed.set_thumbnail(self.get_cover_image(track.identifier))
+        add_to_queue_embed.set_footer(text='Was this a mistake? Run /music remove_last to quickly remove.')
+
+        return add_to_queue_embed
+
     @music.subcommand(sub_cmd_description="Play a file!")
     @slash_option(name="file", description="Input a file to play.", opt_type=OptionType.ATTACHMENT, required=True)
     async def play_file(self, ctx: SlashContext, file: Attachment):
-        await ctx.defer()
 
         # Getting user's voice state
         voice_state = ctx.author.voice
+
         if not voice_state or not voice_state.channel:
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
                                        ephemeral=True)
 
+        message = await fancy_message(ctx, f"[ Loading search results... {icons.loading()} ]")
+
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
 
-        track = await player.get_tracks(file.url)
+        track: list[lavalink.AudioTrack] = await player.get_tracks(file.url)
 
         if len(track) == 0:
-            return await fancy_message(ctx, "[ Attachment must either be a video or audio file. ]", color=0xff0000, ephemeral=True)
+            return await fancy_message(ctx, "[ Attachment must either be a video or audio file. ]", color=0xff0000,
+                                       ephemeral=True)
 
         track: lavalink.AudioTrack = track[0]
 
         track.title = file.filename
         track.uri = file.url
         track.identifier = file.url
-        track.author = 'Uploaded file.'
+        track.author = 'Uploaded File'
         track.requester = int(ctx.author.id)
 
         player.add(track)
 
         player.store('Channel', ctx.channel)
 
+        await message.delete()
+
         if player.is_playing:
-            add_to_queue_embed = Embed(
-                title=track.title,
-                url=track.uri,
-                description=f'From **{track.author}**\n\n*Was this a mistake? Run ``/music remove_last`` to quickly remove.*',
-                color=0x1fef2f
-            )
-
-            add_to_queue_embed.set_author(name="Added to Queue", )
-
-            add_to_queue_embed.set_thumbnail(track.source_name)
-            add_to_queue_embed.set_footer(text='Requested by ' + ctx.author.user.username,
-                                          icon_url=ctx.author.user.avatar_url)
+            add_to_queue_embed = self.added_to_playlist_embed(ctx, player, track)
 
             return await ctx.channel.send(embeds=add_to_queue_embed)
 
@@ -383,6 +389,16 @@ class Music(Extension):
 
     async def load_spotify_search(self, content):
         search_: dict = await spotify.search(content, limit=25, type='track')
+
+        if search_ == 'error':
+            return (
+                [
+                    {
+                        "Text": "An error occurred within the search.",
+                        "URL": "ef9hur39fh3ehgurifjehiie"
+                    }
+                ]
+            )
 
         tracks = []
 
@@ -655,7 +671,7 @@ class Music(Extension):
             embed = await self.get_lyrics(player.current)
             return await ctx.edit(message, embed=embed)
 
-        if not await self.check(player, ctx.author):
+        if not await self.can_modify(player, ctx.author, ctx.guild.id):
             await fancy_message(ctx, '[ You cannot modify the player. ]', ephemeral=True, color=0xff0d13)
             return
 

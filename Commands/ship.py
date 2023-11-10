@@ -1,13 +1,15 @@
+import random
+
 from interactions import *
+
+import Utilities.bot_icons as icons
 from Utilities.fancysend import *
 from Utilities.text_generation import generate_text
-import random
-import Utilities.bot_icons as icons
 
 
 class Command(Extension):
 
-    @slash_command(description="This is a Boilerplate Command.")
+    @slash_command(description="Ship two people together.")
     @slash_option(name="who", description="First person. Can be a user.", opt_type=OptionType.STRING, required=True)
     @slash_option(name="what", description="Second person. Can be a user.", opt_type=OptionType.STRING, required=True)
     async def ship(self, ctx: SlashContext, who: str, what: str):
@@ -44,19 +46,19 @@ class Command(Extension):
             description = 'Perfect compatibility.'
         if love_percentage < 100:
             emoji = '💖'
-            description = 'Aww.'
+            description = 'In love.'
         if love_percentage < 70:
             emoji = '❤'
-            description = 'In Love.'
-        if love_percentage < 50:
-            emoji = '❣'
             description = 'There\'s interest!'
-        if love_percentage < 30:
+        if love_percentage <= 50:
             emoji = '❓'
             description = 'Maybe?'
+        if love_percentage < 30:
+            emoji = '❌'
+            description = 'No interest.'
         if love_percentage < 10:
             emoji = '💔'
-            description = 'Not compatible.'
+            description = 'Not at all.'
 
         l_length = list("🤍🤍🤍🤍🤍")
 
