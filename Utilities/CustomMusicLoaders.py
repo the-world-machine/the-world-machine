@@ -1,4 +1,5 @@
 from lavalink.models import (DeferredAudioTrack, LoadResult, LoadType, PlaylistInfo, Source)
+
 from Utilities.spotifyapi import Spotify
 from load_data import load_config
 
@@ -28,7 +29,7 @@ class CustomSearch(Source):
         super().__init__(name='custom')  # Initialising our custom source with the name 'custom'.
 
     async def load_item(self, client, query: str):
-        if 'https://open.spotify.com' in query:
+        if 'open.spotify.com' in query:
 
             load_type = LoadType.TRACK
 

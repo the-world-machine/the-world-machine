@@ -58,6 +58,7 @@ class Spotify:
         if 'open.spotify.com/track/' in query:
 
             query = query.replace('https://open.spotify.com/track/', '')
+            query = query.replace('http://open.spotify.com/track/', '')
 
             async with aiohttp.ClientSession() as session:
                 async with session.get(f"https://api.spotify.com/v1/tracks/{query}/", headers=headers) as resp:
@@ -77,6 +78,7 @@ class Spotify:
 
         if 'open.spotify.com/playlist/' in url:
             url = url.replace('https://open.spotify.com/playlist/', '')
+            url = url.replace('http://open.spotify.com/playlist/', '')
             async with aiohttp.ClientSession() as session:
 
                 url = f"https://api.spotify.com/v1/playlists/{url}"
@@ -111,6 +113,7 @@ class Spotify:
         else:
             async with aiohttp.ClientSession() as session:
                 url = url.replace('https://open.spotify.com/album/', '')
+                url = url.replace('http://open.spotify.com/album/', '')
                 async with session.get(f"https://api.spotify.com/v1/albums/{url}", headers=headers) as resp:
                     data = await resp.json()
 
@@ -137,5 +140,10 @@ class Spotify:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://api.spotify.com/v1/search?q={query}&type={type}&limit={limit}",
                                    headers=headers) as resp:
-                data = await resp.json()
+
+                try:
+                    data = await resp.json()
+                except:
+                    return 'error'
+
                 return data

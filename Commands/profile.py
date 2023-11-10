@@ -1,15 +1,15 @@
+import json
+import os
+from datetime import datetime, timedelta
+
+import aiofiles
 from interactions import *
+
 import Utilities.badge_manager as bm
+import Utilities.bot_icons as icons
+import Utilities.profile_viewer as view
 import database as db
 from Utilities.fancysend import *
-import Utilities.profile_viewer as view
-import Utilities.bot_icons as icons
-import aiofiles
-import json
-from datetime import datetime, timedelta
-from uuid import uuid4
-import os
-from interactions.api.events import Component
 
 
 class Command(Extension):
@@ -96,72 +96,8 @@ class Command(Extension):
     @profile.subcommand(sub_cmd_description='Edit your profile.')
     async def edit(self, ctx: SlashContext):
 
-        uid = uuid4()
-
-        edit_buttons = [
-            Button(label='Edit Background', custom_id=f'background{uid}', style=ButtonStyle.PRIMARY),
-            Button(label='Edit Description', custom_id=f'description{uid}', style=ButtonStyle.PRIMARY),
-        ]
-
-        await ctx.send('What do you want to edit?', components=edit_buttons, ephemeral=True)
-
-        while True:
-            button: Component = await self.client.wait_for_component(components=edit_buttons)
-            
-            button_ctx: ComponentContext = button.ctx
-
-            data = button_ctx.custom_id
-
-            if (data == f'description{uid}'):
-                modal = Modal(
-                    ShortText(
-                        label='Edit Profile Description',
-                        custom_id='description',
-                        placeholder='Enter a description for your profile.'
-                    ),
-                    title='Edit Profile Description',
-                    custom_id='ModalSus'
-                )
-
-                await button_ctx.send_modal(modal)
-
-            if (data == f'background{uid}'):
-
-                user_backgrounds = db.fetch('user_data', 'unlocked_backgrounds', ctx.user.id)
-
-                backgrounds = await self.open_backgrounds()
-
-                profile_background_choices = []
-
-                for i, bg in enumerate(backgrounds['background']):
-
-                    if i in user_backgrounds:
-                        profile_background_choices.append(
-                            StringSelectOption(
-                                label=bg['name'],
-                                value=str(i)
-                            )
-                        )
-
-                menu = StringSelectMenu(*profile_background_choices, custom_id='selection')
-
-                await button_ctx.send('Select a profile background.', components=menu, ephemeral=True)
-
-                option: Component = await self.client.wait_for_component(components=menu)
-                
-                SelectOption_: ComponentContext = option.ctx
-
-                id_ = int(ctx.user.id)
-
-                bg_id = SelectOption_.values[0]
-
-                get_bg = backgrounds['background'][int(bg_id)]
-
-                db.update('user_data', 'equipped_background', ctx.user.id, int(bg_id))
-
-                await button_ctx.send(
-                    f'[ Successfully set profile background to: ``{get_bg["name"]}``, use </profile view:8328932897324897> to view your changes. ]',
-                    ephemeral=True)
+        await fancy_message(ctx, "[ Hello! This command has been moved to: https://www.theworldmachine.xyz/profile ]",
+                            ephemeral=True)
 
     @profile.subcommand(sub_cmd_description='View a profile.')
     @slash_option(description='The user\'s profile to view.', name='user', opt_type=OptionType.USER, required=True)

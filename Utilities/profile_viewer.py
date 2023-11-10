@@ -1,10 +1,12 @@
-from PIL import Image, ImageDraw, ImageFont, ImageEnhance
-import aiohttp
-import aiofiles
 import json
 import textwrap
-import database as db
+
+import aiofiles
+import aiohttp
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 from interactions import PartialEmoji, User
+
+import database as db
 
 icons = []
 shop_icons = []
@@ -63,7 +65,6 @@ async def DrawBadges(ctx, user: User):
     profile_background = db.fetch('user_data', 'equipped_background', user_id)
     profile_description = db.fetch('user_data', 'profile_description', user_id)
     user_badges = db.fetch('user_data', 'unlocked_badges', user_id)
-    shop_badges = db.fetch('user_data', 'unlocked_nikogotchis', user_id)
     profile_description = profile_description.strip("'")
 
     bgs = await open_backgrounds()
@@ -73,7 +74,6 @@ async def DrawBadges(ctx, user: User):
     bg = await DownloadImage(get_profile_background['image'], 'background')
 
     fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 25)  # Font
-    fnt_small = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 20)  # Font
     title_fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 25)  # Font
 
     d = ImageDraw.Draw(bg)
