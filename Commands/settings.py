@@ -12,6 +12,14 @@ class Command(Extension):
 
     @slash_command(description="Change settings for the server you are on.")
     async def server_settings(self, ctx: SlashContext):
+        pass
+
+
+    @server_settings.subcommand(
+        sub_cmd_description='The transmission channel to use to allow other servers to call. Leave blank to disable.')
+    @slash_option(description='DEFAULT: NO CHANNEL SET', name='channel', opt_type=OptionType.CHANNEL)
+    async def transmit_channel(self, ctx: SlashContext, channel):
+
         can_manage_channels = await ctx.author.has_permissions(Permissions.MANAGE_CHANNELS)
 
         if not can_manage_channels:
@@ -19,10 +27,6 @@ class Command(Extension):
                                        '[ Sorry, you need the ``MANAGE_CHANNELS`` permission in order to use this command. ]',
                                        ephemeral=True, color=0xff060d)
 
-    @server_settings.subcommand(
-        sub_cmd_description='The transmission channel to use to allow other servers to call. Leave blank to disable.')
-    @slash_option(description='DEFAULT: NO CHANNEL SET', name='channel', opt_type=OptionType.CHANNEL)
-    async def transmit_channel(self, ctx: SlashContext, channel):
         if channel is None:
             db.update('server_data', 'transmit_channel', ctx.guild_id, None)
             return await fancy_message(ctx, '[ Successfully disabled transmission calls. ]', ephemeral=True)
@@ -36,6 +40,13 @@ class Command(Extension):
     @slash_option(description='DEFAULT: TRUE', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def transmit_images(self, ctx: SlashContext, value):
 
+        can_manage_channels = await ctx.author.has_permissions(Permissions.MANAGE_CHANNELS)
+
+        if not can_manage_channels:
+            return await fancy_message(ctx,
+                                       '[ Sorry, you need the ``MANAGE_CHANNELS`` permission in order to use this command. ]',
+                                       ephemeral=True, color=0xff060d)
+
         db.update('server_data', 'transmit_images', ctx.guild_id, value)
 
         if value:
@@ -47,6 +58,13 @@ class Command(Extension):
         sub_cmd_description="Disable/Enable whether transmission receivers are shown Oneshot characters instead of users.")
     @slash_option(description='DEFAULT: FALSE', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def transmit_anonymous(self, ctx: SlashContext, value):
+
+        can_manage_channels = await ctx.author.has_permissions(Permissions.MANAGE_CHANNELS)
+
+        if not can_manage_channels:
+            return await fancy_message(ctx,
+                                       '[ Sorry, you need the ``MANAGE_CHANNELS`` permission in order to use this command. ]',
+                                       ephemeral=True, color=0xff060d)
 
         db.update('server_data', 'transmit_anonymous', ctx.guild_id, value)
 

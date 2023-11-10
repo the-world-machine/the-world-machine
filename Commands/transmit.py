@@ -310,11 +310,12 @@ class Transmit(Extension):
 
             if not done:
 
-                time = humanfriendly.format_timespan(disconnect_timer)
+                if disconnect_timer % 10 == 0:
+                    time = humanfriendly.format_timespan(disconnect_timer)
 
-                embed.set_footer(text=f'Transmission will end in {time}.')
+                    embed.set_footer(text=f'Transmission will end in {time}.')
 
-                await msg.edit(embeds=embed, components=disconnect)
+                    await msg.edit(embeds=embed, components=disconnect)
 
                 disconnect_timer -= 1
 
@@ -416,11 +417,12 @@ class Transmit(Extension):
 
             if not done:
 
-                time = humanfriendly.format_timespan(disconnect_timer)
+                if disconnect_timer % 10 == 0:
+                    time = humanfriendly.format_timespan(disconnect_timer)
 
-                embed.set_footer(text=f'Transmission will end in {time}.')
+                    embed.set_footer(text=f'Transmission will end in {time}.')
 
-                await msg.edit(embeds=embed, components=disconnect)
+                    await msg.edit(embeds=embed, components=disconnect)
 
                 disconnect_timer -= 1
 
@@ -551,8 +553,7 @@ class Transmit(Extension):
             if can_pass:
                 embed = await self.message_manager(message, user, allow_images)
 
-                async with other_connection.typing:
-                    await other_connection.send(embeds=embed)
+                await other_connection.send(embeds=embed)
 
     async def message_manager(self, message: Message, user: TransmitUser, allow_images: bool):
 
