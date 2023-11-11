@@ -15,7 +15,6 @@ print('\nStarting The World Machine... 1/4')
 intents = Intents.DEFAULT | \
           Intents.MESSAGE_CONTENT | \
           Intents.GUILDS | \
-          Intents.GUILD_MEMBERS | \
           Intents.MESSAGES
 
 client = Client(intents=intents, disable_dm_commands=True, send_command_tracebacks=False)
