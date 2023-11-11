@@ -43,9 +43,8 @@ def get_treasures():
     json_data = []
     for result in rv:
         json_data.append(dict(zip(row_headers, result)))
-    data = json.dumps(json_data)
 
-    return data
+    return json_data
 
 
 def fetch(table: str, column: str, primary_key: Union[int, Snowflake]):
