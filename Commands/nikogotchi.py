@@ -352,9 +352,7 @@ class Command(Extension):
         nikogotchi.attention = int(max(0, nikogotchi.attention - time_difference * 1.25 * modifier))
         nikogotchi.cleanliness = int(max(0, nikogotchi.cleanliness - time_difference * 1.05 * modifier))
 
-        immortal = database.fetch('nikogotchi_data', 'immortal', uid)
-
-        if immortal:
+        if nikogotchi.immortal:
             nikogotchi.hunger = 9999
             nikogotchi.attention = 9999
             nikogotchi.cleanliness = 9999

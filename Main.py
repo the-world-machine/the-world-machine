@@ -1,5 +1,5 @@
 from interactions import *
-from interactions.api.events import MessageCreate
+from interactions.api.events import MessageCreate, MemberAdd
 import interactions.ext.prefixed_commands as prefixed_commands
 from load_data import *
 import load_commands
@@ -9,10 +9,13 @@ import Utilities.profile_viewer as view
 import Utilities.badge_manager as badge_manager
 import Data.capsule_characters as chars
 
+from Commands.say import TextBoxGeneration
+
 print('\nStarting The World Machine... 1/4')
-intents = Intents.DEFAULT |\
-          Intents.MESSAGE_CONTENT |\
-          Intents.GUILDS |\
+intents = Intents.DEFAULT | \
+          Intents.MESSAGE_CONTENT | \
+          Intents.GUILDS | \
+          Intents.GUILD_MEMBERS | \
           Intents.MESSAGES
 
 client = Client(intents=intents, disable_dm_commands=True, send_command_tracebacks=False)
@@ -39,7 +42,8 @@ async def pick_avatar():
 async def on_ready():
     print("\nFinalizing... 4/4")
 
-    await client.change_presence(status=Status.ONLINE, activity=Activity(name=load_config("MOTD"), type=ActivityType.PLAYING))
+    await client.change_presence(status=Status.ONLINE,
+                                 activity=Activity(name=load_config("MOTD"), type=ActivityType.PLAYING))
     chars.get_characters()
     await view.load_badges()
 
@@ -57,10 +61,10 @@ async def on_ready():
 
 @listen()
 async def on_message(event: MessageCreate):
-
     if event.message.author.bot:
         return
 
     await badge_manager.increment_value(event.message, 'times_messaged', event.message.author)
+
 
 client.start(load_config("Token"))

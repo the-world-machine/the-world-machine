@@ -529,7 +529,7 @@ class Transmit(Extension):
         if message.author.id == 1015629604536463421 or message.author.id == 1028058097383641118:
             return
 
-        if self.next_connected_server is not None:
+        if self.next_connected_server is not None and self.initial_connected_server is not None:
 
             user = self.check_anonymous(guild.id, message.author)
 
