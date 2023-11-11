@@ -28,6 +28,7 @@ class Command(Extension):
     async def sun(self, ctx):
         pass
 
+    
     @sun.subcommand(sub_cmd_description='Give someone a sun!')
     @slash_option(description='Who you want to give it to.', name='user', opt_type=OptionType.USER, required=True)
     async def give(self, ctx: SlashContext, user: User):
@@ -63,6 +64,7 @@ class Command(Extension):
 
         await ctx.send(f'[ {ctx.author.mention} gave {user.mention} a sun! <:Sun:1026207773559619644> ]')
 
+    
     @sun.subcommand(sub_cmd_description='View who has the most suns!')
     async def leaderboard(self, ctx: SlashContext):
         msg = await ctx.send(
@@ -93,12 +95,14 @@ class Command(Extension):
 
         await msg.edit(embeds=embed)
 
+    
     @profile.subcommand(sub_cmd_description='Edit your profile.')
     async def edit(self, ctx: SlashContext):
 
         await fancy_message(ctx, "[ Hello! This command has been moved to: https://www.theworldmachine.xyz/profile ]",
                             ephemeral=True)
 
+    
     @profile.subcommand(sub_cmd_description='View a profile.')
     @slash_option(description='The user\'s profile to view.', name='user', opt_type=OptionType.USER, required=True)
     async def view(self, ctx: SlashContext, user: User):
@@ -119,6 +123,7 @@ class Command(Extension):
         os.remove('Images/Profile Viewer/result.png')
 
     @modal_callback('ModalSus')
+    
     async def set_description(self, ctx: ModalContext, description: str):
         id_ = int(ctx.user.id)
 
@@ -137,6 +142,7 @@ class Command(Extension):
         SlashCommandChoice(name='Times Transmitted', value='times_transmitted')
     ]
 
+    
     @profile.subcommand(sub_cmd_description='View how much times you need to unlock a new badge.')
     @slash_option(description='The badge to view.', name='badge', opt_type=OptionType.STRING, choices=choices, required=True)
     async def next_badge(self, ctx: SlashContext, badge: str):
@@ -170,6 +176,7 @@ class Command(Extension):
 
         await ctx.send(embeds=embed, ephemeral=True)
 
+    
     @profile.subcommand(sub_cmd_description="Recover your badges if they've been reset.")
     async def recover_badges(self, ctx: SlashContext):
         wool_amount = db.fetch('user_data', 'wool', ctx.user.id)

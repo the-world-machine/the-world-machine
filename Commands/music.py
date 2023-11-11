@@ -152,6 +152,7 @@ class Music(Extension):
 
         return False
 
+    
     @music.subcommand(sub_cmd_description="Play a song!")
     @slash_option(name="song", description="Input a search term, or paste a link.", opt_type=OptionType.STRING, required=True, autocomplete=True)
     async def play(self, ctx: SlashContext, song: str):
@@ -204,6 +205,7 @@ class Music(Extension):
 
         return add_to_queue_embed
 
+    
     @music.subcommand(sub_cmd_description="Play a file!")
     @slash_option(name="file", description="Input a file to play.", opt_type=OptionType.ATTACHMENT, required=True)
     async def play_file(self, ctx: SlashContext, file: Attachment):
@@ -246,6 +248,7 @@ class Music(Extension):
 
         await player.play()
 
+    
     @music.subcommand(sub_cmd_description="Stop the music!")
     async def stop(self, ctx: SlashContext):
 
@@ -263,6 +266,7 @@ class Music(Extension):
     async def music_queue(self, ctx: SlashContext):
         pass
 
+    
     @music_queue.subcommand(sub_cmd_description="Jump to a song!")
     @slash_option(name="position", description="The position of the song you want to jump to.", opt_type=OptionType.INTEGER, required=True)
     async def jump(self, ctx: SlashContext, position: int):
@@ -294,6 +298,7 @@ class Music(Extension):
 
         await fancy_message(ctx, f'[ {ctx.user.mention} jumped to **{song.title}**! ]')
 
+    
     @music_queue.subcommand(sub_cmd_description="Remove a song from the queue.")
     @slash_option(name="position", description="The position of the song you want to remove.", opt_type=OptionType.INTEGER, required=True)
     async def remove(self, ctx: SlashContext, position: int):
@@ -451,6 +456,7 @@ class Music(Extension):
         except:
             pass
 
+    
     @music.subcommand(sub_cmd_description='Remove the most recent song from the queue added by you.')
     async def remove_last(self, ctx: SlashContext):
         player = self.lavalink.get_player(ctx.guild_id)

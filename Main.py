@@ -1,3 +1,5 @@
+import asyncio
+
 from interactions import *
 from interactions.api.events import MessageCreate, MemberAdd
 import interactions.ext.prefixed_commands as prefixed_commands
@@ -17,7 +19,7 @@ intents = Intents.DEFAULT | \
           Intents.GUILDS | \
           Intents.MESSAGES
 
-client = Client(intents=intents, disable_dm_commands=True, send_command_tracebacks=False)
+client = Client(intents=intents, disable_dm_commands=True, send_command_tracebacks=False, auto_defer=True)
 prefixed_commands.setup(client, default_prefix='*')
 
 print("\nLoading Commands... 2/4")

@@ -9,6 +9,7 @@ import database
 
 class Command(Extension):
 
+    
     @slash_command(description="Ask The World Machine anything.")
     @slash_option(name="question", description="The question to ask.", opt_type=OptionType.STRING, required=True)
     async def ask(self, ctx: SlashContext, question: str):
@@ -22,23 +23,16 @@ class Command(Extension):
             color=0x8b00cc
         )
 
-        thinking_embed.description = f'*Thinking how to answer...* {bot_icons.loading()}\n\n``{question}``'
-        thinking_embed.set_author(name='⚠️ This command could potentially spoil OneShot!')
+        thinking_embed.description = f'*[ Thinking how I should respond... ]* {bot_icons.loading()} 1/2'
         thinking_embed.set_footer(text=f'You have {limit} questions left for today.')
 
-        await ctx.send(embed=thinking_embed, ephemeral=True)
+        await ctx.send(embed=thinking_embed)
 
         response = await ai.chat(ctx, question)
 
-        emotion_embed = Embed(
-            color=0x8b00cc
-        )
+        thinking_embed.description = f'*[ Thinking how I should respond... ]* {bot_icons.loading()} 2/2'
 
-        emotion_embed.description = f'Thinking how I feel about this question... {bot_icons.loading()}'
-        emotion_embed.set_author(name='⚠️ This command could potentially spoil OneShot!')
-        emotion_embed.set_footer(text=f'You have {limit} questions left for today.')
-
-        await ctx.edit(embed=emotion_embed)
+        await ctx.edit(embed=thinking_embed)
 
         emotion = await ai.generate_text(f'{response} from a list of possible answers, choose the best fitting emotion: Happy Sad Excited Disgusted Tired Angry Confused.')
 
@@ -65,15 +59,12 @@ class Command(Extension):
 
         final_embed.set_thumbnail(url=twm)
         final_embed.set_author(name=question[:255])
-        final_embed.set_footer(text=f'Asked by {ctx.author.display_name} using /ask.', icon_url=ctx.author.avatar_url)
-
-        await ctx.delete()
 
         final_embed.description = f'[ {response} ]'
 
         await increment_value(ctx, 'times_asked', ctx.user)
 
-        await ctx.channel.send(embed=final_embed)
+        await ctx.edit(embed=final_embed)
 
     async def check(self, uid: int):
 

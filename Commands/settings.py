@@ -14,7 +14,7 @@ class Command(Extension):
     async def server_settings(self, ctx: SlashContext):
         pass
 
-
+    
     @server_settings.subcommand(
         sub_cmd_description='The transmission channel to use to allow other servers to call. Leave blank to disable.')
     @slash_option(description='DEFAULT: NO CHANNEL SET', name='channel', opt_type=OptionType.CHANNEL)
@@ -35,6 +35,7 @@ class Command(Extension):
         return await fancy_message(ctx, f'[ Successfully allowed other servers to call to {channel.mention}. ]',
                                    ephemeral=True)
 
+    
     @server_settings.subcommand(
         sub_cmd_description="Disable/Enable receiving images when transmitting. All redacted images will be sent as [IMAGE].")
     @slash_option(description='DEFAULT: TRUE', name='value', opt_type=OptionType.BOOLEAN, required=True)
@@ -54,6 +55,7 @@ class Command(Extension):
         else:
             return await fancy_message(ctx, '[ Successfully disabled transmission images. ]', ephemeral=True)
 
+    
     @server_settings.subcommand(
         sub_cmd_description="Disable/Enable whether transmission receivers are shown Oneshot characters instead of users.")
     @slash_option(description='DEFAULT: FALSE', name='value', opt_type=OptionType.BOOLEAN, required=True)

@@ -29,6 +29,7 @@ class Command(Extension):
 
     last_called = {}
 
+    
     @slash_command(name='explode', description="💥💥💥💥💥💥💥💥")
     async def explode(self, ctx: SlashContext):
         user_id = ctx.user.id

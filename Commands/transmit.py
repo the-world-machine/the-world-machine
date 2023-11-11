@@ -38,6 +38,7 @@ class Transmit(Extension):
     async def transmit(self, ctx: SlashContext):
         pass
 
+    
     @transmit.subcommand(sub_cmd_description='Connect to a server you already know.')
     async def call(self, ctx: SlashContext):
 
@@ -163,6 +164,7 @@ class Transmit(Extension):
                 self.on_connection_second(int(other_server_ctx.ctx.user.id), other_server_message)
             )
 
+    
     @transmit.subcommand(sub_cmd_description='Transmit to another server.')
     async def connect(self, ctx: SlashContext):
 
