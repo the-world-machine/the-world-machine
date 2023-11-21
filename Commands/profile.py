@@ -8,7 +8,7 @@ from interactions import *
 import Utilities.badge_manager as bm
 import Utilities.bot_icons as icons
 import Utilities.profile_viewer as view
-import database as db
+from database import Database as db
 from Utilities.fancysend import *
 
 
@@ -40,7 +40,7 @@ class Command(Extension):
             await fancy_message(ctx, "[ Can't give yourself a sun! ]", color=0xFF0000, ephemeral=True)
             return
 
-        get_sun_reset_time = db.fetch('user_data', 'daily_sun_timestamp', ctx.user.id)
+        get_sun_reset_time = await db.fetch('user_data', 'daily_sun_timestamp', ctx.user.id)
 
         if get_sun_reset_time is None:
             last_reset_time = datetime(2000, 1, 1, 0, 0, 0)
@@ -56,7 +56,7 @@ class Command(Extension):
         # reset the limit if it is a new day
         if now >= last_reset_time:
             reset_time = now + timedelta(days=1)
-            db.update('user_data', 'daily_sun_timestamp', ctx.user.id, reset_time.strftime('%Y-%m-%d %H:%M:%S'))
+            await db.update('user_data', 'daily_sun_timestamp', ctx.user.id, reset_time.strftime('%Y-%m-%d %H:%M:%S'))
 
         await bm.increment_value(ctx, 'suns')
         await bm.increment_value(ctx, 'suns', user)
@@ -68,7 +68,7 @@ class Command(Extension):
         msg = await ctx.send(
             embeds=Embed(description=f'[ Getting Entries... {icons.loading()} ]', color=0x8b00cc))
 
-        lb: tuple[int, int] = db.get_leaderboard('suns')
+        lb: tuple[int, int] = await db.get_leaderboard('suns')
 
         usernames: str = ''
         value = ''
@@ -122,7 +122,7 @@ class Command(Extension):
     async def set_description(self, ctx: ModalContext, description: str):
         id_ = int(ctx.user.id)
 
-        db.update('user_data', 'profile_description', id_, description)
+        await db.update('user_data', 'profile_description', id_, description)
 
         await ctx.send(
             f'[ Successfully set profile description to: ``{description}``, use </profile view:8328932897324897> to view your changes. ]',
@@ -141,7 +141,7 @@ class Command(Extension):
     @slash_option(description='The badge to view.', name='badge', opt_type=OptionType.STRING, choices=choices, required=True)
     async def next_badge(self, ctx: SlashContext, badge: str):
 
-        amount = db.fetch('user_data', badge, ctx.user.id)
+        amount = await db.fetch('user_data', badge, ctx.user.id)
 
         badges = await bm.open_badges()
 
@@ -172,12 +172,12 @@ class Command(Extension):
 
     @profile.subcommand(sub_cmd_description="Recover your badges if they've been reset.")
     async def recover_badges(self, ctx: SlashContext):
-        wool_amount = db.fetch('user_data', 'wool', ctx.user.id)
-        sun_amount = db.fetch('user_data', 'suns', ctx.user.id)
-        times_shattered = db.fetch('user_data', 'times_shattered', ctx.user.id)
-        times_asked = db.fetch('user_data', 'times_asked', ctx.user.id)
-        times_transmitted = db.fetch('user_data', 'times_transmitted', ctx.user.id)
-        times_messaged = db.fetch('user_data', 'times_messaged', ctx.user.id)
+        wool_amount = await db.fetch('user_data', 'wool', ctx.user.id)
+        sun_amount = await db.fetch('user_data', 'suns', ctx.user.id)
+        times_shattered = await db.fetch('user_data', 'times_shattered', ctx.user.id)
+        times_asked = await db.fetch('user_data', 'times_asked', ctx.user.id)
+        times_transmitted = await db.fetch('user_data', 'times_transmitted', ctx.user.id)
+        times_messaged = await db.fetch('user_data', 'times_messaged', ctx.user.id)
 
         get_badges = await bm.open_badges()
         get_badges = get_badges['Badges']
@@ -204,6 +204,6 @@ class Command(Extension):
                 if badge['requirement'] < times_messaged:
                     badges.append(i)
 
-        db.update('user_data', 'unlocked_badges', ctx.user.id, badges)
+        await db.update('user_data', 'unlocked_badges', ctx.user.id, badges)
 
         await ctx.send('[ Successfully recovered your badges. ]', ephemeral=True)

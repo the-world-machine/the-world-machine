@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from typing import Union
 
 import aiofiles
 import aiohttp
@@ -8,14 +9,28 @@ import humanfriendly
 from interactions import *
 from interactions.api.events import MessageCreate, Component
 
-import database as db
+from database import Database as db
 import load_data
 from Utilities.badge_manager import increment_value
 from Utilities.fancysend import *
 
 
+class Connection:
+    def __init__(self, server_id, channel_id):
+        self.server_id = server_id
+        self.channel_id = channel_id
+
+
+class Transmission:
+    def __init__(self, a: Connection, b: Union[Connection, None]):
+        self.connection_a = a
+        self.connection_b = b
+
+
 class Transmit(Extension):
     transmit_characters = None
+
+    transmissions: list[Transmission] = []
 
     async def load_character(self):
         async with aiofiles.open('Data/transmit_characters.json', 'r') as f:
@@ -49,8 +64,8 @@ class Transmit(Extension):
         self.initial_connected_server = {"server_id": 1, "channel_id": 2}
         self.next_connected_server = {"server_id": 1, "channel_id": 2}
 
-        servers = db.fetch('server_data', 'transmittable_servers', ctx.guild.id)
-        can_transmit = db.fetch('server_data', 'transmit_channel', ctx.guild.id)
+        servers = await db.fetch('server_data', 'transmittable_servers', ctx.guild.id)
+        can_transmit = await db.fetch('server_data', 'transmit_channel', ctx.guild.id)
 
         if can_transmit is None:
             self.initial_connected_server = None
@@ -92,7 +107,7 @@ class Transmit(Extension):
 
         other_server = int(select_results.ctx.values[0])
 
-        get_channel = db.fetch('server_data', 'transmit_channel', other_server)
+        get_channel = await db.fetch('server_data', 'transmit_channel', other_server)
 
         if get_channel is None:
             self.initial_connected_server = None
@@ -168,9 +183,13 @@ class Transmit(Extension):
 
         await self.load_character()
 
-        if self.initial_connected_server is None:
-            self.initial_connected_server = {"server_id": int(ctx.guild.id), "channel_id": int(ctx.channel_id),
-                                             "users": self.transmit_characters.copy()}
+        if len(self.transmissions) == 0:
+            self.transmissions.append(
+                Transmission(
+                    Connection(ctx.guild_id, ctx.channel_id),
+                    None
+                )
+            )
 
             embed = await self.embed_manager('initial_connection')
 
@@ -184,7 +203,7 @@ class Transmit(Extension):
 
             cancel_timer = 50
 
-            async def check(component: Component):
+            async def check_(component: Component):
                 if ctx.user.id == component.ctx.user.id:
                     return True
                 else:
@@ -195,7 +214,7 @@ class Transmit(Extension):
 
             await self.change_status_waiting()
 
-            task = asyncio.create_task(self.client.wait_for_component(components=cancel, check=check))
+            task = asyncio.create_task(self.client.wait_for_component(components=cancel, check=check_))
 
             while self.next_connected_server is None:
                 done, result = await asyncio.wait({task}, timeout=1)
@@ -262,12 +281,12 @@ class Transmit(Extension):
 
         get_guild_id = self.initial_connected_server['server_id']
 
-        servers: list = db.fetch('server_data', 'transmittable_servers', get_guild_id)
+        servers: list = await db.fetch('server_data', 'transmittable_servers', get_guild_id)
 
         if servers is None:
             guild = await self.client.fetch_guild(self.next_connected_server['server_id'])
 
-            db.update('server_data', 'transmittable_servers', get_guild_id,
+            await db.update('server_data', 'transmittable_servers', get_guild_id,
                       json.dumps([{'name': guild.name, 'id': int(guild.id)}]))
         else:
             for server in servers:
@@ -278,7 +297,7 @@ class Transmit(Extension):
 
                 servers.append({'name': guild.name, 'id': int(guild.id)})
 
-                db.update('server_data', 'transmittable_servers', get_guild_id, servers)
+                await db.update('server_data', 'transmittable_servers', get_guild_id, servers)
 
         btn_id = uuid.uuid4()
 
@@ -367,12 +386,12 @@ class Transmit(Extension):
 
         get_guild_id = self.next_connected_server['server_id']
 
-        servers: list = db.fetch('server_data', 'transmittable_servers', get_guild_id)
+        servers: list = await db.fetch('server_data', 'transmittable_servers', get_guild_id)
 
         if servers == None:
             guild = await self.client.fetch_guild(self.initial_connected_server['server_id'])
 
-            db.update('server_data', 'transmittable_servers', get_guild_id,
+            await db.update('server_data', 'transmittable_servers', get_guild_id,
                       json.dumps([{'name': guild.name, 'id': int(guild.id)}]))
         else:
             for server in servers:
@@ -383,7 +402,7 @@ class Transmit(Extension):
 
                 servers.append({'name': guild.name, 'id': int(guild.id)})
 
-                db.update('server_data', 'transmittable_servers', get_guild_id, servers)
+                await db.update('server_data', 'transmittable_servers', get_guild_id, servers)
 
         btn_id = uuid.uuid4()
 
@@ -480,7 +499,7 @@ class Transmit(Extension):
 
     def check_anonymous(self, guild_id: int, d_user: User):
 
-        anonymous = db.fetch('server_data', 'transmit_anonymous', guild_id)
+        anonymous = await db.fetch('server_data', 'transmit_anonymous', guild_id)
 
         if guild_id == self.initial_connected_server['server_id']:
             characters = self.initial_connected_server['users']
@@ -543,12 +562,12 @@ class Transmit(Extension):
             if first_server['channel_id'] == channel.id:
                 can_pass = True
                 other_connection = await self.client.fetch_channel(second_server['channel_id'])
-                allow_images = db.fetch('server_data', 'transmit_images', second_server['server_id'])
+                allow_images = await db.fetch('server_data', 'transmit_images', second_server['server_id'])
 
             if second_server['channel_id'] == channel.id:
                 can_pass = True
                 other_connection = await self.client.fetch_channel(first_server['channel_id'])
-                allow_images = db.fetch('server_data', 'transmit_images', first_server['server_id'])
+                allow_images = await db.fetch('server_data', 'transmit_images', first_server['server_id'])
 
             if can_pass:
                 embed = await self.message_manager(message, user, allow_images)
@@ -593,7 +612,7 @@ class Transmit(Extension):
 
     async def on_cancel(self, cancel_reason, id: int, button_ctx=None):
 
-        db.update('server_data', 'transmit_characters', id, json.dumps(self.transmit_characters))
+        await db.update('server_data', 'transmit_characters', id, json.dumps(self.transmit_characters))
 
         await self.change_status_normal()
 

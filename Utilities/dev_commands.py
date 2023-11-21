@@ -1,7 +1,7 @@
 # Import the necessary modules
 from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
 from interactions import Extension
-import database as db
+from database import Database as db
 from load_data import load_config
 import aiohttp
 
@@ -19,9 +19,9 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        wool = db.fetch('user_data', 'wool', target)
+        wool = await db.fetch('user_data', 'wool', target)
 
-        db.update('user_data', 'wool', target, wool + amount)
+        await db.update('user_data', 'wool', target, wool + amount)
 
         await ctx.send(f'Successfully added {amount} wool to {target_user.mention}. <@{ctx.author.id}>')
 
@@ -36,7 +36,7 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        db.update('user_data', 'wool', target, amount)
+        await db.update('user_data', 'wool', target, amount)
 
         await ctx.send(f'Successfully set wool to {amount} for {target_user.mention}. {ctx.author.mention}')
 
@@ -51,10 +51,10 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        badges = db.fetch('user_data', 'unlocked_badges', target)
+        badges = await db.fetch('user_data', 'unlocked_badges', target)
         badges.append(badge_id)
 
-        db.update('user_data', 'unlocked_badges', target, badges)
+        await db.update('user_data', 'unlocked_badges', target, badges)
 
         await ctx.send(f'Successfully added badge with id {badge_id} to {target_user.mention}. <@{ctx.author.id}>')
 
@@ -69,12 +69,12 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        badges = db.fetch('user_data', 'unlocked_badges', target)
+        badges = await db.fetch('user_data', 'unlocked_badges', target)
 
         if badge_id in badges:
             badges.remove(badge_id)
 
-        db.update('user_data', 'unlocked_badges', target, badges)
+        await db.update('user_data', 'unlocked_badges', target, badges)
 
         await ctx.send(f'Successfully removed badge with id {badge_id} from {target_user.mention}. <@{ctx.author.id}>')
 

@@ -6,7 +6,7 @@ import aiohttp
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 from interactions import PartialEmoji, User
 
-import database as db
+from database import Database as db
 
 icons = []
 shop_icons = []
@@ -62,9 +62,9 @@ async def DrawBadges(ctx, user: User):
     user_id = user.id
     user_pfp = user.avatar_url
 
-    profile_background = db.fetch('user_data', 'equipped_background', user_id)
-    profile_description = db.fetch('user_data', 'profile_description', user_id)
-    user_badges = db.fetch('user_data', 'unlocked_badges', user_id)
+    profile_background = await db.fetch('user_data', 'equipped_background', user_id)
+    profile_description = await db.fetch('user_data', 'profile_description', user_id)
+    user_badges = await db.fetch('user_data', 'unlocked_badges', user_id)
     profile_description = profile_description.strip("'")
 
     bgs = await open_backgrounds()
@@ -129,8 +129,8 @@ async def DrawBadges(ctx, user: User):
             current_column += 1
             current_row = 0
 
-    coins = db.fetch('user_data', 'wool', user_id)
-    sun = db.fetch('user_data', 'suns', user_id)
+    coins = await db.fetch('user_data', 'wool', user_id)
+    sun = await db.fetch('user_data', 'suns', user_id)
     d.text((648, 70), f'{coins} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
     bg.paste(wool_, (659, 63), wool_.convert('RGBA'))

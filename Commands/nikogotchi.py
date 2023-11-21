@@ -7,7 +7,7 @@ from interactions import *
 from interactions.api.events import Component
 
 import Data.capsule_characters as chars
-import database
+from database import Database
 from Utilities.bot_icons import loading
 from Utilities.fancysend import *
 
@@ -34,7 +34,7 @@ class Nikogotchi:
 class Command(Extension):
 
     async def get_nikogotchi(self, uid: int):
-        data = database.fetch('nikogotchi_data', 'data', uid)
+        data = await Database.fetch('nikogotchi_data', 'data', uid)
 
         if data is None:
             return None
@@ -72,7 +72,7 @@ class Command(Extension):
             'last_interacted': nikogotchi.last_interacted.strftime('%Y-%m-%d %H:%M:%S'),
         })
 
-        database.update('nikogotchi_data', 'data', uid, data)
+        await Database.update('nikogotchi_data', 'data', uid, data)
 
     buttons = [
         Button(
@@ -103,7 +103,7 @@ class Command(Extension):
     ]
 
     async def get_nikogotchi_age(self, uid: int):
-        date_hatched_str = database.fetch('nikogotchi_data', 'hatched', uid)
+        date_hatched_str = await Database.fetch('nikogotchi_data', 'hatched', uid)
         date_hatched = datetime.strptime(date_hatched_str, '%Y-%m-%d %H:%M:%S')
 
         return relativedelta.relativedelta(datetime.now(), date_hatched)
@@ -190,7 +190,7 @@ class Command(Extension):
             treasures = ''
             looked_over_treasures = []
 
-            get_treasure = database.get_treasures()
+            get_treasure = await Database.get_treasures()
 
             for index in found_treasure:
 
@@ -240,8 +240,8 @@ class Command(Extension):
             await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]', ephemeral=True)
 
         else:
-            is_available = database.fetch('nikogotchi_data', 'nikogotchi_available', uid)
-            rarity = database.fetch('nikogotchi_data', 'rarity', uid)
+            is_available = await Database.fetch('nikogotchi_data', 'nikogotchi_available', uid)
+            rarity = await Database.fetch('nikogotchi_data', 'rarity', uid)
 
             if is_available == 0:
                 return await fancy_message(ctx,
@@ -258,10 +258,10 @@ class Command(Extension):
 
             selected_nikogotchi: chars.Nikogotchi = random.choice(viable_nikogotchi)
 
-            owned_nikogotchi = database.fetch('user_data', 'unlocked_nikogotchis', ctx.author.id)
+            owned_nikogotchi = await Database.fetch('user_data', 'unlocked_nikogotchis', ctx.author.id)
             owned_nikogotchi.append(nikogotchi_list.index(selected_nikogotchi))
 
-            database.update('nikogotchi_data', 'data', ctx.author.id, json.dumps({
+            await Database.update('nikogotchi_data', 'data', ctx.author.id, json.dumps({
                 'name': selected_nikogotchi.name,
                 'emoji': selected_nikogotchi.emoji,
                 'rarity': selected_nikogotchi.rarity.value,
@@ -294,8 +294,8 @@ class Command(Extension):
                 Button(style=ButtonStyle.RED, label='No', custom_id=f'no {ctx.author.id}')
             ]
 
-            database.update('nikogotchi_data', 'nikogotchi_available', uid, is_available - 1)
-            database.update('nikogotchi_data', 'hatched', uid, datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S'))
+            await Database.update('nikogotchi_data', 'nikogotchi_available', uid, is_available - 1)
+            await Database.update('nikogotchi_data', 'hatched', uid, datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S'))
 
             await ctx.send(embed=hatched_embed, components=buttons, ephemeral=True)
 
@@ -373,7 +373,7 @@ class Command(Extension):
             )
 
             buttons = []
-            database.update('nikogotchi_data', 'data', ctx.author.id, None)
+            await Database.update('nikogotchi_data', 'data', ctx.author.id, None)
         else:
             embed = await self.get_main_nikogotchi_embed(uid, age, '...', [], nikogotchi)
 
@@ -405,9 +405,9 @@ class Command(Extension):
 
                         treasures_found.append(treasure)
 
-                        user_treasures = database.fetch('nikogotchi_data', 'treasure', uid)
+                        user_treasures = await Database.fetch('nikogotchi_data', 'treasure', uid)
                         user_treasures[treasure] += 1
-                        database.update('nikogotchi_data', 'treasure', uid, user_treasures)
+                        await Database.update('nikogotchi_data', 'treasure', uid, user_treasures)
 
                 self.buttons[0].disabled = True
                 self.buttons[1].disabled = True
@@ -429,9 +429,9 @@ class Command(Extension):
 
         await ctx.defer(edit_origin=True)
 
-        pancakes = database.fetch('nikogotchi_data', 'pancakes', ctx.author.id)
-        golden_pancakes = database.fetch('nikogotchi_data', 'golden_pancakes', ctx.author.id)
-        glitched_pancakes = database.fetch('nikogotchi_data', 'glitched_pancakes', ctx.author.id)
+        pancakes = await Database.fetch('nikogotchi_data', 'pancakes', ctx.author.id)
+        golden_pancakes = await Database.fetch('nikogotchi_data', 'golden_pancakes', ctx.author.id)
+        glitched_pancakes = await Database.fetch('nikogotchi_data', 'glitched_pancakes', ctx.author.id)
 
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
 
@@ -508,9 +508,9 @@ class Command(Extension):
 
                 treasures_found.append(treasure)
 
-                user_treasures = database.fetch('user_data', 'treasures', ctx.author.id)
+                user_treasures = await Database.fetch('user_data', 'treasures', ctx.author.id)
                 user_treasures[treasure] += 1
-                database.update('user_data', 'treasures', ctx.author.id, user_treasures)
+                await Database.update('user_data', 'treasures', ctx.author.id, user_treasures)
 
             self.buttons[0].disabled = True
             self.buttons[1].disabled = True
@@ -575,9 +575,9 @@ class Command(Extension):
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
         value = ctx.values[0]
 
-        golden_pancakes = database.fetch('nikogotchi_data', 'golden_pancakes', ctx.author.id)
-        pancakes = database.fetch('nikogotchi_data', 'pancakes', ctx.author.id)
-        glitched_pancakes = database.fetch('nikogotchi_data', 'glitched_pancakes', ctx.author.id)
+        golden_pancakes = await Database.fetch('nikogotchi_data', 'golden_pancakes', ctx.author.id)
+        pancakes = await Database.fetch('nikogotchi_data', 'pancakes', ctx.author.id)
+        glitched_pancakes = await Database.fetch('nikogotchi_data', 'glitched_pancakes', ctx.author.id)
 
         hunger_increase = 0
         health_increase = 0
@@ -589,7 +589,7 @@ class Command(Extension):
                 hunger_increase = 50
                 health_increase = 25
 
-                golden_pancakes = database.update('nikogotchi_data', 'golden_pancakes', ctx.author.id,
+                golden_pancakes = await Database.update('nikogotchi_data', 'golden_pancakes', ctx.author.id,
                                                   golden_pancakes - 1)
                 dialogue = random.choice(nikogotchi.pancake_dialogue)
         elif value == 'pancake_glitched':
@@ -598,7 +598,7 @@ class Command(Extension):
             else:
                 hunger_increase = 9999
                 health_increase = 9999
-                glitched_pancakes = database.update('nikogotchi_data', 'glitched_pancakes', ctx.author.id,
+                glitched_pancakes = await Database.update('nikogotchi_data', 'glitched_pancakes', ctx.author.id,
                                                     glitched_pancakes - 1)
                 nikogotchi.immortal = True
                 dialogue = 'Your Nikogotchi is now Immortal.'
@@ -609,7 +609,7 @@ class Command(Extension):
                 hunger_increase = 25
                 health_increase = 1
 
-                pancakes = database.update('nikogotchi_data', 'pancakes', ctx.author.id, pancakes - 1)
+                pancakes = await Database.update('nikogotchi_data', 'pancakes', ctx.author.id, pancakes - 1)
                 dialogue = random.choice(nikogotchi.pancake_dialogue)
 
         nikogotchi.hunger = min(50, nikogotchi.hunger + hunger_increase)
@@ -650,7 +650,7 @@ class Command(Extension):
         custom_id = button_ctx.custom_id
 
         if custom_id == f'rehome {ctx.author.id}':
-            database.update('nikogotchi_data', 'data', ctx.author.id, None)
+            await Database.update('nikogotchi_data', 'data', ctx.author.id, None)
 
             embed = await fancy_embed(f'[ Successfully sent away {nikogotchi.name}. Enjoy your future Nikogotchi! ]')
 
@@ -778,11 +778,11 @@ class Command(Extension):
             color=0x8b00cc,
         )
 
-        treasures = database.get_treasures()
+        treasures = await Database.get_treasures()
 
         treasure_string = ''
 
-        user_treasure = database.fetch('nikogotchi_data', 'treasure', user.id)
+        user_treasure = await Database.fetch('nikogotchi_data', 'treasure', user.id)
 
         for i, item in enumerate(treasures):
             treasure_string += f'<:emoji:{item["image"]}> {item["name"]}: **{user_treasure[i]}x**\n\n'

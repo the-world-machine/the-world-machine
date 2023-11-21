@@ -4,6 +4,7 @@ import interactions
 files = [f for f in os.listdir('Commands') if f != '__pycache__']
 commands = [f.replace('.py', '') for f in files]
 
+
 def load_commands(client: interactions.Client):
 
     # Load each command using the client.load method

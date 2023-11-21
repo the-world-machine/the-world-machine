@@ -1,6 +1,10 @@
+import asyncio
+
 from interactions import *
 from interactions.api.events import MessageCreate, MemberAdd
 import interactions.ext.prefixed_commands as prefixed_commands
+
+from database import Database
 from load_data import *
 import load_commands
 import os
@@ -25,6 +29,7 @@ print("\nLoading Commands... 2/4")
 load_commands.load_commands(client)
 
 print('\nLoading Additional Extensions... 3/4')
+client.load_extension('database')
 client.load_extension("interactions.ext.sentry", token=load_config("SENTRY-TOKEN"))  # Debugging and errors.
 client.load_extension("Utilities.dev_commands")
 
@@ -57,6 +62,8 @@ async def on_ready():
 
     print("\n----------------------------------------")
     print("\nThe World Machine is ready!\n\n")
+
+    await Database.fetch('user_data', 'profile_description', 302883948424462346)
 
 
 @listen()

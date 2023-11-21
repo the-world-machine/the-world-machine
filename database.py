@@ -1,9 +1,8 @@
 import json
 from typing import Union
-
-import mysql.connector as MySQLdb
-from interactions import Snowflake
-
+import aiomysql
+from interactions import Snowflake, Extension, listen
+from interactions.api.events import Startup
 from load_data import load_config
 
 ip = load_config('PHPma-IP')
@@ -11,111 +10,146 @@ user = load_config('PHPma-USERNAME')
 password = load_config('PHPma-PASSWORD')
 db_name = load_config('PHPma-DBNAME')
 
-db: MySQLdb.MySQLConnection = MySQLdb.connect(host=ip, user=user, password=password, database=db_name)
-cursor = db.cursor()
 
+class Database(Extension):
+    pool: aiomysql.Pool = None  # class-level variable to store the database connection pool
 
-def get_datatype(data):
-    if type(data) == str:
-        return f"{data}"
+    @staticmethod
+    async def create_pool():
+        Database.pool = await aiomysql.create_pool(
+            host=ip,
+            port=3306,
+            user=user,
+            password=password,
+            db=db_name,
+            autocommit=True
+        )
 
-    if type(data) == list or type(data) == bool:
-        return json.dumps(data)
+        print('Database Connected')
 
-    return data
+    @listen(Startup)
+    async def on_ready(self):
+        await Database.create_pool()
 
+    @staticmethod
+    async def execute(sql: str):
 
-def get_leaderboard(sort_by: str):
-    sql = 'SELECT p_key, {0} FROM user_data ORDER BY {0} DESC LIMIT 10;'.format(sort_by, sort_by)
-    cursor.execute(sql)
+        async with Database.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.Cursor) as cursor:
+                await cursor.execute(sql)
 
-    return cursor.fetchall()
+        return cursor
 
+    @staticmethod
+    async def fetch(table: str, column: str, primary_key: Union[int, Snowflake]):
+        if type(primary_key) == Snowflake:
+            primary_key = int(primary_key)
 
-def get_treasures():
-    sql = f'SELECT * FROM Treasures'
-    cursor.execute(sql)
+        select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
+        column_sql = f"DESCRIBE {table} {column}"
 
-    rv = cursor.fetchall()
+        async with Database.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.Cursor) as cursor:
+                await cursor.execute(select_sql)
 
-    row_headers = [x[0] for x in cursor.description]
+                row = await cursor.fetchone()
 
-    json_data = []
-    for result in rv:
-        json_data.append(dict(zip(row_headers, result)))
-    data = json.dumps(json_data)
+        async with Database.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.Cursor) as cursor:
+                await cursor.execute(column_sql)
 
-    return data
+                column_data = await cursor.fetchone()
 
+        if row:
+            value = row[0]
 
-def fetch(table: str, column: str, primary_key: Union[int, Snowflake]):
-    if type(primary_key) == Snowflake:
-        primary_key = int(primary_key)
+            # List Handling.
+            if column_data[1] == 'longtext' and value is not None:
+                value = json.loads(value)
 
-    select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
-    column_sql = f"DESCRIBE {table} {column}"
+            return value
+        else:
+            await Database.new_entry(table, primary_key)  # use Database.new_entry()
+            return await Database.fetch(table, column, primary_key)  # use Database.fetch()
 
-    try:
-        cursor.execute(select_sql)
-    except:
-        new_entry('server_data', primary_key)
+    @staticmethod
+    async def new_entry(table: str, primary_key: int):
+        insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
 
-    row = cursor.fetchone()
+        async with Database.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.Cursor) as cursor:
+                await cursor.execute(insert_sql)
 
-    cursor.execute(column_sql)
-    column_data = cursor.fetchone()
+    @staticmethod
+    async def update(table: str, column: str, p_key, data):
+        if not p_key:
+            raise ValueError("Primary key is not set.")
 
-    if row:
+        if type(data) == list:
+            data = json.dumps(data)
+        elif type(data) == dict:
+            data = json.dumps(data)
 
-        value = row[0]
+        if type(p_key) == Snowflake:
+            p_key = int(p_key)
 
-        # List Handling.
-        if column_data[1] == 'longtext':
-            value = json.loads(value)
+        # Check if the primary key already exists in the table
+        select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
+        async with Database.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.Cursor) as cursor:
+                await cursor.execute(select_sql, (p_key,))
 
-        return value
-    else:
-        new_entry(table, primary_key)
-        return fetch(table, column, primary_key)
+        row = await cursor.fetchall()
 
+        if row:
 
-def new_entry(table: str, primary_key: int):
-    insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
-    cursor.execute(insert_sql)
+            update_sql = f"UPDATE `{table}` SET `{column}` = %s WHERE p_key = %s"
+            async with Database.pool.acquire() as conn:
+                async with conn.cursor(aiomysql.Cursor) as cursor:
+                    await cursor.execute(update_sql, (data, p_key))
+        else:
+            insert_sql = f"INSERT INTO `{table}` (p_key, `{column}`) VALUES (%s, %s)"
+            async with Database.pool.acquire() as conn:
+                async with conn.cursor(aiomysql.Cursor) as cursor:
+                    await cursor.execute(insert_sql, (p_key, data))
 
+                try:
+                    await conn.commit()
+                except Exception as e:
+                    print(f"Error committing changes to database: {e}")
+                    await conn.rollback()
+                    return None
 
-def update(table: str, column: str, p_key, data):
-    if not p_key:
-        raise ValueError("Primary key is not set.")
+        return await Database.fetch(table, column, p_key)  # use Database.fetch()
 
-    if type(p_key) == Snowflake:
-        p_key = int(p_key)
+    @staticmethod
+    async def get_items(item: str):
 
-    d_type = get_datatype(data)
+        sql = f'SELECT * FROM {item}'
 
-    # Check if the primary key already exists in the table
-    select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
-    cursor.execute(select_sql, (p_key,))
+        async with Database.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                await cursor.execute(sql)
+                return await cursor.fetchall()
 
-    row = cursor.fetchone()
+    @staticmethod
+    async def get_leaderboard(sort_by: str):
 
-    if row:
-        update_sql = f"UPDATE `{table}` SET `{column}` = %s WHERE p_key = %s"
-        cursor.execute(update_sql, (d_type, p_key))
-    else:
-        insert_sql = f"INSERT INTO `{table}` (p_key, `{column}`) VALUES (%s, %s)"
-        cursor.execute(insert_sql, (p_key, d_type))
+        sql = f'SELECT * FROM user_data ORDER BY {sort_by} DESC LIMIT 10;'
 
-    try:
-        db.commit()
-    except Exception as e:
-        print(f"Error committing changes to database: {e}")
-        db.rollback()
-        return None
+        async with Database.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.DictCursor) as cursor:
+                await cursor.execute(sql)
+                data = await cursor.fetchall()
 
-    return fetch(table, column, p_key)
+        lb = []
 
+        for row in data:
+            lb.append({'user': row['p_key'], 'value': row[sort_by]})
 
-def increment_value(table: str, column: str, primary_key: int):
-    v: int = fetch(table, column, primary_key)
-    update(table, column, primary_key, v + 1)
+        return lb
+
+    @staticmethod
+    async def increment_value(table: str, column: str, primary_key: int):
+        v: int = await Database.fetch(table, column, primary_key)  # use Database.fetch()
+        await Database.update(table, column, primary_key, v + 1)  # use Database.update()

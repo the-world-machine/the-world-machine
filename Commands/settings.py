@@ -1,6 +1,6 @@
 from interactions import *
 
-import database as db
+from database import Database as db
 from Utilities.fancysend import fancy_message
 
 
@@ -28,10 +28,10 @@ class Command(Extension):
                                        ephemeral=True, color=0xff060d)
 
         if channel is None:
-            db.update('server_data', 'transmit_channel', ctx.guild_id, None)
+            await db.update('server_data', 'transmit_channel', ctx.guild_id, None)
             return await fancy_message(ctx, '[ Successfully disabled transmission calls. ]', ephemeral=True)
 
-        db.update('server_data', 'transmit_channel', ctx.guild_id, int(channel.id))
+        await db.update('server_data', 'transmit_channel', ctx.guild_id, int(channel.id))
         return await fancy_message(ctx, f'[ Successfully allowed other servers to call to {channel.mention}. ]',
                                    ephemeral=True)
 
@@ -47,7 +47,7 @@ class Command(Extension):
                                        '[ Sorry, you need the ``MANAGE_CHANNELS`` permission in order to use this command. ]',
                                        ephemeral=True, color=0xff060d)
 
-        db.update('server_data', 'transmit_images', ctx.guild_id, value)
+        await db.update('server_data', 'transmit_images', ctx.guild_id, value)
 
         if value:
             return await fancy_message(ctx, '[ Successfully enabled transmission images. ]', ephemeral=True)
@@ -66,7 +66,7 @@ class Command(Extension):
                                        '[ Sorry, you need the ``MANAGE_CHANNELS`` permission in order to use this command. ]',
                                        ephemeral=True, color=0xff060d)
 
-        db.update('server_data', 'transmit_anonymous', ctx.guild_id, value)
+        await db.update('server_data', 'transmit_anonymous', ctx.guild_id, value)
 
         if value:
             return await fancy_message(ctx, '[ Successfully enabled anonymous mode. ]', ephemeral=True)

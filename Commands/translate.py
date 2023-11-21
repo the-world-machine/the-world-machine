@@ -1,6 +1,6 @@
 from interactions import *
 from Utilities.fancysend import *
-import database
+from database import Database
 
 from Utilities.text_generation import generate_text
 
@@ -12,7 +12,7 @@ class Command(Extension):
 
         await ctx.defer(ephemeral=True)
 
-        target_language = database.fetch('user_data', 'translation_language', ctx.author.id)
+        target_language = await Database.fetch('user_data', 'translation_language', ctx.author.id)
 
         message = await generate_text(f'Translate this message to {target_language} with new lines intact and no quotation marks: "{ctx.target.content}".')
         message = message.strip('\n')
