@@ -1,7 +1,7 @@
 import asyncio
 
 from interactions import *
-from interactions.api.events import MessageCreate, MemberAdd
+from interactions.api.events import MessageCreate, MemberAdd, Ready, GuildJoin
 import interactions.ext.prefixed_commands as prefixed_commands
 
 from database import Database
@@ -13,7 +13,7 @@ import Utilities.profile_viewer as view
 import Utilities.badge_manager as badge_manager
 import Data.capsule_characters as chars
 
-from Commands.say import TextBoxGeneration
+from Utilities.ShopData import fetch_shop_data
 
 print('\nStarting The World Machine... 1/4')
 intents = Intents.DEFAULT | \
@@ -22,7 +22,12 @@ intents = Intents.DEFAULT | \
           Intents.GUILD_MEMBERS | \
           Intents.MESSAGES
 
-client = Client(intents=intents, disable_dm_commands=True, send_command_tracebacks=False)
+client = Client(
+    intents=intents,
+    disable_dm_commands=True,
+    send_command_tracebacks=False
+)
+
 prefixed_commands.setup(client, default_prefix='*')
 
 print("\nLoading Commands... 2/4")
@@ -43,7 +48,7 @@ async def pick_avatar():
     await client.user.edit(avatar=avatar)
 
 
-@listen()
+@listen(Ready)
 async def on_ready():
     print("\nFinalizing... 4/4")
 
@@ -63,10 +68,8 @@ async def on_ready():
     print("\n----------------------------------------")
     print("\nThe World Machine is ready!\n\n")
 
-    await Database.fetch('user_data', 'profile_description', 302883948424462346)
 
-
-@listen()
+@listen(MessageCreate)
 async def on_message(event: MessageCreate):
     if event.message.author.bot:
         return
@@ -75,3 +78,11 @@ async def on_message(event: MessageCreate):
 
 
 client.start(load_config("Token"))
+
+@listen(MemberAdd)
+async def on_guild_join(event: MemberAdd):
+    
+    print('hello world')
+
+
+    await event.guild.system_channel.send('welcome ' + event.member.mention)

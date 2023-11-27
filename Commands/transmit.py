@@ -14,24 +14,11 @@ import load_data
 from Utilities.badge_manager import increment_value
 from Utilities.fancysend import *
 
-
-class Connection:
-    def __init__(self, server_id, channel_id):
-        self.server_id = server_id
-        self.channel_id = channel_id
-
-
-class Transmission:
-    def __init__(self, a: Connection, b: Union[Connection, None]):
-        self.connection_a = a
-        self.connection_b = b
+from Utilities.TransmissionConnectionManager import *
 
 
 class Transmit(Extension):
     transmit_characters = None
-
-    transmissions: list[Transmission] = []
-
     async def load_character(self):
         async with aiofiles.open('Data/transmit_characters.json', 'r') as f:
             strdata = await f.read()
@@ -183,13 +170,8 @@ class Transmit(Extension):
 
         await self.load_character()
 
-        if len(self.transmissions) == 0:
-            self.transmissions.append(
-                Transmission(
-                    Connection(ctx.guild_id, ctx.channel_id),
-                    None
-                )
-            )
+        if len(transmissions) == 0:
+            create_connection(ctx.guild_id, ctx.channel_id)
 
             embed = await self.embed_manager('initial_connection')
 
@@ -216,7 +198,7 @@ class Transmit(Extension):
 
             task = asyncio.create_task(self.client.wait_for_component(components=cancel, check=check_))
 
-            while self.next_connected_server is None:
+            while not connection_alive(ctx.guild_id):
                 done, result = await asyncio.wait({task}, timeout=1)
 
                 if not done:
@@ -228,8 +210,7 @@ class Transmit(Extension):
                     await msg.edit(embeds=embed, components=cancel)
 
                     if cancel_timer == 0:
-                        self.initial_connected_server = None
-                        self.next_connected_server = None
+                        remove_connection(ctx.guild_id)
 
                         embed = await self.on_cancel('timeout', ctx.guild_id, ctx)
 
@@ -238,8 +219,7 @@ class Transmit(Extension):
 
                     continue
 
-                self.initial_connected_server = None
-                self.next_connected_server = None
+                remove_connection(ctx.guild_id)
 
                 button_ctx = task.result()
 
@@ -250,54 +230,44 @@ class Transmit(Extension):
 
             await increment_value(ctx, 'times_transmitted', ctx.user)
 
-            await self.on_connection_first(int(ctx.user.id), msg)
+            await self.on_transmission(ctx.user, msg, ctx.guild_id)
             return
 
-        if self.initial_connected_server['server_id'] == int(ctx.guild_id):
+        connected = check_if_connected(ctx.guild_id)
+
+        if connected:
             await ctx.send('[ You are already transmitting! ]', ephemeral=True)
             return
-
-        if self.next_connected_server is None:
-            self.next_connected_server = {"server_id": int(ctx.guild.id), "channel_id": int(ctx.channel_id),
-                                          "users": self.transmit_characters.copy()}
-
+        else:
             embed = await self.embed_manager('initial_connection')
 
             msg = await ctx.send(embeds=embed)
 
             await increment_value(ctx, 'times_transmitted', ctx.user)
 
-            await self.on_connection_second(int(ctx.user.id), msg)
+            connect_to_transmission(ctx.guild_id, ctx.channel_id)
+            await self.on_transmission(ctx.user, msg, ctx.guild_id)
             return
 
-        if self.next_connected_server['server_id'] == int(ctx.guild_id):
-            await ctx.send('[ You are already transmitting! ]', ephemeral=True)
-            return
+    async def on_transmission(self, user: User, msg: Message, server_id: int):
 
-        await ctx.send('[ Two servers are already transmitting! ]', ephemeral=True)
-        return
+        transmission = get_transmission(server_id)
 
-    async def on_connection_first(self, id_, msg: Message):
+        this_server: Guild
+        other_server: Guild
 
-        get_guild_id = self.initial_connected_server['server_id']
-
-        servers: list = await db.fetch('server_data', 'transmittable_servers', get_guild_id)
-
-        if servers is None:
-            guild = await self.client.fetch_guild(self.next_connected_server['server_id'])
-
-            await db.update('server_data', 'transmittable_servers', get_guild_id,
-                      json.dumps([{'name': guild.name, 'id': int(guild.id)}]))
+        if server_id == transmission.connection_a.server_id:
+            this_server = await self.client.fetch_guild(transmission.connection_a.server_id)
+            other_server = await self.client.fetch_guild(transmission.connection_b.server_id)
         else:
-            for server in servers:
-                if server['id'] == self.next_connected_server['server_id']:
-                    break
+            this_server = await self.client.fetch_guild(transmission.connection_b.server_id)
+            other_server = await self.client.fetch_guild(transmission.connection_a.server_id)
 
-                guild = await self.client.fetch_guild(self.next_connected_server['server_id'])
+        servers = await db.fetch('server_data', 'transmittable_servers', server_id)
 
-                servers.append({'name': guild.name, 'id': int(guild.id)})
+        servers[str(other_server.id)] = other_server.name
 
-                await db.update('server_data', 'transmittable_servers', get_guild_id, servers)
+        await db.update('server_data', 'transmittable_servers', server_id, servers)
 
         btn_id = uuid.uuid4()
 
@@ -307,24 +277,22 @@ class Transmit(Extension):
             custom_id=str(btn_id)
         )
 
-        server_name = await self.client.fetch_guild(self.next_connected_server['server_id'])
-
-        async def check(component: Component):
-            if id_ == int(component.ctx.user.id):
+        async def check_button(component: Component):
+            if user.id == component.ctx.user.id:
                 return True
             else:
-                await component.ctx.send(f'[ Only the initiator of this transmission (<@{id_}>) can cancel it! ]',
+                await component.ctx.send(f'[ Only the initiator of this transmission ({User.mention}) can cancel it! ]',
                                 ephemeral=True)
                 return False
 
-        task = asyncio.create_task(self.client.wait_for_component(components=disconnect, check=check))
+        task = asyncio.create_task(self.client.wait_for_component(components=disconnect, check=check_button))
 
         disconnect_timer = 600
 
         embed = await self.embed_manager('connected')
-        embed.description = f'[ Currently connected to **{server_name.name}**! ]'
+        embed.description = f'[ Currently connected to **{other_server.name}**! ]'
 
-        while self.initial_connected_server is not None:
+        while connection_alive(server_id):
             done, _ = await asyncio.wait({task}, timeout=1)
 
             if not done:
@@ -342,7 +310,7 @@ class Transmit(Extension):
                     await msg.reply('[ Transmission will end in 30 seconds. ]')
 
                 if disconnect_timer == 0:
-                    embed = await self.on_cancel('transmittime', id=get_guild_id)
+                    embed = await self.on_cancel('transmittime', id=server_id)
 
                     self.initial_connected_server = None
                     self.next_connected_server = None
@@ -353,17 +321,7 @@ class Transmit(Extension):
 
                 continue  # * Important
 
-            if disconnect_timer == 0:
-                embed = await self.on_cancel('transmittime', id=get_guild_id)
-
-                self.initial_connected_server = None
-                self.next_connected_server = None
-
-                await msg.edit(embeds=embed, components=[])
-                await msg.reply(embeds=embed)
-                return
-
-            embed = await self.on_cancel('manual', get_guild_id, task.result().ctx)
+            embed = await self.on_cancel('manual', server_id, task.result().ctx)
 
             await msg.edit(embeds=embed, components=[])
             await msg.reply(embeds=embed)
@@ -373,114 +331,7 @@ class Transmit(Extension):
 
             return
 
-        embed = await self.on_cancel('server', id=get_guild_id)
-
-        await msg.edit(embeds=embed, components=[])
-        await msg.reply(embeds=embed)
-
-        return
-
-    async def on_connection_second(self, id_, msg: Message):
-
-        await self.change_status_normal()
-
-        get_guild_id = self.next_connected_server['server_id']
-
-        servers: list = await db.fetch('server_data', 'transmittable_servers', get_guild_id)
-
-        if servers == None:
-            guild = await self.client.fetch_guild(self.initial_connected_server['server_id'])
-
-            await db.update('server_data', 'transmittable_servers', get_guild_id,
-                      json.dumps([{'name': guild.name, 'id': int(guild.id)}]))
-        else:
-            for server in servers:
-                if server['id'] == self.initial_connected_server['server_id']:
-                    break
-
-                guild = await self.client.fetch_guild(self.initial_connected_server['server_id'])
-
-                servers.append({'name': guild.name, 'id': int(guild.id)})
-
-                await db.update('server_data', 'transmittable_servers', get_guild_id, servers)
-
-        btn_id = uuid.uuid4()
-
-        disconnect = Button(
-            style=ButtonStyle.DANGER,
-            label='Disconnect',
-            custom_id=str(btn_id)
-        )
-
-        server_name = await self.client.fetch_guild(self.initial_connected_server['server_id'])
-
-        async def cancel_check(ctx_: Component):
-            if id_ == int(ctx_.ctx.user.id):
-                return True
-            else:
-                await ctx_.ctx.send(f'[ Only the initiator of this transmission (<@{id_}>) can cancel it! ]',
-                                    ephemeral=True)
-                return False
-
-        task = asyncio.create_task(self.client.wait_for_component(components=disconnect, check=cancel_check))
-
-        disconnect_timer = 600
-
-        embed = await self.embed_manager('connected')
-        embed.description = f'[ Currently connected to **{server_name.name}**! ]'
-
-        await msg.edit(embeds=embed, components=disconnect)
-
-        while self.next_connected_server != None:
-            done, _ = await asyncio.wait({task}, timeout=1)
-
-            if not done:
-
-                if disconnect_timer % 10 == 0:
-                    time = humanfriendly.format_timespan(disconnect_timer)
-
-                    embed.set_footer(text=f'Transmission will end in {time}.')
-
-                    await msg.edit(embeds=embed, components=disconnect)
-
-                disconnect_timer -= 1
-
-                if disconnect_timer == 30:
-                    await msg.reply('[ Transmission will end in 30 seconds. ]')
-
-                if disconnect_timer == 0:
-                    embed = await self.on_cancel('transmittime', id=get_guild_id)
-
-                    self.initial_connected_server = None
-                    self.next_connected_server = None
-
-                    await msg.edit(embeds=embed, components=[])
-                    await msg.reply(embeds=embed)
-                    return
-
-                continue  # * Important
-
-            if disconnect_timer == 0:
-                embed = await self.on_cancel('transmittime', id=get_guild_id)
-
-                self.initial_connected_server = None
-                self.next_connected_server = None
-
-                await msg.edit(embeds=embed, components=[])
-                await msg.reply(embeds=embed)
-                return
-
-            embed = await self.on_cancel('manual', id=get_guild_id)
-
-            await msg.edit(embeds=embed, components=[])
-            await msg.reply(embeds=embed)
-
-            self.initial_connected_server = None
-            self.next_connected_server = None
-
-            return
-
-        embed = await self.on_cancel('server', id=get_guild_id)
+        embed = await self.on_cancel('server', id=server_id)
 
         await msg.edit(embeds=embed, components=[])
         await msg.reply(embeds=embed)
@@ -497,14 +348,10 @@ class Transmit(Extension):
             self.id = u_id
             self.image = image
 
-    def check_anonymous(self, guild_id: int, d_user: User):
+    async def check_anonymous(self, guild_id: int, d_user: User):
 
         anonymous = await db.fetch('server_data', 'transmit_anonymous', guild_id)
-
-        if guild_id == self.initial_connected_server['server_id']:
-            characters = self.initial_connected_server['users']
-        else:
-            characters = self.next_connected_server['users']
+        characters = await db.fetch('server_data', 'transmit_characters', guild_id)
 
         user: Transmit.TransmitUser
 
@@ -516,20 +363,12 @@ class Transmit(Extension):
 
                     characters[i]['id'] = d_user.id
 
-                    if guild_id == self.initial_connected_server['server_id']:
-                        self.initial_connected_server['users'] = characters
-                    else:
-                        self.next_connected_server['users'] = characters
+                    await db.update('server_data', 'transmit_characters', guild_id, characters)
 
                     return user
 
             user = Transmit.TransmitUser(self.transmit_characters[0]['name'], d_user.id,
                                          self.transmit_characters[0]['image'])
-
-            if guild_id == self.initial_connected_server['server_id']:
-                self.initial_connected_server['users'] = characters
-            else:
-                self.next_connected_server['users'] = characters
         else:
             user = Transmit.TransmitUser(d_user.username, d_user.id, d_user.display_avatar.url)
 
@@ -548,26 +387,27 @@ class Transmit(Extension):
         if message.author.id == 1015629604536463421 or message.author.id == 1028058097383641118:
             return
 
-        if self.next_connected_server is not None and self.initial_connected_server is not None:
+        if connection_alive(guild.id):
 
-            user = self.check_anonymous(guild.id, message.author)
+            user = await self.check_anonymous(guild.id, message.author)
+            transmission = get_transmission(guild.id)
 
-            first_server = self.initial_connected_server
-            second_server = self.next_connected_server
+            first_server = transmission.connection_a
+            second_server = transmission.connection_b
 
             can_pass = False
             other_connection = None
             allow_images = True
 
-            if first_server['channel_id'] == channel.id:
+            if first_server.channel_id == channel.id:
                 can_pass = True
-                other_connection = await self.client.fetch_channel(second_server['channel_id'])
-                allow_images = await db.fetch('server_data', 'transmit_images', second_server['server_id'])
+                other_connection = await self.client.fetch_channel(second_server.channel_id)
+                allow_images = await db.fetch('server_data', 'transmit_images', second_server.server_id)
 
-            if second_server['channel_id'] == channel.id:
+            if second_server.channel_id == channel.id:
                 can_pass = True
-                other_connection = await self.client.fetch_channel(first_server['channel_id'])
-                allow_images = await db.fetch('server_data', 'transmit_images', first_server['server_id'])
+                other_connection = await self.client.fetch_channel(first_server.channel_id)
+                allow_images = await db.fetch('server_data', 'transmit_images', first_server.server_id)
 
             if can_pass:
                 embed = await self.message_manager(message, user, allow_images)

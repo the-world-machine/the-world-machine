@@ -4,12 +4,12 @@ import aiomysql
 from interactions import Snowflake, Extension, listen
 from interactions.api.events import Startup
 from load_data import load_config
+from datetime import datetime
 
 ip = load_config('PHPma-IP')
 user = load_config('PHPma-USERNAME')
 password = load_config('PHPma-PASSWORD')
 db_name = load_config('PHPma-DBNAME')
-
 
 class Database(Extension):
     pool: aiomysql.Pool = None  # class-level variable to store the database connection pool
@@ -39,9 +39,26 @@ class Database(Extension):
                 await cursor.execute(sql)
 
         return cursor
+    
+    @staticmethod
+    async def fetch_shop_data() -> dict:
+        
+        async with Database.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.Cursor) as cursor:
+                await cursor.execute('SELECT * FROM shop_data')
+                
+                row = await cursor.fetchone()
+                headers = cursor.description
+                
+        data = {}
+        
+        for i in range(len(row)):
+            data[headers[i][0]] = row[i]
+            
+        return data
 
     @staticmethod
-    async def fetch(table: str, column: str, primary_key: Union[int, Snowflake]):
+    async def fetch(table: str, column: str, primary_key: Union[int, Snowflake]) -> any:
         if type(primary_key) == Snowflake:
             primary_key = int(primary_key)
 
@@ -63,9 +80,9 @@ class Database(Extension):
         if row:
             value = row[0]
 
-            # List Handling.
+            # List + Dictionary Handling.
             if column_data[1] == 'longtext' and value is not None:
-                value = json.loads(value)
+                return json.loads(value)
 
             return value
         else:

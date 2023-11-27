@@ -20,9 +20,7 @@ class Command(Extension):
     @slash_option(description='DEFAULT: NO CHANNEL SET', name='channel', opt_type=OptionType.CHANNEL)
     async def transmit_channel(self, ctx: SlashContext, channel):
 
-        can_manage_channels = await ctx.author.has_permissions(Permissions.MANAGE_CHANNELS)
-
-        if not can_manage_channels:
+        if Permissions.MANAGE_CHANNELS not in ctx.author.guild_permissions:
             return await fancy_message(ctx,
                                        '[ Sorry, you need the ``MANAGE_CHANNELS`` permission in order to use this command. ]',
                                        ephemeral=True, color=0xff060d)
@@ -40,9 +38,7 @@ class Command(Extension):
     @slash_option(description='DEFAULT: TRUE', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def transmit_images(self, ctx: SlashContext, value):
 
-        can_manage_channels = await ctx.author.has_permissions(Permissions.MANAGE_CHANNELS)
-
-        if not can_manage_channels:
+        if Permissions.MANAGE_CHANNELS not in ctx.author.guild_permissions:
             return await fancy_message(ctx,
                                        '[ Sorry, you need the ``MANAGE_CHANNELS`` permission in order to use this command. ]',
                                        ephemeral=True, color=0xff060d)
@@ -59,9 +55,7 @@ class Command(Extension):
     @slash_option(description='DEFAULT: FALSE', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def transmit_anonymous(self, ctx: SlashContext, value):
 
-        can_manage_channels = await ctx.author.has_permissions(Permissions.MANAGE_CHANNELS)
-
-        if not can_manage_channels:
+        if Permissions.MANAGE_CHANNELS not in ctx.author.guild_permissions:
             return await fancy_message(ctx,
                                        '[ Sorry, you need the ``MANAGE_CHANNELS`` permission in order to use this command. ]',
                                        ephemeral=True, color=0xff060d)
@@ -72,3 +66,11 @@ class Command(Extension):
             return await fancy_message(ctx, '[ Successfully enabled anonymous mode. ]', ephemeral=True)
         else:
             return await fancy_message(ctx, '[ Successfully disabled anonymous mode. ]', ephemeral=True)
+        
+    @server_settings.subcommand(sub_cmd_description='Change the bot\'s language.')
+    @slash_option(description='DEFAULT: english', name='value', opt_type=OptionType.STRING, required=True)
+    async def bot_language(self, ctx: SlashContext, value):
+        
+        await db.update('server_data', 'bot_language', ctx.guild_id, value)
+        
+        await ctx.send('wow it is now' + value)

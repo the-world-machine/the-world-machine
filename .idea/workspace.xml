@@ -4,22 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="739f72ef-b09c-4ff1-826b-6675590f8d1f" name="Changes" comment="">
+    <list default="true" id="739f72ef-b09c-4ff1-826b-6675590f8d1f" name="Changes" comment="Backup">
+      <change afterPath="$PROJECT_DIR$/Utilities/TransmissionConnectionManager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/ask.py" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/ask.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/nikogotchi.py" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/nikogotchi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/profile.py" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/profile.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Commands/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/translate.py" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/translate.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Commands/transmit.py" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/transmit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Commands/wool.py" beforeDir="false" afterPath="$PROJECT_DIR$/Commands/wool.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/badge_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/badge_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/dev_commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/dev_commands.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/profile_viewer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/profile_viewer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/load_commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/load_commands.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,7 +96,20 @@
       <option name="presentableId" value="Default" />
       <updated>1693165937703</updated>
     </task>
+    <task id="LOCAL-00001" summary="Backup">
+      <option name="closed" value="true" />
+      <created>1700592074343</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1700592074343</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Backup" />
+    <option name="LAST_COMMIT_MESSAGE" value="Backup" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
