@@ -7,6 +7,9 @@ async def get_lang(guild_id: int):
 
     # Import the language module
     language = importlib.import_module(f'Localization.{server_language}')
+    
+    # Reload the language (so any changes can get updated).
+    language = importlib.reload(language)
 
     # Get the 'text' function from the language module
     return getattr(language, 'text')
@@ -34,3 +37,6 @@ async def loc(guild_id: int, *args: str, values: dict = {}) -> Union[str, list[s
         result = f'⚠️ Error: {str(e)}'
     
     return result
+
+def l_num(num: int) -> str:
+    return f'{num:,}'

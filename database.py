@@ -32,11 +32,11 @@ class Database(Extension):
         await Database.create_pool()
 
     @staticmethod
-    async def execute(sql: str):
+    async def execute(sql: str, *values: any):
 
         async with Database.pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
-                await cursor.execute(sql)
+                await cursor.execute(sql, values)
 
         return cursor
     
@@ -98,9 +98,12 @@ class Database(Extension):
                 await cursor.execute(insert_sql)
 
     @staticmethod
-    async def update(table: str, column: str, p_key, data):
-        if not p_key:
+    async def update(table: str, column: str, p_key = None, data = None):
+        if p_key is None:
             raise ValueError("Primary key is not set.")
+        
+        if data is None:
+            raise ValueError("Data is not set.")
 
         if type(data) == list:
             data = json.dumps(data)

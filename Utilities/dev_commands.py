@@ -1,4 +1,5 @@
 # Import the necessary modules
+import json
 from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
 from interactions import Extension
 from database import Database as db
@@ -8,6 +9,26 @@ import aiohttp
 
 class DevCommands(Extension):
     allowed_users = [302883948424462346]
+    
+    @prefixed_command()
+    async def statistics(self, ctx: PrefixedContext, *statistics: str):
+        # Check if the user is allowed to use this command
+
+        if ctx.author.id not in self.allowed_users:
+            return
+
+        # Fetch the bot statistics from the JSON file
+        with open('Data/bot_statistics.json', 'r') as f:
+            bot_statistics = json.load(f)
+
+        # Send the bot statistics as an embed
+        
+        text = ''
+        
+        for statistic in statistics:
+            text += f'``{statistic}: {bot_statistics.get(statistic, "N/A")}``\n'
+            
+        await ctx.send(text)
 
     @prefixed_command()
     async def add_wool(self, ctx: PrefixedContext, target: int, amount: int):
