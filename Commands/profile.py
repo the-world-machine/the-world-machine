@@ -10,6 +10,7 @@ import Utilities.bot_icons as icons
 import Utilities.profile_viewer as view
 from database import Database as db
 from Utilities.fancysend import *
+from Utilities.CommandHandler import twm_cmd, twm_subcmd
 
 
 class Command(Extension):
@@ -92,13 +93,7 @@ class Command(Extension):
         embed.set_footer(text='Give suns using /sun give <user>!')
 
         await msg.edit(embeds=embed)
-
-    @profile.subcommand(sub_cmd_description='Edit your profile.')
-    async def edit(self, ctx: SlashContext):
-
-        await fancy_message(ctx, "[ Hello! This command has been moved to: https://www.theworldmachine.xyz/profile ]",
-                            ephemeral=True)
-
+        
     @profile.subcommand(sub_cmd_description='View a profile.')
     @slash_option(description='The user\'s profile to view.', name='user', opt_type=OptionType.USER, required=True)
     async def view(self, ctx: SlashContext, user: User):
@@ -108,25 +103,21 @@ class Command(Extension):
 
         msg = f'[ Loading {user.username}\'s profile... <a:loading:1026539890382483576> ]'
 
-        message = await ctx.send(msg)
+        message = await fancy_message(ctx, msg)
 
         await view.DrawBadges(ctx, user)
+        
+        button = Button(
+            style=ButtonStyle.URL,
+            url=f'https://www.theworldmachine.xyz/profile',
+            label='Edit Profile',
+        )
 
         img_ = File('Images/Profile Viewer/result.png', description=f'{user.username}\'s profile.')
 
-        await message.edit(content='', files=img_)
+        await message.edit(components=button, content='', embed=[], files=img_)
 
         os.remove('Images/Profile Viewer/result.png')
-
-    @modal_callback('ModalSus')
-    async def set_description(self, ctx: ModalContext, description: str):
-        id_ = int(ctx.user.id)
-
-        await db.update('user_data', 'profile_description', id_, description)
-
-        await ctx.send(
-            f'[ Successfully set profile description to: ``{description}``, use </profile view:8328932897324897> to view your changes. ]',
-            ephemeral=True)
 
     choices = [
         SlashCommandChoice(name='Sun Amount', value='suns'),

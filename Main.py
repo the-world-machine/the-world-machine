@@ -18,8 +18,6 @@ from Utilities.ShopData import fetch_shop_data
 print('\nStarting The World Machine... 1/4')
 intents = Intents.DEFAULT | \
           Intents.MESSAGE_CONTENT | \
-          Intents.GUILDS | \
-          Intents.GUILD_MEMBERS | \
           Intents.MESSAGES
 
 client = Client(
@@ -82,7 +80,7 @@ client.start(load_config("Token"))
 @listen(MemberAdd)
 async def on_guild_join(event: MemberAdd):
     
-    print('hello world')
+    print('someone joined the server')
 
 
     await event.guild.system_channel.send('welcome ' + event.member.mention)

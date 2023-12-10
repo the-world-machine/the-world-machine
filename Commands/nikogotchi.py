@@ -15,7 +15,7 @@ from Utilities.fancysend import *
 class Nikogotchi:
     def __init__(self, name: str, immortal: bool, rarity: int, status: int, emoji: int, health: float, hunger: float,
                  attention: float, cleanliness: float, pancake_dialogue: list[str], pet_dialogue: list[str],
-                 cleaned_dialogue: list[str], last_interacted: datetime):
+                 cleaned_dialogue: list[str], last_interacted: datetime, dead: bool):
         self.name = name
         self.immortal = immortal
         self.rarity = rarity
@@ -29,6 +29,7 @@ class Nikogotchi:
         self.pet_dialogue = pet_dialogue
         self.cleaned_dialogue = cleaned_dialogue
         self.last_interacted = last_interacted
+        self.dead = dead
 
 
 class Command(Extension):
@@ -53,6 +54,7 @@ class Command(Extension):
             pet_dialogue=data['pet_dialogue'],
             cleaned_dialogue=data['cleaned_dialogue'],
             last_interacted=datetime.strptime(data['last_interacted'], '%Y-%m-%d %H:%M:%S'),
+            dead=data['dead']
         )
 
     async def save_nikogotchi(self, nikogotchi: Nikogotchi, uid: int):
@@ -70,6 +72,7 @@ class Command(Extension):
             'pet_dialogue': nikogotchi.pet_dialogue,
             'cleaned_dialogue': nikogotchi.cleaned_dialogue,
             'last_interacted': nikogotchi.last_interacted.strftime('%Y-%m-%d %H:%M:%S'),
+            'dead': nikogotchi.dead
         })
 
         await Database.update('nikogotchi_data', 'data', uid, data)
@@ -236,7 +239,7 @@ class Command(Extension):
 
         nikogotchi: Nikogotchi
 
-        if nikogotchi is not None:
+        if not nikogotchi.dead:
             await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]', ephemeral=True)
 
         else:
@@ -274,7 +277,8 @@ class Command(Extension):
                 'pancake_dialogue': selected_nikogotchi.pancake_dialogue,
                 'pet_dialogue': selected_nikogotchi.pet_dialogue,
                 'cleaned_dialogue': selected_nikogotchi.cleaned_dialogue,
-                'last_interacted': datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+                'last_interacted': datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S'),
+                'dead': False
             }))
 
             nikogotchi = await self.get_nikogotchi(ctx.author.id)
@@ -373,7 +377,11 @@ class Command(Extension):
             )
 
             buttons = []
-            await Database.update('nikogotchi_data', 'data', ctx.author.id, None)
+            
+            nikogotchi.dead = True
+            
+            await self.save_nikogotchi(nikogotchi, ctx.author.id)
+            return await ctx.send(embed=embed, components=buttons)
         else:
             embed = await self.get_main_nikogotchi_embed(uid, age, '...', [], nikogotchi)
 

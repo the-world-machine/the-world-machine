@@ -495,7 +495,7 @@ class Music(Extension):
         if len(channel.voice_members) <= 2:
             text_channel = player.fetch('Channel')
 
-            await fancy_message(text_channel, f'[ Everyone has disconnected from {channel.mention}. To stop playing music, please use ``/music stop``. ]')
+            await fancy_message(text_channel, f'[ Everyone has disconnected from {channel.mention}. To stop playing music, please use {self.stop.mention}. ]')
 
     @staticmethod
     def get_buttons():

@@ -11,8 +11,9 @@ import json
 class Background:
     
     def __init__(self, background: dict):
+        self.id_: int = background['p_key'] - 1
         self.cost: int = background['cost']
-        self.type_: str = background['type']
+        self.type: str = background['type']
         self.image: str = background['image']
         self.nid: str = background['name']
         
@@ -22,6 +23,7 @@ class Item:
         self.cost: int = item['price']
         self.image: str = item['image']
         self.nid: str = item['nid']
+        self.id_: int = item['p_key'] - 1
         self.type: str = item.get('type', 'any')
 
 class ShopData:
@@ -42,9 +44,6 @@ class ShopData:
         self.stock_price: int = data['stock_price']
         self.stock_value: float = data['stock_value']
         self.motd: int = data['motd']
-        
-async def dict_to_item(item: dict):
-    return Item(item)
 
 async def fetch_shop_data():
     

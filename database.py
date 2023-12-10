@@ -101,14 +101,13 @@ class Database(Extension):
     async def update(table: str, column: str, p_key = None, data = None):
         if p_key is None:
             raise ValueError("Primary key is not set.")
-        
-        if data is None:
-            raise ValueError("Data is not set.")
 
         if type(data) == list:
             data = json.dumps(data)
         elif type(data) == dict:
             data = json.dumps(data)
+        elif data is None:
+            data = 'NULL'
 
         if type(p_key) == Snowflake:
             p_key = int(p_key)

@@ -48,10 +48,7 @@ async def open_badges():
 
 
 async def open_backgrounds():
-    async with aiofiles.open('Data/backgrounds.json', 'r') as f:
-        strdata = await f.read()
-
-    return json.loads(strdata)
+    return await db.get_items('Backgrounds')
 
 
 async def DrawBadges(ctx, user: User):
@@ -69,7 +66,7 @@ async def DrawBadges(ctx, user: User):
 
     bgs = await open_backgrounds()
 
-    get_profile_background = bgs['background'][profile_background]
+    get_profile_background = bgs[profile_background]
 
     bg = await DownloadImage(get_profile_background['image'], 'background')
 
@@ -82,7 +79,7 @@ async def DrawBadges(ctx, user: User):
 
     description = textwrap.fill(profile_description, 35)
 
-    d.text((210, 140), f"\"{description}\"", font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000)
+    d.text((210, 140), f"{description}", font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000, align='center')
 
     pfp = await DownloadImage(user_pfp, 'profile_picture')
 

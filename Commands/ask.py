@@ -22,11 +22,10 @@ class Command(Extension):
             color=0x8b00cc
         )
 
-        thinking_embed.description = f'*Thinking how to answer...* {bot_icons.loading()}\n\n``{question}``'
-        thinking_embed.set_author(name='⚠️ This command could potentially spoil OneShot!')
+        thinking_embed.description = f'*Thinking how to answer...* 1/2 {bot_icons.loading()}'
         thinking_embed.set_footer(text=f'You have {limit} questions left for today.')
 
-        await ctx.send(embed=thinking_embed, ephemeral=True)
+        msg = await ctx.send(embed=thinking_embed)
 
         response = await ai.chat(ctx, question)
 
@@ -34,13 +33,12 @@ class Command(Extension):
             color=0x8b00cc
         )
 
-        emotion_embed.description = f'Thinking how I feel about this question... {bot_icons.loading()}'
-        emotion_embed.set_author(name='⚠️ This command could potentially spoil OneShot!')
+        emotion_embed.description = f'*Thinking how to answer...* 2/2 {bot_icons.loading()}'
         emotion_embed.set_footer(text=f'You have {limit} questions left for today.')
 
-        await ctx.edit(embed=emotion_embed)
+        msg = await msg.edit(embed=emotion_embed)
 
-        emotion = await ai.generate_text(f'{response} from a list of possible answers, choose the best fitting emotion: Happy Sad Excited Disgusted Tired Angry Confused.')
+        emotion = await ai.generate_text(f'{response}\n\nFrom a list of possible answers, choose the best fitting emotion: Happy Sad Excited Disgusted Tired Angry Confused.')
 
         twm = 'https://cdn.discordapp.com/emojis/1023573456664662066.webp?size=128&quality=lossless'
 
@@ -64,25 +62,19 @@ class Command(Extension):
         )
 
         final_embed.set_thumbnail(url=twm)
-        final_embed.set_author(name=question[:255])
-        final_embed.set_footer(text=f'Asked by {ctx.author.display_name} using /ask.', icon_url=ctx.author.avatar_url)
-
-        await ctx.delete()
 
         final_embed.description = f'[ {response} ]'
+        
+        final_embed.set_author(name=question[0:250])
 
         await increment_value(ctx, 'times_asked', ctx.user)
 
-        await ctx.channel.send(embed=final_embed)
+        await msg.edit(embed=final_embed)
 
     async def check(self, uid: int):
 
         current_limit = await Database.fetch('user_data', 'gpt_limit', uid)
-        timestamp_str = await Database.fetch('user_data', 'gpt_timestamp', uid)
-        try:
-            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S.%f')
-        except:
-            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
+        timestamp = await Database.fetch('user_data', 'gpt_timestamp', uid)
 
         now = datetime.now()
 
@@ -94,6 +86,6 @@ class Command(Extension):
             return True, current_limit - 1
 
         new_day = now + timedelta(days=1)
-        await Database.update('user_data', 'gpt_timestamp', uid, new_day.strftime('%Y-%m-%d %H:%M:%S.%f'))
+        await Database.update('user_data', 'gpt_timestamp', uid, new_day)
         await Database.update('user_data', 'gpt_limit', uid, 14)
         return True, 14
