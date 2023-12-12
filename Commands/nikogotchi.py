@@ -628,8 +628,9 @@ class Command(Extension):
     async def send_away(self, ctx: SlashContext):
 
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
+        status = await Database.fetch('nikogotchi_data', 'status', ctx.author.id)
 
-        if nikogotchi is None:
+        if not status['owned']:
             return await fancy_message(ctx, "[ You don't have a Nikogotchi! ]", ephemeral=True, color=0xff0000)
 
         buttons = [
@@ -650,7 +651,7 @@ class Command(Extension):
         custom_id = button_ctx.custom_id
 
         if custom_id == f'rehome {ctx.author.id}':
-            await Database.update('nikogotchi_data', 'data', ctx.author.id, None)
+            await Database.update('nikogotchi_data', 'status', ctx.author.id, {'owned': False, 'rarity': 0})
 
             embed = await fancy_embed(f'[ Successfully sent away {nikogotchi.name}. Enjoy your future Nikogotchi! ]')
 
@@ -711,10 +712,13 @@ class Command(Extension):
 
         nikogotchi_one = await self.get_nikogotchi(ctx.author.id)
         nikogotchi_two = await self.get_nikogotchi(user.id)
+        
+        status_one = await Database.fetch('nikogotchi_data', 'status', ctx.author.id)
+        status_two = await Database.fetch('nikogotchi_data', 'status', user.id)
 
-        if nikogotchi_one is None:
+        if not status_one['owned']:
             return await fancy_message(ctx, "[ You don't have a Nikogotchi! ]", ephemeral=True, color=0xff0000)
-        if nikogotchi_two is None:
+        if not status_two['owned']:
             return await fancy_message(ctx, "[ This person doesn't have a Nikogotchi! ]", ephemeral=True,
                                        color=0xff0000)
 
@@ -778,7 +782,7 @@ class Command(Extension):
             color=0x8b00cc,
         )
 
-        treasures = await Database.get_treasures()
+        treasures = await Database.get_items('Treasures')
 
         treasure_string = ''
 
