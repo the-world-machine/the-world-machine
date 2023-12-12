@@ -243,7 +243,7 @@ class Shop(Extension):
         
         await update()
         
-    r_buy_nikogotchi = re.compile(r'buy_nikogotchi_(\d+)')
+    r_buy_nikogotchi = re.compile(r'nikogotchi_buy_(\d+)')
     @component_callback(r_buy_nikogotchi)
     async def buy_nikogotchi_callback(self, ctx: ComponentContext):
         
@@ -263,7 +263,7 @@ class Shop(Extension):
         capsule_data = await loc(ctx.guild_id, 'Items', 'capsules', nikogotchi_capsule.nid)
         
         async def update():
-            embed, components = await self.embed_manager(ctx, 'Nikogotchis')
+            embed, components = await self.embed_manager(ctx, 'capsules')
             embed.set_footer(footer_text)
             
             await ctx.edit(embed=embed, components=components)
@@ -280,6 +280,7 @@ class Shop(Extension):
             return await update()
         
         await Database.update('nikogotchi_data', 'status', ctx.author.id, {'owned': True, 'rarity': nikogotchi_id})
+        await Database.update('user_data', 'wool', ctx.author.id, user_wool - nikogotchi_capsule.cost)
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': capsule_data['name'],
@@ -471,7 +472,7 @@ class Shop(Extension):
         
         elif category == 'capsules':
             
-            nikogotchi: int = await Database.fetch('nikogotchi_data', 'nikogotchi_available', ctx.author.id)
+            nikogotchi_status: int = await Database.fetch('nikogotchi_data', 'status', ctx.author.id)
             capsules: dict = await Database.get_items('capsules')
             
             caspule_text = ''
@@ -487,14 +488,14 @@ class Shop(Extension):
                     label=await loc(ctx.guild_id, 'Shop', 'buy'),
                     emoji=PartialEmoji(id=capsule["image"]),
                     style=ButtonStyle.BLURPLE,
-                    custom_id=f'buy_nikogotchi_{i}'
+                    custom_id=f'nikogotchi_buy_{i}'
                 )
                 
                 if user_wool < capsule['price']:
                     button.disabled = True
                     button.style = ButtonStyle.GRAY
                     
-                if nikogotchi > 0:
+                if nikogotchi_status['owned']:
                     button.disabled = True
                     button.style = ButtonStyle.RED
                     

@@ -161,7 +161,11 @@ def text(data: dict = {}):
                 "select_treasure_placeholder": f"Select a treasure!",
             
                 "treasure_not_selected": "It seems you haven't selected any treasure yet. I'll let you know when you do!",
-                "treasure_selected": f"Ah... the **{fetch('selected_treasure')}**? I think I can give you about {wool_icon}**{fetch('sell_one')}**, if you giving me one, but {wool_icon}**{fetch('sell_all')}** if you're giving me all of it!",
+                "treasure_selected": f"""
+                **{fetch('selected_treasure')}**
+                Sell One: {wool_icon}{fetch('sell_one')}
+                Sell All: {wool_icon}{fetch('sell_all')}
+                """,
             },
         },
         
@@ -252,7 +256,7 @@ def text(data: dict = {}):
                 "The World Machine": "The World Machine",
                 "Alula and Calamus": "Alula and Calamus",
                 "Pancakes": "Pancakes",
-                "Magoie": "Magpie",
+                "Magpie": "Magpie",
                 "Catwalk": "Catwalk",
                 "Ruins": "Ruins",
                 "Factory": "Factory",

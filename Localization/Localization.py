@@ -1,20 +1,25 @@
 from database import Database
 from typing import Union
 import importlib
+import os
 
-language_cache = {}
+languages = {}
+
+def load_languages():
+    
+    for file in os.listdir('Localization/lang'):
+        if file.endswith('.py'):
+            language = file.replace('.py', '')
+            module = importlib.import_module(f'Localization.lang.{language}')
+            
+            languages[language] = module
 
 async def get_lang(guild_id: int):
     server_language: str = await Database.fetch('server_data', 'bot_language', guild_id)
 
-    if server_language in language_cache:
-        return language_cache[server_language]
-
-    language_module = importlib.import_module(f'Localization.{server_language}')
+    language_module = importlib.reload(languages[server_language])
     
     data = getattr(language_module, 'text')
-    
-    language_cache[server_language] = data
     return data
 
 async def loc(guild_id: int, *args: str, values: dict = {}) -> Union[str, list[str], dict]:

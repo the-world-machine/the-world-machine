@@ -12,6 +12,7 @@ import random
 import Utilities.profile_viewer as view
 import Utilities.badge_manager as badge_manager
 import Data.capsule_characters as chars
+from Localization.Localization import load_languages
 
 from Utilities.ShopData import fetch_shop_data
 
@@ -33,6 +34,7 @@ load_commands.load_commands(client)
 
 print('\nLoading Additional Extensions... 3/4')
 client.load_extension('database')
+print('Successfully loaded database.')
 client.load_extension("interactions.ext.sentry", token=load_config("SENTRY-TOKEN"))  # Debugging and errors.
 client.load_extension("Utilities.dev_commands")
 
@@ -62,6 +64,10 @@ async def on_ready():
             await client.user.edit(avatar=File('Images/Unstable.png'))
         except:
             pass
+        
+    load_languages()
+    
+    print('Successfully loaded languages.')
 
     print("\n----------------------------------------")
     print("\nThe World Machine is ready!\n\n")

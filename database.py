@@ -16,6 +16,10 @@ class Database(Extension):
 
     @staticmethod
     async def create_pool():
+        
+        if Database.pool is not None:
+            return
+        
         Database.pool = await aiomysql.create_pool(
             host=ip,
             port=3306,
@@ -24,8 +28,6 @@ class Database(Extension):
             db=db_name,
             autocommit=True
         )
-
-        print('Database Connected')
 
     @listen(Startup)
     async def on_ready(self):
