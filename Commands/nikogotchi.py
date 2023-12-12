@@ -212,7 +212,7 @@ class Command(Extension):
 
         nikogotchi: Nikogotchi
 
-        if not nikogotchi.dead:
+        if not nikogotchi.dead or nikogotchi is None:
             await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]')
 
         else:
