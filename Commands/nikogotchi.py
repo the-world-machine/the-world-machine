@@ -211,12 +211,23 @@ class Command(Extension):
         nikogotchi = await self.get_nikogotchi(uid)
 
         nikogotchi: Nikogotchi
+        
+        dead = False
+        
+        status = await Database.fetch('nikogotchi_data', 'status', uid)
+        
+        if nikogotchi is not None:
+            dead = nikogotchi.dead
+        else:
+            dead = True
+            
+        if not status['owned']:
+            dead = True
 
-        if nikogotchi is not None or not nikogotchi.dead:
+        if not dead:
             await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]')
 
         else:
-            status = await Database.fetch('nikogotchi_data', 'status', uid)
             rarity = status['rarity']
 
             if not status['owned']:
@@ -652,9 +663,11 @@ class Command(Extension):
 
         if custom_id == f'rehome {ctx.author.id}':
             await Database.update('nikogotchi_data', 'status', ctx.author.id, {'owned': False, 'rarity': 0})
+            nikogotchi.dead = True
 
             embed = await fancy_embed(f'[ Successfully sent away {nikogotchi.name}. Enjoy your future Nikogotchi! ]')
 
+            await self.save_nikogotchi(nikogotchi, ctx.author.id)
             await ctx.edit(embed=embed, components=[])
 
     @nikogotchi.subcommand(sub_cmd_description='Rename your Nikogotchi.')
@@ -662,8 +675,9 @@ class Command(Extension):
     async def rename(self, ctx: SlashContext, name):
 
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
+        status = await Database.fetch('nikogotchi_data', 'status', ctx.author.id)
 
-        if nikogotchi is None:
+        if not status['owned']:
             return await fancy_message(ctx, "[ You don't have a Nikogotchi! ]", ephemeral=True, color=0xff0000)
 
         old_name = nikogotchi.name

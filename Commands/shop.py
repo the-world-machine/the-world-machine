@@ -732,7 +732,7 @@ class Shop(Extension):
                     'sell_all': l_num(sell_price_all),
                 })             
             else:
-                selection_description = await loc(ctx.guild_id, 'Shop', 'Treasure_Sell', 'treasure_not_selected'),
+                selection_description = await loc(ctx.guild_id, 'Shop', 'Treasure_Sell', 'treasure_not_selected')
                 
             embed = Embed(
                 title=await loc(ctx.guild_id, 'Shop', 'Treasure_Sell', 'title'),
