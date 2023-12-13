@@ -44,7 +44,7 @@ class Database(Extension):
     @staticmethod
     async def execute(sql: str, *values: any):
         
-        get_pool = get_pool
+        get_pool = await Database.get_pool()
 
         async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
@@ -55,7 +55,7 @@ class Database(Extension):
     @staticmethod
     async def fetch_shop_data() -> dict:
         
-        get_pool = get_pool
+        get_pool = await Database.get_pool()
         
         async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
@@ -79,8 +79,8 @@ class Database(Extension):
         select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
         column_sql = f"DESCRIBE {table} {column}"
         
-        get_pool = get_pool
-
+        get_pool = await Database.get_pool()
+        
         async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(select_sql)
@@ -109,7 +109,7 @@ class Database(Extension):
     async def new_entry(table: str, primary_key: int):
         insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
         
-        get_pool = get_pool
+        get_pool = await Database.get_pool()
 
         async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
