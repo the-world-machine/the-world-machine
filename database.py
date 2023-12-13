@@ -28,6 +28,14 @@ class Database(Extension):
             db=db_name,
             autocommit=True
         )
+    
+    @staticmethod
+    async def get_pool():
+        
+        if Database.get_pool() is None:
+            await Database.create_pool()
+            
+        return Database.get_pool()
 
     @listen(Startup)
     async def on_ready(self):
@@ -36,7 +44,7 @@ class Database(Extension):
     @staticmethod
     async def execute(sql: str, *values: any):
 
-        async with Database.pool.acquire() as conn:
+        async with Database.get_pool().acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(sql, values)
 
@@ -45,7 +53,7 @@ class Database(Extension):
     @staticmethod
     async def fetch_shop_data() -> dict:
         
-        async with Database.pool.acquire() as conn:
+        async with Database.get_pool().acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute('SELECT * FROM shop_data')
                 
@@ -67,13 +75,13 @@ class Database(Extension):
         select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
         column_sql = f"DESCRIBE {table} {column}"
 
-        async with Database.pool.acquire() as conn:
+        async with Database.get_pool().acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(select_sql)
 
                 row = await cursor.fetchone()
 
-        async with Database.pool.acquire() as conn:
+        async with Database.get_pool().acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(column_sql)
 
@@ -95,7 +103,7 @@ class Database(Extension):
     async def new_entry(table: str, primary_key: int):
         insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
 
-        async with Database.pool.acquire() as conn:
+        async with Database.get_pool().acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(insert_sql)
 
@@ -116,7 +124,7 @@ class Database(Extension):
 
         # Check if the primary key already exists in the table
         select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
-        async with Database.pool.acquire() as conn:
+        async with Database.get_pool().acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(select_sql, (p_key,))
 
@@ -125,12 +133,12 @@ class Database(Extension):
         if row:
 
             update_sql = f"UPDATE `{table}` SET `{column}` = %s WHERE p_key = %s"
-            async with Database.pool.acquire() as conn:
+            async with Database.get_pool().acquire() as conn:
                 async with conn.cursor(aiomysql.Cursor) as cursor:
                     await cursor.execute(update_sql, (data, p_key))
         else:
             insert_sql = f"INSERT INTO `{table}` (p_key, `{column}`) VALUES (%s, %s)"
-            async with Database.pool.acquire() as conn:
+            async with Database.get_pool().acquire() as conn:
                 async with conn.cursor(aiomysql.Cursor) as cursor:
                     await cursor.execute(insert_sql, (p_key, data))
 
@@ -148,7 +156,7 @@ class Database(Extension):
 
         sql = f'SELECT * FROM {item}'
 
-        async with Database.pool.acquire() as conn:
+        async with Database.get_pool().acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
                 await cursor.execute(sql)
                 return await cursor.fetchall()
@@ -158,7 +166,7 @@ class Database(Extension):
 
         sql = f'SELECT * FROM user_data ORDER BY {sort_by} DESC LIMIT 10;'
 
-        async with Database.pool.acquire() as conn:
+        async with Database.get_pool().acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
                 await cursor.execute(sql)
                 data = await cursor.fetchall()
