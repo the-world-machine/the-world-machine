@@ -35,7 +35,7 @@ class Database(Extension):
         if Database.pool is None:
             await Database.create_pool()
             
-        return await Database.get_pool()
+        return Database.pool
 
     @listen(Startup)
     async def on_ready(self):
@@ -43,8 +43,10 @@ class Database(Extension):
 
     @staticmethod
     async def execute(sql: str, *values: any):
+        
+        get_pool = get_pool
 
-        async with await Database.get_pool().acquire() as conn:
+        async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(sql, values)
 
@@ -53,7 +55,9 @@ class Database(Extension):
     @staticmethod
     async def fetch_shop_data() -> dict:
         
-        async with await Database.get_pool().acquire() as conn:
+        get_pool = get_pool
+        
+        async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute('SELECT * FROM shop_data')
                 
@@ -74,14 +78,16 @@ class Database(Extension):
 
         select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
         column_sql = f"DESCRIBE {table} {column}"
+        
+        get_pool = get_pool
 
-        async with await Database.get_pool().acquire() as conn:
+        async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(select_sql)
 
                 row = await cursor.fetchone()
 
-        async with await Database.get_pool().acquire() as conn:
+        async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(column_sql)
 
@@ -102,8 +108,10 @@ class Database(Extension):
     @staticmethod
     async def new_entry(table: str, primary_key: int):
         insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
+        
+        get_pool = get_pool
 
-        async with await Database.get_pool().acquire() as conn:
+        async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(insert_sql)
 
@@ -121,10 +129,13 @@ class Database(Extension):
 
         if type(p_key) == Snowflake:
             p_key = int(p_key)
+            
+            
+        get_pool = await Database.get_pool()
 
         # Check if the primary key already exists in the table
         select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
-        async with await Database.get_pool().acquire() as conn:
+        async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(select_sql, (p_key,))
 
@@ -133,12 +144,12 @@ class Database(Extension):
         if row:
 
             update_sql = f"UPDATE `{table}` SET `{column}` = %s WHERE p_key = %s"
-            async with await Database.get_pool().acquire() as conn:
+            async with get_pool.acquire() as conn:
                 async with conn.cursor(aiomysql.Cursor) as cursor:
                     await cursor.execute(update_sql, (data, p_key))
         else:
             insert_sql = f"INSERT INTO `{table}` (p_key, `{column}`) VALUES (%s, %s)"
-            async with await Database.get_pool().acquire() as conn:
+            async with get_pool.acquire() as conn:
                 async with conn.cursor(aiomysql.Cursor) as cursor:
                     await cursor.execute(insert_sql, (p_key, data))
 
@@ -155,8 +166,10 @@ class Database(Extension):
     async def get_items(item: str):
 
         sql = f'SELECT * FROM {item}'
+        
+        get_pool = await Database.get_pool()
 
-        async with await Database.get_pool().acquire() as conn:
+        async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
                 await cursor.execute(sql)
                 return await cursor.fetchall()
@@ -165,8 +178,10 @@ class Database(Extension):
     async def get_leaderboard(sort_by: str):
 
         sql = f'SELECT * FROM user_data ORDER BY {sort_by} DESC LIMIT 10;'
+        
+        get_pool = await Database.get_pool()
 
-        async with await Database.get_pool().acquire() as conn:
+        async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
                 await cursor.execute(sql)
                 data = await cursor.fetchall()
