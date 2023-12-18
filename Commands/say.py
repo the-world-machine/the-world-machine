@@ -1,3 +1,4 @@
+import io
 from interactions import *
 import json
 from uuid import uuid4
@@ -31,9 +32,7 @@ class TextBoxGeneration(Extension):
     async def generate_dialogue(l1, image_url, uuid):
         img = Image.open("Images/Dialogue Generation/niko-background.png")  # Opening Images for both the background...
 
-        await TextBoxGeneration.DownloadImage(image_url=image_url, filename='Images/Dialogue Generation/niko.png')
-
-        icon = Image.open("Images/Dialogue Generation/niko.png")  # ...And the niko face selected in the command
+        icon = await TextBoxGeneration.GetImage(image_url=image_url, filename='Images/Dialogue Generation/niko.png') # ...And the niko face selected in the command
 
         fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 20)  # Font
 
@@ -55,9 +54,7 @@ class TextBoxGeneration(Extension):
 
         img = Image.open("Images/Dialogue Generation/niko-background.png")  # Opening Images for both the background...
 
-        await TextBoxGeneration.DownloadImage(image_url=image_url, filename='Images/Dialogue Generation/niko.png')
-
-        icon = Image.open("Images/Dialogue Generation/niko.png")  # ...And the niko face selected in the command
+        icon = await TextBoxGeneration.GetImage(image_url=image_url, filename='Images/Dialogue Generation/niko.png')  # ...And the niko face selected in the command
 
         fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 20)  # Font
 
@@ -65,38 +62,47 @@ class TextBoxGeneration(Extension):
         cumulative_text = ''
 
         final_text = '\n'.join(textwrap.wrap(text, width=46))
+        
+        def append_frame():
+            text_x = 20
+            text_y = 17
+            d = ImageDraw.Draw(img)
 
-        for index, char in enumerate(final_text):
+            d.text((text_x, text_y), cumulative_text, font=fnt, fill=(255, 255, 255))  # Text and Text Wrapping
+            text_y += 25  # Width of line breaks, by y value
+
+            img.paste(icon, (496, 16), icon.convert('RGBA'))  # The face sprite to use on the textbox
+            return img.copy()
+
+        for char in final_text:
             cumulative_text += char
-
-            if char in ['-', ',', '.', '!', '?']:
-                print('pause')
-                frame_length = 10
+            
+            frame_time = 0
+            
+            if char in ['. ', '! ', '? ']:
+                frame_time = 10
+            
+            if char in ['.', '!', '?']:
+                frame_time = 5
+            
+            img = append_frame()
+            
+            if frame_time > 0:
+                for _ in range(frame_time):
+                    images.append(img)
             else:
-                frame_length = 1
-
-            for frame in range(frame_length):
-                text_x = 20
-                text_y = 17
-                d = ImageDraw.Draw(img)
-
-                d.text((text_x, text_y), cumulative_text, font=fnt, fill=(255, 255, 255))  # Text and Text Wrapping
-                text_y += 25  # Width of line breaks, by y value
-
-                img.paste(icon, (496, 16), icon.convert('RGBA'))  # The face sprite to use on the textbox
-                images.append(img.copy())
-
-            img.paste(icon, (496, 16), icon.convert('RGBA'))
-        img.save(f'Images/{uuid}.gif', save_all=True, append_images=images, optimize=False, duration=60 / len(text))
+                images.append(img)         
+                
+                
+        img.save(f'Images/{uuid}.gif', save_all=True, append_images=images, optimize=False, duration=40)
 
     @staticmethod
-    async def DownloadImage(image_url, filename):
+    async def GetImage(image_url, filename):
         async with aiohttp.ClientSession() as session:
             async with session.get(image_url) as resp:
                 if resp.status == 200:
-                    f = await aiofiles.open(filename, mode='wb')
-                    await f.write(await resp.read())
-                    await f.close()
+                    file = io.BytesIO(await resp.read())
+                    return Image.open(file)
 
     def emojis(self):
         json_data = {}

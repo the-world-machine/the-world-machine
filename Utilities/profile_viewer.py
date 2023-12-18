@@ -1,3 +1,4 @@
+import io
 import json
 import textwrap
 
@@ -30,11 +31,11 @@ async def load_badges():
         emoji = PartialEmoji(id=stamp['emoji'])
         images.append(f'https://cdn.discordapp.com/emojis/{emoji.id}.webp?size=96&quality=lossless')
 
-    wool_ = await DownloadImage('https://cdn.discordapp.com/emojis/1044668364422918176.png', 'wool')
-    sun_ = await DownloadImage('https://cdn.discordapp.com/emojis/1026207773559619644.png', 'sun')
+    wool_ = await GetImage('https://cdn.discordapp.com/emojis/1044668364422918176.png', 'wool')
+    sun_ = await GetImage('https://cdn.discordapp.com/emojis/1026207773559619644.png', 'sun')
 
     for item in images:
-        img = await DownloadImage(item, 'icon')
+        img = await GetImage(item, 'icon')
         img = img.convert('RGBA')
         img = img.resize((35, 35), Image.NEAREST)
         icons.append(img)
@@ -68,7 +69,7 @@ async def DrawBadges(ctx, user: User):
 
     get_profile_background = bgs[profile_background]
 
-    bg = await DownloadImage(get_profile_background['image'], 'background')
+    bg = await GetImage(get_profile_background['image'], 'background')
 
     fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 25)  # Font
     title_fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 25)  # Font
@@ -81,7 +82,7 @@ async def DrawBadges(ctx, user: User):
 
     d.text((210, 140), f"{description}", font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000, align='center')
 
-    pfp = await DownloadImage(user_pfp, 'profile_picture')
+    pfp = await GetImage(user_pfp, 'profile_picture')
 
     pfp = pfp.resize((148, 148))
 
@@ -141,12 +142,9 @@ async def DrawBadges(ctx, user: User):
     bg.save('Images/Profile Viewer/result.png')
 
 
-async def DownloadImage(image_url, filename):
+async def GetImage(image_url, filename):
     async with aiohttp.ClientSession() as session:
         async with session.get(image_url) as resp:
             if resp.status == 200:
-                f = await aiofiles.open(f'Images/Profile Viewer/{filename}.png', mode='wb')
-                await f.write(await resp.read())
-                await f.close()
-
-    return Image.open(f'Images/Profile Viewer/{filename}.png')
+                image = io.BytesIO(await resp.read())
+                return Image.open(image)

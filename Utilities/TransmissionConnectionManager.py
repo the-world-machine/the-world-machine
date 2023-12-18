@@ -26,6 +26,8 @@ def remove_connection(server_id):
         if t.connection_a.server_id == server_id:
             transmissions.remove(t)
 
+        if t.connection_b.server_id == server_id:
+            t.connection_b = None
 
 def connect_to_transmission(server_id, channel_id):
     for t in transmissions:

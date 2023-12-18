@@ -25,9 +25,6 @@ class Transmit(Extension):
 
         self.transmit_characters = json.loads(strdata)
 
-    initial_connected_server = None
-    next_connected_server = None
-
     async def change_status_waiting(self):
         await self.client.change_presence(status=Status.IDLE,
                                           activity=Activity(name="Transmission 📺", type=ActivityType.WATCHING))
@@ -45,26 +42,16 @@ class Transmit(Extension):
 
         await self.load_character()
 
-        if self.initial_connected_server is not None:
-            return await fancy_message(ctx, '[ Two servers are already transmitting! ]')
-
-        self.initial_connected_server = {"server_id": 1, "channel_id": 2}
-        self.next_connected_server = {"server_id": 1, "channel_id": 2}
-
-        servers = await db.fetch('server_data', 'transmittable_servers', ctx.guild.id)
+        server_ids: dict = await db.fetch('server_data', 'transmittable_servers', ctx.guild.id)
         can_transmit = await db.fetch('server_data', 'transmit_channel', ctx.guild.id)
 
         if can_transmit is None:
-            self.initial_connected_server = None
-            self.next_connected_server = None
 
             return await fancy_message(ctx,
                                        '[ This server has opted to disable call transmissions or has simply not set a channel. ]',
                                        ephemeral=True)
 
-        if servers is None:
-            self.initial_connected_server = None
-            self.next_connected_server = None
+        if server_ids is None:
 
             return await fancy_message(ctx,
                                        '[ This server doesn\'t know any other servers! Connect using ``/transmit connect``! ]',
@@ -74,11 +61,11 @@ class Transmit(Extension):
 
         server_name = ''
 
-        for server in servers:
+        for server in server_ids.keys():
             options.append(
                 StringSelectOption(
-                    label=server['name'],
-                    value=server['id']
+                    label=server_ids[server],
+                    value=server
                 )
             )
 
@@ -97,14 +84,12 @@ class Transmit(Extension):
         get_channel = await db.fetch('server_data', 'transmit_channel', other_server)
 
         if get_channel is None:
-            self.initial_connected_server = None
-            self.next_connected_server = None
 
             return await fancy_message(select_results.ctx,
                                        '[ Sorry, but the server you selected has opted to disable call transmissions, or simply has not set a channel. ]',
                                        color=0xfa272d, ephemeral=True)
 
-        other_server_channel = await self.client.fetch_channel(get_channel, force=True)
+        other_server_channel: GuildText = await self.client.fetch_channel(get_channel, force=True)
 
         server_name = other_server_channel.guild.name
 
@@ -135,8 +120,6 @@ class Transmit(Extension):
         try:
             other_server_ctx = await self.client.wait_for_component(components=[connect_button, disconnect_button], timeout=60)
         except:
-            self.initial_connected_server = None
-            self.next_connected_server = None
 
             await other_server_message.edit(embed=embed_timeout_one, components=[])
             await message.edit(embed=embed_timeout_two)
@@ -148,21 +131,16 @@ class Transmit(Extension):
 
         if button_id == 'decline_phone':
 
-            self.initial_connected_server = None
-            self.next_connected_server = None
-
             await other_server_message.edit(embed=embed_cancel_one, components=[])
             await message.edit(embed=embed_cancel_two)
         else:
 
-            self.initial_connected_server = {"server_id": int(ctx.guild_id), "channel_id": int(ctx.channel_id),
-                                             "users": self.transmit_characters.copy()}
-            self.next_connected_server = {"server_id": int(other_server), "channel_id": int(other_server_channel.id),
-                                          "users": self.transmit_characters.copy()}
+            create_connection(ctx.guild_id, ctx.channel_id)
+            connect_to_transmission(other_server, other_server_channel.id)
 
             await  asyncio.gather(
-                self.on_connection_first(int(ctx.user.id), message),
-                self.on_connection_second(int(other_server_ctx.ctx.user.id), other_server_message)
+                self.on_transmission(ctx.author.user, message, ctx.guild_id),
+                self.on_transmission(other_server_ctx.ctx.user, other_server_message, other_server)
             )
 
     @transmit.subcommand(sub_cmd_description='Transmit to another server.')
@@ -312,8 +290,7 @@ class Transmit(Extension):
                 if disconnect_timer == 0:
                     embed = await self.on_cancel('transmittime', id=server_id)
 
-                    self.initial_connected_server = None
-                    self.next_connected_server = None
+                    remove_connection(server_id)
 
                     await msg.edit(embeds=embed, components=[])
                     await msg.reply(embeds=embed)
@@ -326,8 +303,7 @@ class Transmit(Extension):
             await msg.edit(embeds=embed, components=[])
             await msg.reply(embeds=embed)
 
-            self.initial_connected_server = None
-            self.next_connected_server = None
+            remove_connection(server_id)
 
             return
 
@@ -442,17 +418,8 @@ class Transmit(Extension):
         embed.description = final_text
 
         return embed
-
-    async def DownloadImage(self, image_url, filename):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(image_url) as resp:
-                if resp.status == 200:
-                    f = await aiofiles.open(f'Images/{filename}', mode='wb')
-                    await f.write(await resp.read())
-                    await f.close()
-
-        return File(f'Badges/Images/{filename}.png')
-
+                    
+                    
     async def on_cancel(self, cancel_reason, id: int, button_ctx=None):
 
         await db.update('server_data', 'transmit_characters', id, json.dumps(self.transmit_characters))
