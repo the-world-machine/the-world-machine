@@ -388,6 +388,9 @@ class Transmit(Extension):
             return
 
         if connection_alive(guild.id):
+            
+            if message.author.id == self.client.user.id:
+                return
 
             user = await self.check_anonymous(guild.id, message.author)
             transmission = get_transmission(guild.id)

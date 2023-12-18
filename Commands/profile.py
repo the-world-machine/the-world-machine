@@ -46,7 +46,7 @@ class Command(Extension):
         if get_sun_reset_time is None:
             last_reset_time = datetime(2000, 1, 1, 0, 0, 0)
         else:
-            last_reset_time = datetime.strptime(get_sun_reset_time, '%Y-%m-%d %H:%M:%S')
+            last_reset_time = get_sun_reset_time
 
         now = datetime.now()
 
