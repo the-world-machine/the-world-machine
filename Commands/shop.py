@@ -254,12 +254,12 @@ class Shop(Extension):
         if not match:
             return
         
-        nikogotchi_id = int(match.group(1))        
+        capsule_id = int(match.group(1))        
         footer_text = ''
         
         capsules = await Database.get_items('capsules')
         
-        nikogotchi_capsule = Item(capsules[nikogotchi_id])
+        nikogotchi_capsule = Item(capsules[capsule_id])
         capsule_data = await loc(ctx.guild_id, 'Items', 'capsules', nikogotchi_capsule.nid)
         
         async def update():
@@ -269,9 +269,10 @@ class Shop(Extension):
             await ctx.edit(embed=embed, components=components)
             
         user_wool = await Database.fetch('user_data', 'wool', ctx.author.id)
-        nikogotchi_status = await Database.fetch('nikogotchi_data', 'status', ctx.author.id)
+        nikogotchi = await Database.fetch('nikogotchi_data', 'data', ctx.author.id)
+        rarity = await Database.fetch('nikogotchi_data', 'rarity', ctx.author.id)
         
-        if nikogotchi_status['owned']:
+        if nikogotchi or rarity > -1:
             footer_text = await loc(ctx.guild_id, 'Shop', 'already_owned')
             return await update()
         
@@ -279,7 +280,7 @@ class Shop(Extension):
             footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
-        await Database.update('nikogotchi_data', 'status', ctx.author.id, {'owned': True, 'rarity': nikogotchi_id})
+        await Database.update('nikogotchi_data', 'rarity', ctx.author.id, capsule_id)
         await Database.update('user_data', 'wool', ctx.author.id, user_wool - nikogotchi_capsule.cost)
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
@@ -472,7 +473,8 @@ class Shop(Extension):
         
         elif category == 'capsules':
             
-            nikogotchi_status: int = await Database.fetch('nikogotchi_data', 'status', ctx.author.id)
+            nikogotchi = await Database.fetch('nikogotchi_data', 'data', ctx.author.id)
+            rarity = await Database.fetch('nikogotchi_data', 'rarity', ctx.author.id)
             capsules: dict = await Database.get_items('capsules')
             
             caspule_text = ''
@@ -495,7 +497,7 @@ class Shop(Extension):
                     button.disabled = True
                     button.style = ButtonStyle.GRAY
                     
-                if nikogotchi_status['owned']:
+                if rarity > -1 or nikogotchi:
                     button.disabled = True
                     button.style = ButtonStyle.RED
                     

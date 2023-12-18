@@ -29,7 +29,6 @@ class Nikogotchi:
     pet_dialogue: list[str]
     cleaned_dialogue: list[str]
     last_interacted: datetime
-    dead: bool
 
 
 class Command(Extension):
@@ -37,7 +36,7 @@ class Command(Extension):
     async def get_nikogotchi(self, uid: int):
         data = await Database.fetch('nikogotchi_data', 'data', uid)
 
-        if data is None:
+        if not data:
             return None
         
         data['last_interacted'] = datetime.strptime(data['last_interacted'], '%Y-%m-%d %H:%M:%S')
@@ -51,6 +50,10 @@ class Command(Extension):
         )
 
         await Database.update('nikogotchi_data', 'data', uid, data)
+        
+    async def delete_nikogotchi(self, uid: int):
+        
+        await Database.update('nikogotchi_data', 'data', uid, '{}')
 
     def nikogotchi_buttons(self, owner_id: int):
         prefix = 'action_'
@@ -210,31 +213,19 @@ class Command(Extension):
 
         nikogotchi = await self.get_nikogotchi(uid)
 
-        nikogotchi: Nikogotchi
-        
-        dead = False
-        
-        status = await Database.fetch('nikogotchi_data', 'status', uid)
-        
         if nikogotchi is not None:
-            dead = nikogotchi.dead
-        else:
-            dead = True
-            
-        if not status['owned']:
-            dead = True
-
-        if not dead:
             await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]')
 
         else:
-            rarity = status['rarity']
+            rarity = await Database.fetch('nikogotchi_data', 'rarity', uid)
 
-            if not status['owned']:
+            if rarity < 0:
                 return await fancy_message(ctx,
                                            "[ You don't have a Nikogotchi! You can buy a capsule from the shop to unlock a random one! ]",
                                            ephemeral=True, color=0xff0000)
 
+            await Database.update('nikogotchi_data', 'rarity', uid, -1)
+            
             viable_nikogotchi = []
 
             nikogotchi_list = chars.get_characters()
@@ -261,8 +252,7 @@ class Command(Extension):
                 'pancake_dialogue': selected_nikogotchi.pancake_dialogue,
                 'pet_dialogue': selected_nikogotchi.pet_dialogue,
                 'cleaned_dialogue': selected_nikogotchi.cleaned_dialogue,
-                'last_interacted': datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S'),
-                'dead': False
+                'last_interacted': datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
             }))
 
             nikogotchi = await self.get_nikogotchi(ctx.author.id)
@@ -279,8 +269,7 @@ class Command(Extension):
                 Button(style=ButtonStyle.GREEN, label='Yes', custom_id=f'yes {ctx.author.id}'),
                 Button(style=ButtonStyle.RED, label='No', custom_id=f'no {ctx.author.id}')
             ]
-
-            await Database.update('nikogotchi_data', 'status', uid, {'owned': False, 'rarity': 0})
+            
             await Database.update('nikogotchi_data', 'hatched', uid, datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S'))
 
             await ctx.send(embed=hatched_embed, components=buttons, ephemeral=True)
@@ -369,13 +358,9 @@ class Command(Extension):
 
             buttons = []
             
-            nikogotchi.dead = True
+            await self.delete_nikogotchi(uid)
             
-            await self.save_nikogotchi(nikogotchi, ctx.author.id)
-            
-            await Database.update('nikogotchi_data', 'status', uid, {'owned': False, 'rarity': 0})
-            
-            return await ctx.send(embed=embed, components=buttons)
+            return await ctx.edit_origin(embed=embed, components=buttons)
         else:
             embed = await self.get_main_nikogotchi_embed(uid, age, '...', [], nikogotchi)
 
@@ -444,6 +429,21 @@ class Command(Extension):
         glitched_pancakes = await Database.fetch('nikogotchi_data', 'glitched_pancakes', ctx.author.id)
 
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
+        
+        if nikogotchi is None:
+            return await ctx.edit_origin(
+            embed=Embed(
+                title='No Nikogotchi',
+                description='Nikogotchi does not exist.'
+            ),
+            
+            components=[
+                Button(
+                    emoji=PartialEmoji(id=1147696088250335303),
+                    custom_id=f'action_refresh_{ctx.author.id}',
+                    style=ButtonStyle.GREY)
+            ]
+        )
         
         time_difference = (datetime.now() - nikogotchi.last_interacted).total_seconds() / 7200
 
@@ -639,9 +639,8 @@ class Command(Extension):
     async def send_away(self, ctx: SlashContext):
 
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
-        status = await Database.fetch('nikogotchi_data', 'status', ctx.author.id)
 
-        if not status['owned']:
+        if nikogotchi is None:
             return await fancy_message(ctx, "[ You don't have a Nikogotchi! ]", ephemeral=True, color=0xff0000)
 
         buttons = [
@@ -662,12 +661,11 @@ class Command(Extension):
         custom_id = button_ctx.custom_id
 
         if custom_id == f'rehome {ctx.author.id}':
-            await Database.update('nikogotchi_data', 'status', ctx.author.id, {'owned': False, 'rarity': 0})
-            nikogotchi.dead = True
+            
+            await self.delete_nikogotchi(ctx.author.id)
 
             embed = await fancy_embed(f'[ Successfully sent away {nikogotchi.name}. Enjoy your future Nikogotchi! ]')
 
-            await self.save_nikogotchi(nikogotchi, ctx.author.id)
             await ctx.edit(embed=embed, components=[])
 
     @nikogotchi.subcommand(sub_cmd_description='Rename your Nikogotchi.')
@@ -727,12 +725,9 @@ class Command(Extension):
         nikogotchi_one = await self.get_nikogotchi(ctx.author.id)
         nikogotchi_two = await self.get_nikogotchi(user.id)
         
-        status_one = await Database.fetch('nikogotchi_data', 'status', ctx.author.id)
-        status_two = await Database.fetch('nikogotchi_data', 'status', user.id)
-
-        if not status_one['owned']:
+        if nikogotchi_one is None:
             return await fancy_message(ctx, "[ You don't have a Nikogotchi! ]", ephemeral=True, color=0xff0000)
-        if not status_two['owned']:
+        if nikogotchi_two is None:
             return await fancy_message(ctx, "[ This person doesn't have a Nikogotchi! ]", ephemeral=True,
                                        color=0xff0000)
 

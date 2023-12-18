@@ -308,6 +308,8 @@ class Transmit(Extension):
             return
 
         embed = await self.on_cancel('server', id=server_id)
+        
+        remove_connection(server_id)
 
         await msg.edit(embeds=embed, components=[])
         await msg.reply(embeds=embed)
