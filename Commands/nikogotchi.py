@@ -214,7 +214,7 @@ class Command(Extension):
         nikogotchi = await self.get_nikogotchi(uid)
 
         if nikogotchi is not None:
-            await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]')
+            msg = await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]')
 
         else:
             rarity = await Database.fetch('nikogotchi_data', 'rarity', uid)
@@ -360,7 +360,7 @@ class Command(Extension):
             
             await self.delete_nikogotchi(uid)
             
-            return await ctx.edit_origin(embed=embed, components=buttons)
+            return await ctx.edit(embed=embed, components=buttons)
         else:
             embed = await self.get_main_nikogotchi_embed(uid, age, '...', [], nikogotchi)
 

@@ -364,6 +364,9 @@ class Transmit(Extension):
 
         if message.author.id == 1015629604536463421 or message.author.id == 1028058097383641118:
             return
+        
+        if guild is None:
+            return
 
         if connection_alive(guild.id):
             
