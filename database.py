@@ -65,14 +65,14 @@ class Database(Extension):
         column_sql = f"DESCRIBE {table}"
         
         cursor = await Database.execute(select_sql)
-        row = cursor.fetchone()
+        row = await cursor.fetchone()
         
         if not row:
             await Database.new_entry(table, primary_key)  # use Database.new_entry()
             return await Database.fetch(table, primary_key, column)  # use Database.fetch()
 
         cursor = await Database.execute(column_sql)
-        column_data = cursor.fetchall()
+        column_data = await cursor.fetchall()
                 
         result_dict = {}
                 
