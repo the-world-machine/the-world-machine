@@ -4,11 +4,37 @@ from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
 from interactions import Extension
 from database import Database as db
 from load_data import load_config
+from importlib import reload, import_module
 import aiohttp
 
 
 class DevCommands(Extension):
     allowed_users = [302883948424462346]
+    
+    @prefixed_command()
+    async def reload_file(self, ctx: PrefixedContext, file: str):
+        # Check if the user is allowed to use this command
+
+        if ctx.author.id not in self.allowed_users:
+            return
+
+        # Reload the file
+        module = import_module(file)
+        reload(module)
+        
+        await ctx.send("Successfully reloaded file.")
+        
+    @prefixed_command()
+    async def reload_ext(self, ctx: PrefixedContext, ext: str):
+        # Check if the user is allowed to use this command
+
+        if ctx.author.id not in self.allowed_users:
+            return
+
+        # Reload the extension
+        self.client.reload_extension(f'Commands.{ext}')
+        
+        await ctx.send("Successfully reloaded extension.")
     
     @prefixed_command()
     async def statistics(self, ctx: PrefixedContext, *statistics: str):
@@ -57,14 +83,19 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        await db.update('user_data', 'wool', target, amount)
+        await db.update('UserData', 'wool', target, amount)
 
         await ctx.send(f'Successfully set wool to {amount} for {target_user.mention}. {ctx.author.mention}')
 
     # Define the "add_badge" command using the new system
     @prefixed_command()
-    async def add_badge(self, ctx: PrefixedContext, target: int, badge_id: int):
+    async def add_badge(self, ctx: PrefixedContext, target: int, *badge_ids: str):
         # Check if the user is allowed to use this command
+        
+        badges = []
+        
+        for badge in badge_ids:
+            badges.append(badge.replace('_', ' '))
 
         if ctx.author.id not in self.allowed_users:
             return
@@ -73,15 +104,20 @@ class DevCommands(Extension):
         target_user = await ctx.client.fetch_user(target)
 
         badges = await db.fetch('user_data', 'unlocked_badges', target)
-        badges.append(badge_id)
+        badges.append(badges)
 
-        await db.update('user_data', 'unlocked_badges', target, badges)
+        await db.update('UserData', 'unlocked_badges', target, badges)
 
-        await ctx.send(f'Successfully added badge with id {badge_id} to {target_user.mention}. <@{ctx.author.id}>')
+        await ctx.send(f'Successfully added badge {badges} to {target_user.mention}. <@{ctx.author.id}>')
 
     # Define the "remove_badge" command using the new system
     @prefixed_command()
-    async def remove_badge(self, ctx: PrefixedContext, target: int, badge_id: int):
+    async def remove_badge(self, ctx: PrefixedContext, target: int, *badge_ids: str):
+        
+        badges = []
+        
+        for badge in badge_ids:
+            badges.append(badge.replace('_', ' '))
         # Check if the user is allowed to use this command
 
         if ctx.author.id not in self.allowed_users:
@@ -90,14 +126,15 @@ class DevCommands(Extension):
         # Fetch the target user
         target_user = await ctx.client.fetch_user(target)
 
-        badges = await db.fetch('user_data', 'unlocked_badges', target)
+        owned_badges = await db.fetch('UserData', 'unlocked_badges', target)
 
-        if badge_id in badges:
-            badges.remove(badge_id)
+        for b in owned_badges:
+            if b in badges:
+                badges.remove(b)
 
-        await db.update('user_data', 'unlocked_badges', target, badges)
+        await db.update('UserData', 'unlocked_badges', target, badges)
 
-        await ctx.send(f'Successfully removed badge with id {badge_id} from {target_user.mention}. <@{ctx.author.id}>')
+        await ctx.send(f'Successfully removed badge {badges} from {target_user.mention}. <@{ctx.author.id}>')
 
     # Define the "restart" command using the new system
     @prefixed_command()

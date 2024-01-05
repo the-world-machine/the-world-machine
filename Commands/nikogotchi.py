@@ -10,7 +10,7 @@ from interactions.api.events import Component
 
 import Data.capsule_characters as chars
 from database import Database
-from Utilities.bot_icons import loading
+from Utilities.bot_icons import icon_loading
 from Utilities.fancysend import *
 
 
@@ -214,7 +214,7 @@ class Command(Extension):
         nikogotchi = await self.get_nikogotchi(uid)
 
         if nikogotchi is not None:
-            msg = await fancy_message(ctx, f'[ Loading Nikogotchi... {loading()} ]')
+            msg = await fancy_message(ctx, f'[ Loading Nikogotchi... {icon_loading} ]')
 
         else:
             rarity = await Database.fetch('nikogotchi_data', 'rarity', uid)
@@ -731,7 +731,7 @@ class Command(Extension):
             return await fancy_message(ctx, "[ This person doesn't have a Nikogotchi! ]", ephemeral=True,
                                        color=0xff0000)
 
-        await fancy_message(ctx, f'[ Sent {user.mention} a trade offer! Waiting on their response... {loading()} ]',
+        await fancy_message(ctx, f'[ Sent {user.mention} a trade offer! Waiting on their response... {icon_loading} ]',
                             ephemeral=True)
 
         uid = user.id

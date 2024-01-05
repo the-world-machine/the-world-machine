@@ -73,14 +73,6 @@ async def on_ready():
     print("\nThe World Machine is ready!\n\n")
 
 
-@listen(MessageCreate)
-async def on_message(event: MessageCreate):
-    if event.message.author.bot:
-        return
-
-    await badge_manager.increment_value(event.message, 'times_messaged', event.message.author)
-
-
 client.start(load_config("Token"))
 
 @listen(MemberAdd)

@@ -6,8 +6,9 @@ import aiofiles
 from interactions import *
 
 import Utilities.badge_manager as bm
+from Utilities.ItemData import fetch_badge
 import Utilities.bot_icons as icons
-import Utilities.profile_viewer as view
+import Utilities.profile_viewer as profile_viewer
 from database import Database as db
 from Utilities.fancysend import *
 from Utilities.CommandHandler import twm_cmd, twm_subcmd
@@ -105,7 +106,7 @@ class Command(Extension):
 
         message = await fancy_message(ctx, msg)
 
-        await view.DrawBadges(ctx, user)
+        await profile_viewer.draw_badges(user)
         
         button = Button(
             style=ButtonStyle.URL,
@@ -127,74 +128,3 @@ class Command(Extension):
         SlashCommandChoice(name='Times Messaged', value='times_messaged'),
         SlashCommandChoice(name='Times Transmitted', value='times_transmitted')
     ]
-
-    @profile.subcommand(sub_cmd_description='View how much times you need to unlock a new badge.')
-    @slash_option(description='The badge to view.', name='badge', opt_type=OptionType.STRING, choices=choices, required=True)
-    async def next_badge(self, ctx: SlashContext, badge: str):
-
-        amount = await db.fetch('user_data', badge, ctx.user.id)
-
-        badges = await bm.open_badges()
-
-        amount_required = 0
-        get_badge = {}
-
-        for b in badges['Badges']:
-            if b['type'] == badge:
-                if b['requirement'] < amount:
-                    continue
-                get_badge = b
-                amount_required = b['requirement'] - amount
-
-                break
-
-        description = f'To unlock <:b:{get_badge["emoji"]}> **{get_badge["name"]}** you need to do this action **{amount_required}** more time(s).'
-
-        if badge == "suns" or badge == 'wool':
-            description = f'To unlock <:b:{get_badge["emoji"]}> **{get_badge["name"]}** you need to collect **{amount_required}** more {badge}.'
-
-        embed = Embed(
-            title='Current Milestone',
-            description=description,
-            color=0xff171d
-        )
-
-        await ctx.send(embeds=embed, ephemeral=True)
-
-    @profile.subcommand(sub_cmd_description="Recover your badges if they've been reset.")
-    async def recover_badges(self, ctx: SlashContext):
-        wool_amount = await db.fetch('user_data', 'wool', ctx.user.id)
-        sun_amount = await db.fetch('user_data', 'suns', ctx.user.id)
-        times_shattered = await db.fetch('user_data', 'times_shattered', ctx.user.id)
-        times_asked = await db.fetch('user_data', 'times_asked', ctx.user.id)
-        times_transmitted = await db.fetch('user_data', 'times_transmitted', ctx.user.id)
-        times_messaged = await db.fetch('user_data', 'times_messaged', ctx.user.id)
-
-        get_badges = await bm.open_badges()
-        get_badges = get_badges['Badges']
-
-        badges = []
-
-        for i, badge in enumerate(get_badges):
-            if badge['type'] == 'wool':
-                if badge['requirement'] < wool_amount:
-                    badges.append(i)
-            if badge['type'] == 'suns':
-                if badge['requirement'] < sun_amount:
-                    badges.append(i)
-            if badge['type'] == 'times_shattered':
-                if badge['requirement'] < times_shattered:
-                    badges.append(i)
-            if badge['type'] == 'times_asked':
-                if badge['requirement'] < times_asked:
-                    badges.append(i)
-            if badge['type'] == 'times_transmitted':
-                if badge['requirement'] < times_transmitted:
-                    badges.append(i)
-            if badge['type'] == 'times_messaged':
-                if badge['requirement'] < times_messaged:
-                    badges.append(i)
-
-        await db.update('user_data', 'unlocked_badges', ctx.user.id, badges)
-
-        await ctx.send('[ Successfully recovered your badges. ]', ephemeral=True)

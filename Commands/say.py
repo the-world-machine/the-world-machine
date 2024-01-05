@@ -4,7 +4,7 @@ import json
 from uuid import uuid4
 import os
 from Utilities.fancysend import fancy_message, fancy_embed
-
+from Utilities.bot_icons import icon_loading
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import aiohttp
@@ -32,7 +32,8 @@ class TextBoxGeneration(Extension):
     async def generate_dialogue(l1, image_url, uuid):
         img = Image.open("Images/Dialogue Generation/niko-background.png")  # Opening Images for both the background...
 
-        icon = await TextBoxGeneration.GetImage(image_url=image_url, filename='Images/Dialogue Generation/niko.png') # ...And the niko face selected in the command
+        icon = await TextBoxGeneration.GetImage(image_url=image_url) # ...And the niko face selected in the command
+        icon = icon.resize((96, 96)) # This doesn't need to be done for the OneShot characters, but for avatars and the elusive eyebrow raise.
 
         fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 20)  # Font
 
@@ -54,7 +55,8 @@ class TextBoxGeneration(Extension):
 
         img = Image.open("Images/Dialogue Generation/niko-background.png")  # Opening Images for both the background...
 
-        icon = await TextBoxGeneration.GetImage(image_url=image_url, filename='Images/Dialogue Generation/niko.png')  # ...And the niko face selected in the command
+        icon = await TextBoxGeneration.GetImage(image_url=image_url)  # ...And the niko face selected in the command
+        icon = icon.resize((96, 96)) # This doesn't need to be done for the OneShot characters, but for avatars and the elusive eyebrow raise.
 
         fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 20)  # Font
 
@@ -97,7 +99,7 @@ class TextBoxGeneration(Extension):
         img.save(f'Images/{uuid}.gif', save_all=True, append_images=images, optimize=False, duration=40)
 
     @staticmethod
-    async def GetImage(image_url, filename):
+    async def GetImage(image_url):
         async with aiohttp.ClientSession() as session:
             async with session.get(image_url) as resp:
                 if resp.status == 200:
@@ -121,7 +123,7 @@ class TextBoxGeneration(Extension):
             awesome.append(
                 StringSelectOption(
                     label=name,
-                    emoji=PartialEmoji(name='any', id=id_),
+                    emoji=PartialEmoji(id=id_),
                     value=name
                 )
             )
@@ -168,11 +170,17 @@ class TextBoxGeneration(Extension):
                 break
 
         for face in char['faces']:
+            
+            if type(face['id']) == str:
+                emoji = face['id']
+            else:
+                emoji = PartialEmoji(id=face['id'])
+            
             options.append(
                 StringSelectOption(
                     label=face['face_name'],
                     value=face['id'],
-                    emoji=PartialEmoji(id=face['id'])
+                    emoji=emoji
                 )
             )
 
@@ -201,7 +209,10 @@ class TextBoxGeneration(Extension):
 
         uuid = str(uuid)
 
-        emoji = f'https://cdn.discordapp.com/emojis/{value}.png'
+        if value == '964952736460312576':
+            emoji = ctx.author.avatar.url
+        else:
+            emoji = f'https://cdn.discordapp.com/emojis/{value}.png'
 
         if not animated:
             await TextBoxGeneration.generate_dialogue(text, emoji, uuid)

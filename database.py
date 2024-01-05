@@ -72,12 +72,16 @@ class Database(Extension):
         return data
 
     @staticmethod
-    async def fetch(table: str, column: str, primary_key: Union[int, Snowflake]) -> any:
+    async def fetch(table: str, primary_key: Union[int, Snowflake], column: str = None) -> any:
         if type(primary_key) == Snowflake:
             primary_key = int(primary_key)
 
-        select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
-        column_sql = f"DESCRIBE {table} {column}"
+        if column is None:
+            select_sql = f"SELECT * FROM {table} WHERE p_key = {primary_key}"
+        else:
+            select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
+            
+        column_sql = f"DESCRIBE {table}"
         
         get_pool = await Database.get_pool()
         
@@ -86,24 +90,35 @@ class Database(Extension):
                 await cursor.execute(select_sql)
 
                 row = await cursor.fetchone()
+                
+        if not row:
+            await Database.new_entry(table, primary_key)  # use Database.new_entry()
+            return await Database.fetch(table, primary_key, column)  # use Database.fetch()
 
         async with get_pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(column_sql)
 
-                column_data = await cursor.fetchone()
-
-        if row:
-            value = row[0]
-
-            # List + Dictionary Handling.
-            if column_data[1] == 'longtext' and value is not None:
-                return json.loads(value)
-
-            return value
-        else:
-            await Database.new_entry(table, primary_key)  # use Database.new_entry()
-            return await Database.fetch(table, column, primary_key)  # use Database.fetch()
+                column_data = await cursor.fetchall()
+                
+        result_dict = {}
+                
+        for i in range(len(column_data)):
+            column = column_data[i]
+            
+            key = column[0]
+            dtype = column[1]
+            value = row[i]
+            
+            if dtype == 'longtext' and value is not 'NULL':
+                value = json.loads(value)
+                
+            if value is 'NULL':
+                value = None
+            
+            result_dict[key] = value
+            
+        return result_dict
 
     @staticmethod
     async def new_entry(table: str, primary_key: int):
@@ -116,14 +131,10 @@ class Database(Extension):
                 await cursor.execute(insert_sql)
 
     @staticmethod
-    async def update(table: str, column: str, p_key = None, data = None):
+    async def update(table: str, column: str, p_key: Union[int, Snowflake] = None, data = None):
         if p_key is None:
             raise ValueError("Primary key is not set.")
-
-        if type(data) == list:
-            data = json.dumps(data)
-        elif type(data) == dict:
-            data = json.dumps(data)
+        
         elif data is None:
             data = 'NULL'
 
@@ -139,7 +150,7 @@ class Database(Extension):
             async with conn.cursor(aiomysql.Cursor) as cursor:
                 await cursor.execute(select_sql, (p_key,))
 
-        row = await cursor.fetchall()
+        row = await cursor.fetchone()
 
         if row:
 
@@ -159,20 +170,6 @@ class Database(Extension):
                     print(f"Error committing changes to database: {e}")
                     await conn.rollback()
                     return None
-
-        return await Database.fetch(table, column, p_key)  # use Database.fetch()
-
-    @staticmethod
-    async def get_items(item: str):
-
-        sql = f'SELECT * FROM {item}'
-        
-        get_pool = await Database.get_pool()
-
-        async with get_pool.acquire() as conn:
-            async with conn.cursor(aiomysql.DictCursor) as cursor:
-                await cursor.execute(sql)
-                return await cursor.fetchall()
 
     @staticmethod
     async def get_leaderboard(sort_by: str):
@@ -195,5 +192,36 @@ class Database(Extension):
 
     @staticmethod
     async def increment_value(table: str, column: str, primary_key: int):
-        v: int = await Database.fetch(table, column, primary_key)  # use Database.fetch()
+        v: int = await Database.fetch(table, primary_key, column)  # use Database.fetch()
         await Database.update(table, column, primary_key, v + 1)  # use Database.update()
+    
+    @staticmethod
+    async def update_user(id: int, data: dict, **what: str):
+            
+        def update_value(key_: str, value_):
+            data[key_] = value_
+            
+            if type(value_) == dict or type(value_) == list or type(value_) == bool:
+                return json.dumps(value_)
+            else:
+                return value_
+        
+        if not what:
+            for key in data:
+                data[key] = update_value(key, data[key])
+                await Database.update('UserData', key, id, data[key])
+        else:
+            for key, value in what.items():
+                value = update_value(key, value)
+                await Database.update('UserData', key, id, value)
+                
+        return data
+        
+    @staticmethod
+    async def increment_user(id: int, what: str, amount: int):
+        
+        user = await Database.fetch('UserData', id)
+        
+        user[what] += amount
+        
+        await Database.update_user(id, user, **{what: user[what]})

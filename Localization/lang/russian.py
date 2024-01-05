@@ -241,7 +241,7 @@ def text(data: dict = {}):
             },
             "Backgrounds": {
                 # Translate the right hand value. (e.g. 'Normal': 'Translate This.')
-                "Normal": "Нормальный",
+                "Default": "Нормальный",
                 "Green": "Зелёный",
                 "Yellow": "Жёлтый",
                 "Pink": "Розовый",

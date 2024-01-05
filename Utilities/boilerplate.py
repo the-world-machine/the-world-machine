@@ -1,7 +1,7 @@
 from interactions import *
 from Utilities.fancysend import *
-import Utilities.badge_manager
-import Utilities.bot_icons
+import Utilities.badge_manager as badge_manager
+from Utilities.bot_icons import *
 
 
 class Command(Extension):

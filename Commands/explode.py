@@ -14,17 +14,6 @@ class Command(Extension):
         'https://static7.depositphotos.com/1206476/749/i/600/depositphotos_7492923-stock-photo-broken-light-bulb.jpg',
     ]
 
-    random_message = [
-        "oh no",
-        "whoops",
-        "nice",
-        "good job",
-        "we're doomed",
-        "woah",
-        "don't do that",
-        "uh oh"
-    ]
-
     sad_image = 'https://images-ext-1.discordapp.net/external/47E2RmeY6Ro21ig0pkcd3HaYDPel0K8CWf6jumdJzr8/https/i.ibb.co/bKG17c2/image.png'
 
     last_called = {}
@@ -42,7 +31,10 @@ class Command(Extension):
         self.last_called[user_id] = datetime.datetime.utcnow()
 
         with open('Data/explosions.txt', 'r') as f:
-            explosion_amount = int(f.read())
+            try:
+                explosion_amount = int(f.read())
+            except ValueError:
+                explosion_amount = 99999
 
         random_number = random.randint(1, len(Command.explosion_image)) - 1
         random_sadness = random.randint(1, 100)
@@ -54,17 +46,17 @@ class Command(Extension):
 
         if not sad:
             embed = Embed(description=' ')
-
-            embed.set_author(name=f'{self.random_message[random.randint(0, len(self.random_message) - 1)]}')
-
-            if explosion_amount == 69:
-                embed.set_author(name='nice')
-            if explosion_amount == 420:
-                embed.set_author(name='nice')
-            if explosion_amount == 42069:
-                embed.set_author(name='nice')
-            if explosion_amount == 69420:
-                embed.set_author(name='nice')
+            
+            sexy_amounts = [69, 420, 42069, 69420]
+            
+            if explosion_amount in sexy_amounts:
+                embed.set_author(name='nice 👍')
+                
+            if explosion_amount >= 99999:
+                explosion_amount = 99999
+                embed.set_author(name='That\'s enough.')
+                
+                explosion_amount = ctx.author_id
 
             embed.set_image(url=Command.explosion_image[random_number])
             embed.set_footer(f'The Sun has been exploded {explosion_amount} times.')
@@ -74,9 +66,12 @@ class Command(Extension):
             embed.set_footer(f'[ You killed niko. ]')
 
         with open('Data/explosions.txt', 'w') as f:
-            f.write(str(explosion_amount + 1))
+            try:
+                f.write(str(explosion_amount + 1))
+            except ValueError:
+                f.write(explosion_amount)
 
         if not sad:
-            await bm.increment_value(ctx, 'times_shattered')
+            await bm.increment_value(ctx, 'times_shattered', 1, ctx.author)
 
         await ctx.send(embed=embed)

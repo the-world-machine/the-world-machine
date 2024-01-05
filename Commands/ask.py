@@ -4,7 +4,7 @@ from Utilities.fancysend import *
 from Utilities.badge_manager import increment_value
 import Utilities.bot_icons as bot_icons
 import Utilities.text_generation as ai
-from database import Database
+from Utilities.DatabaseTypes import fetch_user
 
 
 class Command(Extension):
@@ -22,7 +22,7 @@ class Command(Extension):
             color=0x8b00cc
         )
 
-        thinking_embed.description = f'*Thinking how to answer...* 1/2 {bot_icons.loading()}'
+        thinking_embed.description = f'*Thinking how to answer...* 1/2 {bot_icons.icon_loading}'
         thinking_embed.set_footer(text=f'You have {limit} questions left for today.')
 
         msg = await ctx.send(embed=thinking_embed)
@@ -33,7 +33,7 @@ class Command(Extension):
             color=0x8b00cc
         )
 
-        emotion_embed.description = f'*Thinking how to answer...* 2/2 {bot_icons.loading()}'
+        emotion_embed.description = f'*Thinking how to answer...* 2/2 {bot_icons.icon_loading}'
         emotion_embed.set_footer(text=f'You have {limit} questions left for today.')
 
         msg = await msg.edit(embed=emotion_embed)
@@ -67,25 +67,27 @@ class Command(Extension):
         
         final_embed.set_author(name=question[0:250])
 
-        await increment_value(ctx, 'times_asked', ctx.user)
+        await increment_value(ctx, 'times_asked', 1, ctx.user)
 
         await msg.edit(embed=final_embed)
 
     async def check(self, uid: int):
 
-        current_limit = await Database.fetch('user_data', 'gpt_limit', uid)
-        timestamp = await Database.fetch('user_data', 'gpt_timestamp', uid)
-
+        user = await fetch_user(uid)
         now = datetime.now()
 
-        if now < timestamp:
-            if current_limit <= 0:
-                return False, current_limit
+        if now < user.last_asked:
+            if user.ask_limit <= 0:
+                return False, user.ask_limit
 
-            await Database.update('user_data', 'gpt_limit', uid, current_limit - 1)
-            return True, current_limit - 1
+            await user.update(ask_limit=user.ask_limit - 1)
+            return True, user.ask_limit
 
         new_day = now + timedelta(days=1)
-        await Database.update('user_data', 'gpt_timestamp', uid, new_day)
-        await Database.update('user_data', 'gpt_limit', uid, 14)
+        
+        await user.update(
+            last_asked = new_day,
+            ask_limit = 14
+        )
+        
         return True, 14
