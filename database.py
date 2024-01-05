@@ -83,7 +83,7 @@ class Database(Extension):
             dtype = column[1]
             value = row[i]
             
-            if dtype == 'longtext' and value is not 'NULL':
+            if dtype == 'longtext' and value != 'NULL':
                 value = json.loads(value)
                 
             if value is 'NULL':
