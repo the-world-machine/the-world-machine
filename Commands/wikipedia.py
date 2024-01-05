@@ -14,7 +14,7 @@ class Command(Extension):
 
                     result = get_search['content_urls']['desktop']['page']
 
-                    await fancy_message(ctx, f'[ [Here]({result}) is your random wikipedia article. ]')
+                    await fancy_message(ctx, f'[ [Here]({result}) is your random wikipedia article. It\'s about {get_search["title"]}... I think... ]')
 
     @slash_command(description='bogus')
     async def amogus(self, ctx: SlashContext):

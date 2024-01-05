@@ -9,7 +9,7 @@ import humanfriendly
 from interactions import *
 from interactions.api.events import MessageCreate, Component
 
-from database import Database as db
+from Utilities.DatabaseTypes import ServerData, fetch_server
 import load_data
 from Utilities.badge_manager import increment_value
 from Utilities.fancysend import *
@@ -18,12 +18,6 @@ from Utilities.TransmissionConnectionManager import *
 
 
 class Transmit(Extension):
-    transmit_characters = None
-    async def load_character(self):
-        async with aiofiles.open('Data/transmit_characters.json', 'r') as f:
-            strdata = await f.read()
-
-        self.transmit_characters = json.loads(strdata)
 
     async def change_status_waiting(self):
         await self.client.change_presence(status=Status.IDLE,
@@ -42,16 +36,18 @@ class Transmit(Extension):
 
         await self.load_character()
 
-        server_ids: dict = await db.fetch('server_data', 'transmittable_servers', ctx.guild.id)
-        can_transmit = await db.fetch('server_data', 'transmit_channel', ctx.guild.id)
+        server_data = await fetch_server(ctx.guild.id)
+        
+        can_transmit = server_data.transmit_channel
+        server_ids = server_data.transmittable_servers
 
-        if can_transmit is None:
+        if not can_transmit:
 
             return await fancy_message(ctx,
                                        '[ This server has opted to disable call transmissions or has simply not set a channel. ]',
                                        ephemeral=True)
 
-        if server_ids is None:
+        if not server_ids:
 
             return await fancy_message(ctx,
                                        '[ This server doesn\'t know any other servers! Connect using ``/transmit connect``! ]',
@@ -61,11 +57,11 @@ class Transmit(Extension):
 
         server_name = ''
 
-        for server in server_ids.keys():
+        for server_id, name in server_ids.items():
             options.append(
                 StringSelectOption(
-                    label=server_ids[server],
-                    value=server
+                    label=name,
+                    value=server_id
                 )
             )
 
@@ -81,9 +77,10 @@ class Transmit(Extension):
 
         other_server = int(select_results.ctx.values[0])
 
-        get_channel = await db.fetch('server_data', 'transmit_channel', other_server)
+        get_channel = await fetch_server(other_server)
+        get_channel = get_channel.transmit_channel
 
-        if get_channel is None:
+        if not get_channel:
 
             return await fancy_message(select_results.ctx,
                                        '[ Sorry, but the server you selected has opted to disable call transmissions, or simply has not set a channel. ]',
@@ -145,8 +142,6 @@ class Transmit(Extension):
 
     @transmit.subcommand(sub_cmd_description='Transmit to another server.')
     async def connect(self, ctx: SlashContext):
-
-        await self.load_character()
 
         if len(transmissions) == 0:
             create_connection(ctx.guild_id, ctx.channel_id)
@@ -231,21 +226,18 @@ class Transmit(Extension):
 
         transmission = get_transmission(server_id)
 
-        this_server: Guild
         other_server: Guild
 
         if server_id == transmission.connection_a.server_id:
-            this_server = await self.client.fetch_guild(transmission.connection_a.server_id)
             other_server = await self.client.fetch_guild(transmission.connection_b.server_id)
         else:
-            this_server = await self.client.fetch_guild(transmission.connection_b.server_id)
             other_server = await self.client.fetch_guild(transmission.connection_a.server_id)
 
-        servers = await db.fetch('server_data', 'transmittable_servers', server_id)
-
-        servers[str(other_server.id)] = other_server.name
-
-        await db.update('server_data', 'transmittable_servers', server_id, servers)
+        server_data = await fetch_server(server_id)
+        transmittable_servers = server_data.transmittable_servers
+        transmittable_servers[str(other_server.id)] = other_server.name
+        
+        server_data.update(transmittable_servers = transmittable_servers)
 
         btn_id = uuid.uuid4()
 
@@ -326,22 +318,19 @@ class Transmit(Extension):
             self.id = u_id
             self.image = image
 
-    async def check_anonymous(self, guild_id: int, d_user: User):
-
-        anonymous = await db.fetch('server_data', 'transmit_anonymous', guild_id)
-        characters = await db.fetch('server_data', 'transmit_characters', guild_id)
+    async def check_anonymous(self, guild_id: int, d_user: User, connection: Connection, server_data: ServerData):
 
         user: Transmit.TransmitUser
 
-        if anonymous:
+        if server_data.anonymous:
+            
+            i = 0
 
-            for i, character in enumerate(characters):
-                if character['id'] is None or character['id'] == d_user.id:
-                    user = Transmit.TransmitUser(character['name'], d_user.id, character['image'])
+            for i, character in enumerate(connection.characters):
+                if character['id'] == 0 or character['id'] == d_user.id:
+                    user = Transmit.TransmitUser(character['Name'], d_user.id, character['Image'])
 
-                    characters[i]['id'] = d_user.id
-
-                    await db.update('server_data', 'transmit_characters', guild_id, characters)
+                    connection.characters[i].update({'id': d_user.id})
 
                     return user
 
@@ -372,8 +361,9 @@ class Transmit(Extension):
             
             if message.author.id == self.client.user.id:
                 return
-
-            user = await self.check_anonymous(guild.id, message.author)
+            
+            server_data = await fetch_server(guild.id)
+            
             transmission = get_transmission(guild.id)
 
             first_server = transmission.connection_a
@@ -385,13 +375,15 @@ class Transmit(Extension):
 
             if first_server.channel_id == channel.id:
                 can_pass = True
+                user = await self.check_anonymous(guild.id, message.author, first_server, server_data)
                 other_connection = await self.client.fetch_channel(second_server.channel_id)
-                allow_images = await db.fetch('server_data', 'transmit_images', second_server.server_id)
+                allow_images = server_data.transmit_images
 
             if second_server.channel_id == channel.id:
                 can_pass = True
+                user = await self.check_anonymous(guild.id, message.author, second_server, server_data)
                 other_connection = await self.client.fetch_channel(first_server.channel_id)
-                allow_images = await db.fetch('server_data', 'transmit_images', first_server.server_id)
+                allow_images = server_data.transmit_images
 
             if can_pass:
                 embed = await self.message_manager(message, user, allow_images)
@@ -426,9 +418,6 @@ class Transmit(Extension):
                     
                     
     async def on_cancel(self, cancel_reason, id: int, button_ctx=None):
-
-        await db.update('server_data', 'transmit_characters', id, json.dumps(self.transmit_characters))
-
         await self.change_status_normal()
 
         if cancel_reason == 'timeout':

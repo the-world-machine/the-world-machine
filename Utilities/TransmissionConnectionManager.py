@@ -5,6 +5,15 @@ class Connection:
     def __init__(self, server_id, channel_id):
         self.server_id = server_id
         self.channel_id = channel_id
+        self.characters = [
+            {"id": 0, "Image": 1019605517695463484, "Name": "Niko"},
+            {"id": 0, "Image": 1071085652327813212, "Name": "Alula"},
+            {"id": 0, "Image": 1071085682132529294, "Name": "Calamus"},
+            {"id": 0, "Image": 1071085718975283310, "Name": "Lamplighter"},
+            {"id": 0, "Image": 1027240024992927814, "Name": "Kip"},
+            {"id": 0, "Image": 1090982149659836466, "Name": "Ling"},
+            {"id": 0, "Image": 1023573456664662066, "Name": "The World Machine"},
+        ]
 
 
 class Transmission:
@@ -23,11 +32,13 @@ def create_connection(server_id, channel_id):
 
 def remove_connection(server_id):
     for t in transmissions:
-        if t.connection_a.server_id == server_id:
-            transmissions.remove(t)
+        if t.connection_a:
+            if t.connection_a.server_id == server_id:
+                transmissions.remove(t)
 
-        if t.connection_b.server_id == server_id:
-            t.connection_b = None
+        if t.connection_b:
+            if t.connection_b.server_id == server_id:
+                transmissions.remove(t)
 
 def connect_to_transmission(server_id, channel_id):
     for t in transmissions:
@@ -43,7 +54,14 @@ def get_transmission(server_id):
 
         if t.connection_b.server_id == server_id:
             return t
+        
+def get_connection(server_id):
+    for t in transmissions:
+        if t.connection_a.server_id == server_id:
+            return t.connection_a
 
+        if t.connection_b.server_id == server_id:
+            return t.connection_b
 
 def connection_alive(server_id) -> bool:
     for t in transmissions:

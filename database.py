@@ -42,7 +42,7 @@ class Database(Extension):
         await Database.create_pool()
 
     @staticmethod
-    async def execute(sql: str, *values: any):
+    async def execute(sql: str, *values: any) -> aiomysql.Cursor or None:
         
         get_pool = await Database.get_pool()
 
@@ -51,25 +51,6 @@ class Database(Extension):
                 await cursor.execute(sql, values)
 
         return cursor
-    
-    @staticmethod
-    async def fetch_shop_data() -> dict:
-        
-        get_pool = await Database.get_pool()
-        
-        async with get_pool.acquire() as conn:
-            async with conn.cursor(aiomysql.Cursor) as cursor:
-                await cursor.execute('SELECT * FROM shop_data')
-                
-                row = await cursor.fetchone()
-                headers = cursor.description
-                
-        data = {}
-        
-        for i in range(len(row)):
-            data[headers[i][0]] = row[i]
-            
-        return data
 
     @staticmethod
     async def fetch(table: str, primary_key: Union[int, Snowflake], column: str = None) -> any:
@@ -83,23 +64,15 @@ class Database(Extension):
             
         column_sql = f"DESCRIBE {table}"
         
-        get_pool = await Database.get_pool()
+        cursor = await Database.execute(select_sql)
+        row = cursor.fetchone()
         
-        async with get_pool.acquire() as conn:
-            async with conn.cursor(aiomysql.Cursor) as cursor:
-                await cursor.execute(select_sql)
-
-                row = await cursor.fetchone()
-                
         if not row:
             await Database.new_entry(table, primary_key)  # use Database.new_entry()
             return await Database.fetch(table, primary_key, column)  # use Database.fetch()
 
-        async with get_pool.acquire() as conn:
-            async with conn.cursor(aiomysql.Cursor) as cursor:
-                await cursor.execute(column_sql)
-
-                column_data = await cursor.fetchall()
+        cursor = await Database.execute(column_sql)
+        column_data = cursor.fetchall()
                 
         result_dict = {}
                 
@@ -123,12 +96,7 @@ class Database(Extension):
     @staticmethod
     async def new_entry(table: str, primary_key: int):
         insert_sql = f'INSERT INTO `{table}` (p_key) VALUES ({primary_key})'
-        
-        get_pool = await Database.get_pool()
-
-        async with get_pool.acquire() as conn:
-            async with conn.cursor(aiomysql.Cursor) as cursor:
-                await cursor.execute(insert_sql)
+        await Database.execute(insert_sql)
 
     @staticmethod
     async def update(table: str, column: str, p_key: Union[int, Snowflake] = None, data = None):
@@ -140,48 +108,27 @@ class Database(Extension):
 
         if type(p_key) == Snowflake:
             p_key = int(p_key)
-            
-            
-        get_pool = await Database.get_pool()
 
         # Check if the primary key already exists in the table
         select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
-        async with get_pool.acquire() as conn:
-            async with conn.cursor(aiomysql.Cursor) as cursor:
-                await cursor.execute(select_sql, (p_key,))
+        cursor = await Database.execute(select_sql, p_key)
 
         row = await cursor.fetchone()
 
         if row:
-
             update_sql = f"UPDATE `{table}` SET `{column}` = %s WHERE p_key = %s"
-            async with get_pool.acquire() as conn:
-                async with conn.cursor(aiomysql.Cursor) as cursor:
-                    await cursor.execute(update_sql, (data, p_key))
+            await Database.execute(update_sql, data, p_key)
         else:
             insert_sql = f"INSERT INTO `{table}` (p_key, `{column}`) VALUES (%s, %s)"
-            async with get_pool.acquire() as conn:
-                async with conn.cursor(aiomysql.Cursor) as cursor:
-                    await cursor.execute(insert_sql, (p_key, data))
-
-                try:
-                    await conn.commit()
-                except Exception as e:
-                    print(f"Error committing changes to database: {e}")
-                    await conn.rollback()
-                    return None
+            await Database.execute(insert_sql, p_key, data)
 
     @staticmethod
     async def get_leaderboard(sort_by: str):
 
         sql = f'SELECT * FROM user_data ORDER BY {sort_by} DESC LIMIT 10;'
-        
-        get_pool = await Database.get_pool()
-
-        async with get_pool.acquire() as conn:
-            async with conn.cursor(aiomysql.DictCursor) as cursor:
-                await cursor.execute(sql)
-                data = await cursor.fetchall()
+    
+        cursor = await Database.execute(sql)
+        data = await cursor.fetchall()
 
         lb = []
 
@@ -191,13 +138,13 @@ class Database(Extension):
         return lb
 
     @staticmethod
-    async def increment_value(table: str, column: str, primary_key: int):
+    async def increment_value(table: str, column: str, primary_key: int, amount = 1):
         v: int = await Database.fetch(table, primary_key, column)  # use Database.fetch()
-        await Database.update(table, column, primary_key, v + 1)  # use Database.update()
+        await Database.update(table, column, primary_key, v + amount)  # use Database.update()
     
     @staticmethod
-    async def update_user(id: int, data: dict, **what: str):
-            
+    async def update_table(table: str, p_key: int, data: dict, **what: str):
+        
         def update_value(key_: str, value_):
             data[key_] = value_
             
@@ -209,19 +156,10 @@ class Database(Extension):
         if not what:
             for key in data:
                 data[key] = update_value(key, data[key])
-                await Database.update('UserData', key, id, data[key])
+                await Database.update(table, key, p_key, data[key])
         else:
             for key, value in what.items():
                 value = update_value(key, value)
-                await Database.update('UserData', key, id, value)
+                await Database.update(table, key, p_key, value)
                 
         return data
-        
-    @staticmethod
-    async def increment_user(id: int, what: str, amount: int):
-        
-        user = await Database.fetch('UserData', id)
-        
-        user[what] += amount
-        
-        await Database.update_user(id, user, **{what: user[what]})

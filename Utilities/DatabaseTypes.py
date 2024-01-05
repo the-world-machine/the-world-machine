@@ -7,9 +7,17 @@ import re
 class UserData:
     
     async def update(self, **what: str):
-        data_dict = await Database.update_user(self.p_key, self.__dict__, **what)
+        data_dict = await Database.update_table('UserData', self.p_key, self.__dict__, **what)
         self = UserData(**data_dict)
         return self
+    
+    async def increment_value(self, what: str, amount: int = 1):
+        await Database.increment_value('UserData', what, self.p_key, amount)
+        data_dict = self.__dict__
+        
+        data_dict[what] += amount
+        
+        return UserData(**data_dict)
         
     p_key: int
     wool: int
@@ -35,3 +43,26 @@ async def fetch_user(id: int, as_dict: bool = False):
         return data
     else:
         return UserData(**data)
+    
+@dataclass
+class ServerData:
+
+    async def update(self, **what: str):
+        data_dict = await Database.update_table('ServerData', self.p_key, self.__dict__, **what)
+        self = ServerData(**data_dict)
+        return self
+    
+    p_key: int
+    transmit_channel: int
+    transmittable_servers: dict
+    blocked_servers: list
+    anonymous: bool
+    transmit_images: bool
+    
+async def fetch_server(id: int, as_dict: bool = False):
+    data = await Database.fetch('ServerData', id)
+    
+    if as_dict:
+        return data
+    else:
+        return ServerData(**data)
