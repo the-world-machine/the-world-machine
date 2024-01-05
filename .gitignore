@@ -1,6 +1,7 @@
 # World Machine
 Data/config.json
 Data/last_shop_reset_date.json
+Data/explosions.txt
 
 __pycache__/
 *.py[cod]
