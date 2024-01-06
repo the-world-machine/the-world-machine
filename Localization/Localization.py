@@ -15,7 +15,7 @@ def load_languages():
             languages[language] = module
 
 async def get_lang(guild_id: int):
-    server_language: str = await Database.fetch('server_data', 'bot_language', guild_id)
+    server_language: str = await Database.fetch('ServerData', guild_id, 'language')
 
     language_module = importlib.reload(languages[server_language])
     

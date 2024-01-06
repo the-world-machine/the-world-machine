@@ -53,7 +53,7 @@ async def increment_value(ctx: SlashContext, value_to_increment: str, amount: in
     user_data = await fetch_user(user.id)
     json_data = user_data.__dict__
 
-    await db.increment_user(user.id, value_to_increment, amount)
+    await user_data.increment_value(value_to_increment, amount)
     
     get_value = json_data[value_to_increment] + amount
     

@@ -35,6 +35,7 @@ class UserData:
     times_shattered: int
     wool_gained: int
     suns_gained: int
+    translation_language: str
     
 async def fetch_user(id: int, as_dict: bool = False):
     data = await Database.fetch('UserData', id)
@@ -58,6 +59,7 @@ class ServerData:
     blocked_servers: list
     anonymous: bool
     transmit_images: bool
+    language: str
     
 async def fetch_server(id: int, as_dict: bool = False):
     data = await Database.fetch('ServerData', id)
@@ -66,3 +68,30 @@ async def fetch_server(id: int, as_dict: bool = False):
         return data
     else:
         return ServerData(**data)
+    
+@dataclass
+class NikogotchiData:
+    
+    async def update(self, **what: str):
+        data_dict = await Database.update_table('NikogotchiData', self.p_key, self.__dict__, **what)
+        self = NikogotchiData(**data_dict)
+        return self
+
+    p_key: int
+    last_interacted: datetime
+    hatched: datetime
+    data: dict
+    nikogotchi_available: bool
+    rarity: int
+    
+    pancakes: int
+    golden_pancakes: int
+    glitched_pancakes: int
+    
+async def fetch_nikogotchi(id: int, as_dict: bool = False):
+    data = await Database.fetch('NikogotchiData', id)
+    
+    if as_dict:
+        return data
+    else:
+        return NikogotchiData(**data)

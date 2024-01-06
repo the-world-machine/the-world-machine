@@ -5,11 +5,11 @@ def text(data: dict = {}):
     
     # Generally, you want to leave this code alone. Unless you want to do something fancy.
     def fetch(what: str):
-        return data.get(what, "")
+        return data.get(what, "?")
 
     # Simply renaming variables so that it makes things easier to read.
-    loading_icon = icons.loading()
-    wool_icon = icons.wool()
+    loading_icon = icons.icon_loading
+    wool_icon = icons.icon_wool
 
     # Start of translations
     return {

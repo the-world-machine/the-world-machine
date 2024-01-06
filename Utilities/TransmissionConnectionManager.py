@@ -31,61 +31,76 @@ def create_connection(server_id, channel_id):
 
 
 def remove_connection(server_id):
-    for t in transmissions:
-        if t.connection_a:
-            if t.connection_a.server_id == server_id:
-                transmissions.remove(t)
+    for transmission in transmissions:
+        if transmission.connection_a:
+            if transmission.connection_a.server_id == server_id:
+                transmissions.remove(transmission)
 
-        if t.connection_b:
-            if t.connection_b.server_id == server_id:
-                transmissions.remove(t)
+        if transmission.connection_b:
+            if transmission.connection_b.server_id == server_id:
+                transmissions.remove(transmission)
 
 def connect_to_transmission(server_id, channel_id):
-    for t in transmissions:
-        if t.connection_b is None:
-            t.connection_b = Connection(server_id, channel_id)
+    for transmission in transmissions:
+        if transmission.connection_b is None:          
+            transmission.connection_b = Connection(server_id, channel_id)
             return
 
 
 def get_transmission(server_id):
-    for t in transmissions:
-        if t.connection_a.server_id == server_id:
-            return t
+    for transmission in transmissions:
+        if transmission.connection_a.server_id == server_id:
+            return transmission
 
-        if t.connection_b.server_id == server_id:
-            return t
+        if transmission.connection_b.server_id == server_id:
+            return transmission
         
 def get_connection(server_id):
-    for t in transmissions:
-        if t.connection_a.server_id == server_id:
-            return t.connection_a
+    for transmission in transmissions:
+        if transmission.connection_a.server_id == server_id:
+            return transmission.connection_a
 
-        if t.connection_b.server_id == server_id:
-            return t.connection_b
+        if transmission.connection_b.server_id == server_id:
+            return transmission.connection_b
 
 def connection_alive(server_id) -> bool:
-    for t in transmissions:
-        if t.connection_a.server_id == server_id:
-            if t.connection_b is not None:
+    for transmission in transmissions:     
+        if transmission.connection_a.server_id == server_id:
+            if transmission.connection_b is not None:
                 return True
-            return False
 
-        if t.connection_b is not None:
-            if t.connection_b.server_id == server_id:
+        if transmission.connection_b is not None:
+            if transmission.connection_b.server_id == server_id:
                 return True
-            return False
 
     return False
 
+def attempting_to_connect(server_id) -> bool:
+    for transmission in transmissions:
+        if transmission.connection_a.server_id == server_id:
+            return True
+    return False
+
+def available_initial_connections(block_list) -> bool:
+    for transmission in transmissions:
+        
+        if transmission.connection_b is None:
+            
+            if transmission.connection_a.server_id in block_list:
+                continue
+            
+            return False
+        
+    return True
 
 def check_if_connected(server_id) -> bool:
-    for t in transmissions:
-        if t.connection_a.server_id == server_id:
+    for transmission in transmissions:
+        if transmission.connection_a.server_id == server_id:
             return True
 
-        if t.connection_b is None:
+        if transmission.connection_b is None:
             return False
-        elif t.connection_b.server_id == server_id:
+        elif transmission.connection_b.server_id == server_id:
             return True
 
     return False

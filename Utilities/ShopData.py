@@ -4,6 +4,7 @@ import aiofiles
 import json
 
 from interactions import SlashContext
+from Utilities.ItemData import fetch_background, fetch_item, fetch_treasure
 from database import Database
 from Localization.Localization import loc
 import json
@@ -48,10 +49,13 @@ class ShopData:
 async def fetch_shop_data():
     
     data: str = await Database.fetch_shop_data()
-    backgrounds: dict = await Database.get_items('Backgrounds')
-    items: dict = await Database.get_items('Treasures')
+    backgrounds: dict = await fetch_background('all')
+    treasures: dict = await fetch_treasure('all')
+    capsules: dict = await fetch_item('capsules')
+    pancakes: dict = await fetch_item('pancakes')
+    items = {**capsules, **pancakes}
      
-    return ShopData(data, backgrounds, items)
+    return ShopData(data, backgrounds, treasures, items)
 
 async def reset_shop_data(guild_id: int):
     
@@ -80,11 +84,11 @@ async def reset_shop_data(guild_id: int):
     
     data['stock_price'] = min(2, max(0.2, price_change))
     
-    await Database.update('shop_data', 'stock_price', 0, data['stock_price'])
-    await Database.update('shop_data', 'stock_value', 0, data['stock_value'])
-    await Database.update('shop_data', 'last_reset_date', 0, data['last_reset_date'])
-    await Database.update('shop_data', 'backgrounds', 0, data['backgrounds'])
-    await Database.update('shop_data', 'treasure', 0, data['treasure'])
-    await Database.update('shop_data', 'motd', 0, data['motd'])
+    await Database.update('ShopData', 'stock_price', 0, data['stock_price'])
+    await Database.update('ShopData', 'stock_value', 0, data['stock_value'])
+    await Database.update('ShopData', 'last_reset_date', 0, data['last_reset_date'])
+    await Database.update('ShopData', 'backgrounds', 0, data['backgrounds'])
+    await Database.update('ShopData', 'treasure', 0, data['treasure'])
+    await Database.update('ShopData', 'motd', 0, data['motd'])
     
     return ShopData(data, bgs, trs)

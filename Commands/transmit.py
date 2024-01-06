@@ -34,12 +34,14 @@ class Transmit(Extension):
     @transmit.subcommand(sub_cmd_description='Connect to a server you already know.')
     async def call(self, ctx: SlashContext):
 
-        await self.load_character()
-
         server_data = await fetch_server(ctx.guild.id)
         
         can_transmit = server_data.transmit_channel
         server_ids = server_data.transmittable_servers
+        
+        if attempting_to_connect(ctx.guild.id):
+
+            return await fancy_message(ctx, '[ This server is already transmitting! ]', ephemeral=True)
 
         if not can_transmit:
 
@@ -76,6 +78,13 @@ class Transmit(Extension):
         select_results = await self.client.wait_for_component(components=server_list)
 
         other_server = int(select_results.ctx.values[0])
+        other_server_data = await fetch_server(other_server)
+        
+        if other_server in server_data.blocked_servers:
+            return await fancy_message(select_results.ctx, '[ Sorry, but this server is blocked. ]', color=0xfa272d, ephemeral=True)
+        
+        if ctx.guild_id in other_server_data.blocked_servers:
+            return await fancy_message(select_results.ctx, '[ Sorry, but this server has blocked you. ]', color=0xfa272d, ephemeral=True)
 
         get_channel = await fetch_server(other_server)
         get_channel = get_channel.transmit_channel
@@ -142,8 +151,16 @@ class Transmit(Extension):
 
     @transmit.subcommand(sub_cmd_description='Transmit to another server.')
     async def connect(self, ctx: SlashContext):
+        
+        await ctx.defer()
+        server_data = await fetch_server(ctx.guild_id)
 
-        if len(transmissions) == 0:
+        if available_initial_connections(server_data.blocked_servers):
+            
+            if attempting_to_connect(ctx.guild_id):
+
+                return await fancy_message(ctx, '[ This server is already transmitting! ]', ephemeral=True)
+            
             create_connection(ctx.guild_id, ctx.channel_id)
 
             embed = await self.embed_manager('initial_connection')
@@ -194,14 +211,16 @@ class Transmit(Extension):
 
                 remove_connection(ctx.guild_id)
 
-                button_ctx = task.result()
+                button_ctx: Component = task.result()
+                
+                await button_ctx.ctx.defer(edit_origin=True)
 
-                embed = await self.on_cancel('manual', ctx.guild_id, button_ctx)
+                embed = await self.on_cancel('manual', ctx.guild_id, button_ctx.ctx)
 
                 await msg.edit(embeds=embed, components=[])
                 return
 
-            await increment_value(ctx, 'times_transmitted', ctx.user)
+            await increment_value(ctx, 'times_transmitted', 1, ctx.user)
 
             await self.on_transmission(ctx.user, msg, ctx.guild_id)
             return
@@ -216,7 +235,7 @@ class Transmit(Extension):
 
             msg = await ctx.send(embeds=embed)
 
-            await increment_value(ctx, 'times_transmitted', ctx.user)
+            await increment_value(ctx, 'times_transmitted', 1, ctx.user)
 
             connect_to_transmission(ctx.guild_id, ctx.channel_id)
             await self.on_transmission(ctx.user, msg, ctx.guild_id)
@@ -237,7 +256,7 @@ class Transmit(Extension):
         transmittable_servers = server_data.transmittable_servers
         transmittable_servers[str(other_server.id)] = other_server.name
         
-        server_data.update(transmittable_servers = transmittable_servers)
+        await server_data.update(transmittable_servers = transmittable_servers)
 
         btn_id = uuid.uuid4()
 
@@ -261,7 +280,7 @@ class Transmit(Extension):
 
         embed = await self.embed_manager('connected')
         embed.description = f'[ Currently connected to **{other_server.name}**! ]'
-
+        
         while connection_alive(server_id):
             done, _ = await asyncio.wait({task}, timeout=1)
 
@@ -328,7 +347,7 @@ class Transmit(Extension):
 
             for i, character in enumerate(connection.characters):
                 if character['id'] == 0 or character['id'] == d_user.id:
-                    user = Transmit.TransmitUser(character['Name'], d_user.id, character['Image'])
+                    user = Transmit.TransmitUser(character['Name'], d_user.id, f'https://cdn.discordapp.com/emojis/{character["Image"]}.png')
 
                     connection.characters[i].update({'id': d_user.id})
 

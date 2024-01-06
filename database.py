@@ -53,14 +53,11 @@ class Database(Extension):
         return cursor
 
     @staticmethod
-    async def fetch(table: str, primary_key: Union[int, Snowflake], column: str = None) -> any:
+    async def fetch(table: str, primary_key: Union[int, Snowflake], what: str = None) -> any:
         if type(primary_key) == Snowflake:
             primary_key = int(primary_key)
 
-        if column is None:
-            select_sql = f"SELECT * FROM {table} WHERE p_key = {primary_key}"
-        else:
-            select_sql = f"SELECT {column} FROM {table} WHERE p_key = {primary_key}"
+        select_sql = f"SELECT * FROM {table} WHERE p_key = {primary_key}"
             
         column_sql = f"DESCRIBE {table}"
         
@@ -69,7 +66,7 @@ class Database(Extension):
         
         if not row:
             await Database.new_entry(table, primary_key)  # use Database.new_entry()
-            return await Database.fetch(table, primary_key, column)  # use Database.fetch()
+            return await Database.fetch(table, primary_key, what)  # use Database.fetch()
 
         cursor = await Database.execute(column_sql)
         column_data = await cursor.fetchall()
@@ -86,12 +83,15 @@ class Database(Extension):
             if dtype == 'longtext' and value != 'NULL':
                 value = json.loads(value)
                 
-            if value is 'NULL':
+            if value == 'NULL':
                 value = None
             
             result_dict[key] = value
             
-        return result_dict
+        if not what:
+            return result_dict
+        else:
+            return result_dict[what]
 
     @staticmethod
     async def new_entry(table: str, primary_key: int):
@@ -108,6 +108,9 @@ class Database(Extension):
 
         if type(p_key) == Snowflake:
             p_key = int(p_key)
+            
+        if type(data) == dict or type(data) == list or type(data) == bool:
+            data = json.dumps(data)
 
         # Check if the primary key already exists in the table
         select_sql = f"SELECT * FROM `{table}` WHERE p_key = %s"
@@ -143,23 +146,20 @@ class Database(Extension):
         await Database.update(table, column, primary_key, v + amount)  # use Database.update()
     
     @staticmethod
-    async def update_table(table: str, p_key: int, data: dict, **what: str):
-        
-        def update_value(key_: str, value_):
-            data[key_] = value_
-            
-            if type(value_) == dict or type(value_) == list or type(value_) == bool:
-                return json.dumps(value_)
-            else:
-                return value_
+    async def update_table(table: str, p_key: int, data_: dict, **what: str):
         
         if not what:
-            for key in data:
-                data[key] = update_value(key, data[key])
-                await Database.update(table, key, p_key, data[key])
+            for key in data_:
+                await Database.update(table, key, p_key, data_[key])
         else:
             for key, value in what.items():
-                value = update_value(key, value)
                 await Database.update(table, key, p_key, value)
                 
+        return data_
+    
+    @staticmethod
+    async def fetch_shop_data():
+        
+        data = await Database.fetch('ShopData', 0)
+        
         return data

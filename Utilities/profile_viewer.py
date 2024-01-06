@@ -24,11 +24,13 @@ async def load_badges():
     global wool_icon
     global sun_icon
     global badges
+    global icons
 
     print('Loading Badges...')
 
     images = []
-
+    icons = []
+    
     badges = await fetch_badge('all')
 
     for _, badge in badges.items():

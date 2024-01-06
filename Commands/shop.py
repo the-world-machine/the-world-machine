@@ -1,6 +1,8 @@
 from typing import Union
 from interactions import *
 from interactions.api.events import Component
+from Utilities.DatabaseTypes import fetch_nikogotchi, fetch_user
+from Utilities.ItemData import fetch_item
 from Utilities.fancysend import *
 from Utilities.bot_icons import *
 from Utilities.ShopData import Background, Item, ShopData, fetch_shop_data, reset_shop_data
@@ -249,6 +251,9 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
+        user_data = await fetch_user(ctx.author.id)
+        nikogotchi = await fetch_nikogotchi(ctx.author.id)
+        
         match = self.r_buy_nikogotchi.match(ctx.component.custom_id)
         
         if not match:
@@ -267,21 +272,17 @@ class Shop(Extension):
             embed.set_footer(footer_text)
             
             await ctx.edit(embed=embed, components=components)
-            
-        user_wool = await Database.fetch('user_data', 'wool', ctx.author.id)
-        nikogotchi = await Database.fetch('nikogotchi_data', 'data', ctx.author.id)
-        rarity = await Database.fetch('nikogotchi_data', 'rarity', ctx.author.id)
         
-        if nikogotchi or rarity > -1:
+        if nikogotchi.data or nikogotchi.nikogotchi_available:
             footer_text = await loc(ctx.guild_id, 'Shop', 'already_owned')
             return await update()
         
-        if user_wool < nikogotchi_capsule.cost:
+        if user_data.wool < nikogotchi_capsule.cost:
             footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
-        await Database.update('nikogotchi_data', 'rarity', ctx.author.id, capsule_id)
-        await Database.update('user_data', 'wool', ctx.author.id, user_wool - nikogotchi_capsule.cost)
+        await nikogotchi.update(nikogotchi_available=True)
+        await user_data.update(wool=user_data.wool - nikogotchi_capsule.cost)
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': capsule_data['name'],
@@ -295,6 +296,8 @@ class Shop(Extension):
     async def buy_callback(self, ctx: ComponentContext):
         
         await ctx.defer(edit_origin=True)
+        
+        user_data = await fetch_user(ctx.author.id)
         
         match = self.r_buy_object.match(ctx.component.custom_id)
         
@@ -318,16 +321,10 @@ class Shop(Extension):
             embed.set_footer(footer_text)
             
             return await ctx.edit(embed=embed, components=components)
-        
-        user_wool = await Database.fetch('user_data', 'wool', ctx.author.id)
-        items = await Database.get_items(item_category)
-        
-        item = Item(items[item_id])
-        
-        if item.type == 'Treasures':
-            item.cost = item.cost * self.daily_shop.stock_price
+
+        item = await fetch_item(item_category, item_id)
             
-        if user_wool < item.cost:
+        if user_data.wool < item.cost:
             footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
@@ -348,7 +345,7 @@ class Shop(Extension):
             
             await Database.update('nikogotchi_data', item.nid, ctx.author.id, pancake)
         
-        await Database.update('user_data', 'wool', ctx.author.id, user_wool - item.cost)
+        await user_data.update(wool=user_data.wool - item.cost)
         await update()
         
         
@@ -405,7 +402,9 @@ class Shop(Extension):
 
         await self.load_shop(ctx.guild_id)
         
-        user_wool: int = await Database.fetch('user_data', 'wool', ctx.author.id)
+        user_data = await fetch_user(ctx.author.id)
+        
+        user_wool: int = user_data.wool
         
         stock: str = await loc(ctx.guild_id, 'Shop', 'stock', values={'stock_price': self.daily_shop.stock_price, 'stock_value': self.daily_shop.stock_value})
         
@@ -473,8 +472,7 @@ class Shop(Extension):
         
         elif category == 'capsules':
             
-            nikogotchi = await Database.fetch('nikogotchi_data', 'data', ctx.author.id)
-            rarity = await Database.fetch('nikogotchi_data', 'rarity', ctx.author.id)
+            nikogotchi = await fetch_nikogotchi(ctx.author.id)
             capsules: dict = await Database.get_items('capsules')
             
             caspule_text = ''
@@ -484,7 +482,7 @@ class Shop(Extension):
                 
                 capsule_data = await loc(ctx.guild_id, 'Items', 'capsules', capsule['nid'])
                 
-                caspule_text += f'<:capsule:{capsule["image"]}>  **{capsule_data["name"]}** - {wool()}{l_num(capsule["price"])}\n*{capsule_data["description"]}*\n\n'
+                caspule_text += f'<:capsule:{capsule["image"]}>  **{capsule_data["name"]}** - {icon_wool}{l_num(capsule["price"])}\n*{capsule_data["description"]}*\n\n'
                 
                 button = Button(
                     label=await loc(ctx.guild_id, 'Shop', 'buy'),
@@ -497,7 +495,7 @@ class Shop(Extension):
                     button.disabled = True
                     button.style = ButtonStyle.GRAY
                     
-                if rarity > -1 or nikogotchi:
+                if nikogotchi.nikogotchi_available or nikogotchi:
                     button.disabled = True
                     button.style = ButtonStyle.RED
                     
@@ -527,13 +525,13 @@ class Shop(Extension):
             buttons: list[Button] = []
             for id_, pancake in enumerate(pancakes):
                 
-                owned = await Database.fetch('nikogotchi_data', pancake.nid, ctx.author.id)
+                owned = await Database.fetch('NikogotchiData', ctx.author.id, pancake.nid)
                 
                 amount_owned = await loc(ctx.guild_id, 'Shop', 'currently_owned', values={'amount': owned})
                 pancake_loc = await loc(ctx.guild_id, 'Items', 'pancakes', pancake.nid)
                 
                 pancake_text += f'''
-                <:pancake:{pancake.image}>  **{pancake_loc['name']}** - {wool()}{l_num(pancake.cost)}
+                <:pancake:{pancake.image}>  **{pancake_loc['name']}** - {icon_wool}{l_num(pancake.cost)}
                 *{pancake_loc['description']}*
                 {amount_owned}\n'''
                 
@@ -568,7 +566,7 @@ class Shop(Extension):
             bg_page = args['page']
             
             background = self.daily_shop.background_stock[bg_page]
-            user_backgrounds = await Database.fetch('user_data', 'unlocked_backgrounds', ctx.author.id)
+            user_backgrounds = user_data.owned_backgrounds
             
             background_name = await loc(ctx.guild_id, 'Items', 'Backgrounds', background.nid)
             background_description = await loc(ctx.guild_id, 'Shop', 'Backgrounds', 'description', values={
@@ -641,7 +639,7 @@ class Shop(Extension):
                 treasure_loc = await loc(ctx.guild_id, 'Items', 'Treasures', treasure.nid)
                 
                 treasure_text += f'''
-                <:treasure:{treasure.image}>  **{treasure_loc['name']}** - ~~{wool()}{l_num(treasure.cost)}~~ - {wool()}{l_num(price)}
+                <:treasure:{treasure.image}>  **{treasure_loc['name']}** - ~~{icon_wool}{l_num(treasure.cost)}~~ - {icon_wool}{l_num(price)}
                 *{treasure_loc['description']}*
                 {amount_owned}\n'''
                 
