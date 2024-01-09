@@ -345,10 +345,18 @@ class Command(Extension):
 
         if nikogotchi.status == 3:
             modifier = 2.5
+            
+        random_stat_modifier = random.uniform(1, 1.50)
 
-        nikogotchi.hunger = round(max(0, nikogotchi.hunger - time_difference * modifier))
-        nikogotchi.attention = round(max(0, nikogotchi.attention - time_difference * modifier))
-        nikogotchi.cleanliness = round(max(0, nikogotchi.cleanliness - time_difference * modifier))
+        nikogotchi.hunger = round(max(0, nikogotchi.hunger - time_difference * random_stat_modifier * modifier))
+        
+        random_stat_modifier = random.uniform(1, 1.50)
+        
+        nikogotchi.attention = round(max(0, nikogotchi.attention - time_difference * random_stat_modifier * modifier))
+        
+        random_stat_modifier = random.uniform(1, 1.50)
+        
+        nikogotchi.cleanliness = round(max(0, nikogotchi.cleanliness - time_difference * random_stat_modifier * modifier))
 
         if nikogotchi.immortal:
             nikogotchi.hunger = 9999
@@ -427,7 +435,6 @@ class Command(Extension):
 
         if not custom_id == 'feed':
             if nikogotchi.status == 2:
-                select.disabled = False
                 buttons[0].disabled = False
                 buttons[1].disabled = False
                 buttons[2].disabled = False
@@ -542,9 +549,9 @@ class Command(Extension):
                 )
             )
             
-            placeholder = 'No food to feed.'
-            cannot_feed = True 
-
+            placeholder = f'No Food!'
+            cannot_feed = True
+            
         select = StringSelectMenu(
             *food_options,
             custom_id='feed_food',

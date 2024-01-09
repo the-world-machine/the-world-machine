@@ -164,7 +164,7 @@ class Music(Extension):
 
         print(song)
 
-        message = await fancy_message(ctx, f"[ Loading search results... {icons.loading()} ]")
+        message = await fancy_message(ctx, f"[ Loading search results... {icons.icon_loading} ]")
 
         # Connecting to voice channel and getting player instance
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
@@ -215,7 +215,7 @@ class Music(Extension):
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
                                        ephemeral=True)
 
-        message = await fancy_message(ctx, f"[ Loading search results... {icons.loading()} ]")
+        message = await fancy_message(ctx, f"[ Loading search results... {icons.icon_loading} ]")
 
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
 

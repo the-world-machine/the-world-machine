@@ -46,16 +46,19 @@ class CustomSearch(Source):
                 return LoadResult(load_type, get_tracks, playlist_info=PlaylistInfo.none())
 
             for t in tracks:
-                get_tracks.append(
-                    CustomAudioTrack({  # Create an instance of our CustomAudioTrack.
-                        'identifier': t.album['images'][0]['url'],  # Fill it with metadata that we've obtained from our source's provider.
-                        'isSeekable': True,
-                        'author': t.artists,
-                        'length': t.duration,
-                        'isStream': False,
-                        'title': t.name,
-                        'uri': t.url
-                        }, requester=0, extra={'cover_art': t.album['images'][0]['url']})
-                )  # Init requester with a default value.
+                try:
+                    get_tracks.append(
+                        CustomAudioTrack({  # Create an instance of our CustomAudioTrack.
+                            'identifier': t.album['images'][0]['url'],  # Fill it with metadata that we've obtained from our source's provider.
+                            'isSeekable': True,
+                            'author': t.artists,
+                            'length': t.duration,
+                            'isStream': False,
+                            'title': t.name,
+                            'uri': t.url
+                            }, requester=0, extra={'cover_art': t.album['images'][0]['url']})
+                        )  # Init requester with a default value.
+                except:
+                    pass # Incase there's a track that cannot be used.
 
             return LoadResult(load_type, get_tracks, playlist_info=PlaylistInfo.none())

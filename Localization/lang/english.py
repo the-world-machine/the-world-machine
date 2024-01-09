@@ -31,7 +31,7 @@ def text(data: dict = {}):
 
             "sell_button": "Sell Treasures",
             "sell": "Sell One",
-            "sell_all": "Sell All",
+            "sell_all": f"Sell All (x{fetch('amount')})",
             
             "cannot_buy": "You do not have enough to trade for this item.",
             "cannot_sell": "You do not have anything to trade.",
@@ -151,8 +151,6 @@ def text(data: dict = {}):
                 
                 {fetch('selected_treasure')}
                 
-                {fetch('currently_owned')}
-                
                 
                 {fetch('user_wool')}
                 """,
@@ -161,11 +159,7 @@ def text(data: dict = {}):
                 "select_treasure_placeholder": f"Select a treasure!",
             
                 "treasure_not_selected": "It seems you haven't selected any treasure yet. I'll let you know when you do!",
-                "treasure_selected": f"""
-                **{fetch('selected_treasure')}**
-                Sell One: {wool_icon}{fetch('sell_one')}
-                Sell All: {wool_icon}{fetch('sell_all')}
-                """,
+                "treasure_selected": f"**{fetch('selected_treasure')}\n**Sell One: {wool_icon}{fetch('sell_one')}\nSell All: {wool_icon}{fetch('sell_all')}",
             },
         },
         

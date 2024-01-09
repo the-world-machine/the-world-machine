@@ -2,10 +2,10 @@ from typing import Union
 from interactions import *
 from interactions.api.events import Component
 from Utilities.DatabaseTypes import fetch_nikogotchi, fetch_user
-from Utilities.ItemData import fetch_item
+from Utilities.ItemData import fetch_background, fetch_item, fetch_treasure
 from Utilities.fancysend import *
 from Utilities.bot_icons import *
-from Utilities.ShopData import Background, Item, ShopData, fetch_shop_data, reset_shop_data
+from Utilities.ShopData import DictItem, Item, ShopData, fetch_shop_data, reset_shop_data
 from Utilities.CommandHandler import twm_cmd, twm_subcmd
 from datetime import datetime, timedelta
 from database import Database
@@ -41,7 +41,7 @@ class Shop(Extension):
         
         await self.load_shop(ctx.guild_id)
         
-        treasure = int(ctx.values[0])
+        treasure = ctx.values[0]
         
         embed, components = await self.embed_manager(ctx, 'Sell_Treasures', {'selected_treasure': treasure})
         
@@ -71,17 +71,19 @@ class Shop(Extension):
         if not match:
             return
         
-        treasure_id = int(match.group(1))
+        treasure_id = match.group(1)
         amount_to_sell = match.group(2)
         
         stock_price = self.daily_shop.stock_price
         
-        all_treasures = await Database.get_items('Treasures')
-        owned_treasure = await Database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
+        user_data = await fetch_user(ctx.author.id)
+        
+        all_treasures = await fetch_treasure('all')
+        owned_treasure = user_data.owned_treasures
         
         amount_of_treasure = owned_treasure[treasure_id]
         
-        treasure = Item(all_treasures[treasure_id])
+        treasure = DictItem(nid=treasure_id, **all_treasures[treasure_id], type=0)
         
         footer_text = ''
         
@@ -116,15 +118,14 @@ class Shop(Extension):
             
             footer_text = await loc(ctx.guild_id, 'Shop', 'sold', values={'what': treasure_data['name'], 'cost': l_num(sell_price)})
             
-        await Database.update('nikogotchi_data', 'treasure', ctx.author.id, owned_treasure)
-        
-        user_wool = await Database.fetch('user_data', 'wool', ctx.author.id)
-        
-        await Database.update('user_data', 'wool', ctx.author.id, user_wool + sell_price)
+        await user_data.update(
+            owned_treasures=owned_treasure,
+            wool=user_data.wool + sell_price
+        )
         
         await update()
         
-    r_treasure_buy = re.compile(r'treasure_buy_(\d+)_([^\d]+)')
+    r_treasure_buy = re.compile(r'treasure_buy_(.*)_(.*)')
     @component_callback(r_treasure_buy)
     async def buy_treasure_callback(self, ctx: ComponentContext):
         
@@ -132,19 +133,19 @@ class Shop(Extension):
         
         await self.load_shop(ctx.guild_id)
         
-        user_wool = await Database.fetch('user_data', 'wool', ctx.author.id)
+        user_data = await fetch_user(ctx.author.id)
         
         match = self.r_treasure_buy.match(ctx.component.custom_id)
         
         if not match:
             return
         
-        treasure_id = int(match.group(1))
+        treasure_id = match.group(1)
         amount_to_buy = match.group(2)
         
-        all_treasures = await Database.get_items('Treasures')
+        all_treasures = await fetch_treasure('all')
         
-        treasure = Item(all_treasures[treasure_id])
+        treasure = DictItem(nid=treasure_id, **all_treasures[treasure_id], type=0)
         
         footer_text = ''
         
@@ -156,11 +157,11 @@ class Shop(Extension):
             
             await ctx.edit(embed=embed, components=components)
         
-        if user_wool < treasure_price:
+        if user_data.wool < treasure_price:
             footer_text = 'You cannot afford this item.'
             return await update()
 
-        current_cost = user_wool
+        current_balance = user_data.wool
         price = 0
         amount = 0
         
@@ -170,9 +171,9 @@ class Shop(Extension):
         
         if amount_to_buy == 'All':
             while True:
-                current_cost -= treasure_price
+                current_balance -= treasure_price
                 
-                if current_cost <= 0:
+                if current_balance <= 0:
                     break
                 
                 price += int(treasure_price)
@@ -180,43 +181,41 @@ class Shop(Extension):
                 
             footer_text = await loc(ctx.guild_id, 'Shop', 'bought_all', values={'what': name, 'cost': l_num(price), 'amount': l_num(amount)})
         else:
-            current_cost -= treasure_price
             price = int(treasure_price)
             amount = 1
             footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={'what': name, 'cost': l_num(price)})
         
-        owned_treasure = await Database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
+        owned_treasure = user_data.owned_treasures
         
-        owned_treasure[treasure_id] += amount
+        owned_treasure[treasure_id] = owned_treasure.get(treasure_id, 0) + amount
         
-        await Database.update('nikogotchi_data', 'treasure', ctx.author.id, owned_treasure)
-        
-        await Database.update('user_data', 'wool', ctx.author.id, user_wool - price)
-        
+        await user_data.update(
+            wool=user_data.wool - price,
+            owned_treasures=owned_treasure
+        )
         
         return await update()
         
-    r_buy_bg = re.compile(r'buy_bg_(\d+)_(\d+)')
+    r_buy_bg = re.compile(r'buy_bg_(.*)_(\d+)')
     @component_callback(r_buy_bg)
     async def buy_bg_callback(self, ctx: ComponentContext):
         
         await ctx.defer(edit_origin=True)
         
-        user_wool = await Database.fetch('user_data', 'wool', ctx.author.id)
+        user = await fetch_user(ctx.author.id)
         
         match = self.r_buy_bg.match(ctx.component.custom_id)
-        
-        all_bgs = await Database.get_items('Backgrounds')
         
         if not match:
             return
         
-        bg_id = int(match.group(1))
+        bg_id = match.group(1)
         page = int(match.group(2))
         
-        bg = Background(all_bgs[bg_id])
+        bg_data = await fetch_background(bg_id)
+        bg = DictItem(nid=bg_id, **bg_data)
         
-        owned_backgrounds = await Database.fetch('user_data', 'unlocked_backgrounds', ctx.author.id)
+        owned_backgrounds = user.owned_backgrounds
         
         async def update():
             embed, components = await self.embed_manager(ctx, 'Backgrounds', {'page': page})
@@ -224,24 +223,25 @@ class Shop(Extension):
             
             await ctx.send(embed=embed, components=components, ephemeral=True)
         
-        if bg.id_ in owned_backgrounds:
+        if bg.nid in owned_backgrounds:
             footer_text = await loc(ctx.guild_id, 'Shop', 'already_owned')
             return await update()
         
-        if user_wool < bg.cost:
+        if user.wool < bg.cost:
             footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
-        owned_backgrounds.append(bg.id_)
-        
-        await Database.update('user_data', 'unlocked_backgrounds', ctx.author.id, owned_backgrounds)
+        owned_backgrounds.append(bg.nid)
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': await loc(ctx.guild_id, 'Items', 'Backgrounds', bg.nid),
             'cost': l_num(bg.cost)
         })
-            
-        await Database.update('user_data', 'wool', ctx.author.id, user_wool - bg.cost)
+        
+        await user.update(
+            owned_backgrounds=owned_backgrounds,
+            wool=user.wool - bg.cost
+        )
         
         await update()
         
@@ -262,10 +262,10 @@ class Shop(Extension):
         capsule_id = int(match.group(1))        
         footer_text = ''
         
-        capsules = await Database.get_items('capsules')
+        capsules = await fetch_item('capsules')
         
-        nikogotchi_capsule = Item(capsules[capsule_id])
-        capsule_data = await loc(ctx.guild_id, 'Items', 'capsules', nikogotchi_capsule.nid)
+        nikogotchi_capsule = Item(**capsules[capsule_id])
+        capsule_data = await loc(ctx.guild_id, 'Items', 'capsules', nikogotchi_capsule.id)
         
         async def update():
             embed, components = await self.embed_manager(ctx, 'capsules')
@@ -281,7 +281,7 @@ class Shop(Extension):
             footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
-        await nikogotchi.update(nikogotchi_available=True)
+        await nikogotchi.update(nikogotchi_available=True, rarity=capsule_id)
         await user_data.update(wool=user_data.wool - nikogotchi_capsule.cost)
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
@@ -293,7 +293,7 @@ class Shop(Extension):
         
     r_buy_object = re.compile(r'buy_([^\d]+)_(\d+)')
     @component_callback(r_buy_object)
-    async def buy_callback(self, ctx: ComponentContext):
+    async def buy_pancakes_callback(self, ctx: ComponentContext):
         
         await ctx.defer(edit_origin=True)
         
@@ -323,27 +323,22 @@ class Shop(Extension):
             return await ctx.edit(embed=embed, components=components)
 
         item = await fetch_item(item_category, item_id)
+        
+        item = Item(**item)
             
         if user_data.wool < item.cost:
             footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
-            'what': await loc(ctx.guild_id, 'Items', item_category, item.nid, 'name', values={'item': item.nid}),
+            'what': await loc(ctx.guild_id, 'Items', item_category, item.id, 'name', values={'item': item.id}),
             'cost': l_num(item.cost)
         })
+
+        pancake = await Database.fetch('NikogotchiData', ctx.author.id, item.id)
+        pancake += 1
         
-        if item.type == 'Treasures':
-            treasure = await Database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
-            treasure[item_id] += 1
-            
-            await Database.update('nikogotchi_data', 'treasure', ctx.author.id, treasure)
-            
-        if item.type == 'pancakes':
-            pancake = await Database.fetch('nikogotchi_data', item.nid, ctx.author.id)
-            pancake += 1
-            
-            await Database.update('nikogotchi_data', item.nid, ctx.author.id, pancake)
+        await Database.update('NikogotchiData', item.id, ctx.author.id, pancake)
         
         await user_data.update(wool=user_data.wool - item.cost)
         await update()
@@ -473,16 +468,16 @@ class Shop(Extension):
         elif category == 'capsules':
             
             nikogotchi = await fetch_nikogotchi(ctx.author.id)
-            capsules: dict = await Database.get_items('capsules')
+            capsules: dict = await fetch_item('capsules')
             
             caspule_text = ''
             buttons = []
             
             for i, capsule in enumerate(capsules):
                 
-                capsule_data = await loc(ctx.guild_id, 'Items', 'capsules', capsule['nid'])
+                capsule_data = await loc(ctx.guild_id, 'Items', 'capsules', capsule['id'])
                 
-                caspule_text += f'<:capsule:{capsule["image"]}>  **{capsule_data["name"]}** - {icon_wool}{l_num(capsule["price"])}\n*{capsule_data["description"]}*\n\n'
+                caspule_text += f'<:capsule:{capsule["image"]}>  **{capsule_data["name"]}** - {icon_wool}{l_num(capsule["cost"])}\n*{capsule_data["description"]}*\n\n'
                 
                 button = Button(
                     label=await loc(ctx.guild_id, 'Shop', 'buy'),
@@ -491,11 +486,11 @@ class Shop(Extension):
                     custom_id=f'nikogotchi_buy_{i}'
                 )
                 
-                if user_wool < capsule['price']:
+                if user_wool < capsule['cost']:
                     button.disabled = True
                     button.style = ButtonStyle.GRAY
                     
-                if nikogotchi.nikogotchi_available or nikogotchi:
+                if nikogotchi.nikogotchi_available or nikogotchi.data:
                     button.disabled = True
                     button.style = ButtonStyle.RED
                     
@@ -515,20 +510,18 @@ class Shop(Extension):
             return embed, buttons
         elif category == 'pancakes':
         
-            pancake_data = await Database.get_items('pancakes')
-            
-            pancakes: list[Item] = []
-            for pancake in pancake_data:
-                pancakes.append(Item(pancake))
+            pancake_data = await fetch_item('pancakes')
             
             pancake_text = ''
             buttons: list[Button] = []
-            for id_, pancake in enumerate(pancakes):
+            for id_, pancake in enumerate(pancake_data):
                 
-                owned = await Database.fetch('NikogotchiData', ctx.author.id, pancake.nid)
+                pancake = Item(**pancake)
+                
+                owned = await Database.fetch('NikogotchiData', ctx.author.id, pancake.id)
                 
                 amount_owned = await loc(ctx.guild_id, 'Shop', 'currently_owned', values={'amount': owned})
-                pancake_loc = await loc(ctx.guild_id, 'Items', 'pancakes', pancake.nid)
+                pancake_loc = await loc(ctx.guild_id, 'Items', 'pancakes', pancake.id)
                 
                 pancake_text += f'''
                 <:pancake:{pancake.image}>  **{pancake_loc['name']}** - {icon_wool}{l_num(pancake.cost)}
@@ -565,7 +558,7 @@ class Shop(Extension):
             
             bg_page = args['page']
             
-            background = self.daily_shop.background_stock[bg_page]
+            background: DictItem = self.daily_shop.background_stock[bg_page]
             user_backgrounds = user_data.owned_backgrounds
             
             background_name = await loc(ctx.guild_id, 'Items', 'Backgrounds', background.nid)
@@ -593,7 +586,7 @@ class Shop(Extension):
                 Button(
                     label=await loc(ctx.guild_id, 'Shop', 'buy'),
                     style=ButtonStyle.GREEN,
-                    custom_id=f'buy_bg_{background.id_}_{bg_page}'
+                    custom_id=f'buy_bg_{background.nid}_{bg_page}'
                 ),
                 Button(
                     label=await loc(ctx.guild_id, 'Shop', 'go_back'),
@@ -613,7 +606,7 @@ class Shop(Extension):
                 buy_button.disabled = True
                 buy_button.style = ButtonStyle.GRAY
             
-            if background.id_ in user_backgrounds:
+            if background.nid in user_backgrounds:
                 buy_button.disabled = True
                 buy_button.style = ButtonStyle.RED
                 
@@ -629,13 +622,13 @@ class Shop(Extension):
             buttons: list[Button] = []
             bottom_buttons: list[Button] = []
             
-            for id_, treasure in enumerate(treasure_stock):
+            for treasure in treasure_stock:
                 
                 price = int(treasure.cost * self.daily_shop.stock_price)
                 
-                owned = await Database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
+                owned = await Database.fetch('UserData', ctx.author.id, 'owned_treasures')
                 
-                amount_owned = await loc(ctx.guild_id, 'Shop', 'currently_owned', values={'amount': owned[treasure.id_]})
+                amount_owned = await loc(ctx.guild_id, 'Shop', 'currently_owned', values={'amount': owned.get(treasure.nid, 0)})
                 treasure_loc = await loc(ctx.guild_id, 'Items', 'Treasures', treasure.nid)
                 
                 treasure_text += f'''
@@ -647,7 +640,7 @@ class Shop(Extension):
                     label=await loc(ctx.guild_id, 'Shop', 'buy'),
                     emoji=PartialEmoji(id=treasure.image),
                     style=ButtonStyle.BLURPLE,
-                    custom_id=f'treasure_buy_{treasure.id_}_One'
+                    custom_id=f'treasure_buy_{treasure.nid}_One'
                 )
                 
                 if user_wool < price:
@@ -659,7 +652,7 @@ class Shop(Extension):
                     label=await loc(ctx.guild_id, 'Shop', 'buy_all'),
                     emoji=PartialEmoji(id=treasure.image),
                     style=ButtonStyle.BLURPLE,
-                    custom_id=f'treasure_buy_{treasure.id_}_All'
+                    custom_id=f'treasure_buy_{treasure.nid}_All'
                 )
                 
                 if user_wool < price:
@@ -693,44 +686,68 @@ class Shop(Extension):
             sell_price_one = 0
             sell_price_all = 0
             
-            owned_treasures = await Database.fetch('nikogotchi_data', 'treasure', ctx.author.id)
-            all_treasures = await Database.get_items('Treasures')
+            owned = await Database.fetch('UserData', ctx.author.id, 'owned_treasures')
+            all_treasures = await fetch_treasure('all')
             
             if selected_treasure is not None:
-                selected_treasure = Item(all_treasures[selected_treasure])
+                selected_treasure = DictItem(nid=selected_treasure, **all_treasures[selected_treasure], type=0)
                 selected_treasure_data = await loc(ctx.guild_id, 'Items', 'Treasures', selected_treasure.nid)
                 
                 sell_price_one = int(selected_treasure.cost * self.daily_shop.stock_price)
-                sell_price_all = int(selected_treasure.cost * self.daily_shop.stock_price * owned_treasures[selected_treasure.id_])
+                sell_price_all = int(selected_treasure.cost * self.daily_shop.stock_price * owned[selected_treasure.nid])
             
             treasure_selection = []
             
-            for i, amount in enumerate(owned_treasures):
+            for treasure_nid, amount in owned.items():
                 
-                if owned_treasures[i] <= 0:
+                if amount <= 0:
                     continue
                 
-                treasure = Item(all_treasures[i])
+                treasure = DictItem(nid=treasure_nid, **all_treasures[treasure_nid], type=0)
                 
-                treasure_data = await loc(ctx.guild_id, 'Items', 'Treasures', treasure.nid)
+                treasure_data = await loc(ctx.guild_id, 'Items', 'Treasures', treasure_nid)
+                
+                emoji=PartialEmoji(id=int(treasure.image))
                 
                 treasure_selection.append(
+                    
                     StringSelectOption(
                         label=f'{treasure_data["name"]} (x{amount})',
-                        value=str(i),
+                        value=treasure_nid,
                         description=treasure_data['description'],
-                        emoji=PartialEmoji(id=treasure.image),
+                        emoji=emoji,
                     )
                 )
                 
             selection_description = ''
             
             if selected_treasure is not None:
+                treasure_id = selected_treasure.nid
+            else:
+                treasure_id = 0
+            
+            buttons = [
+                Button(
+                    label=await loc(ctx.guild_id, 'Shop', 'sell'),
+                    custom_id=f'treasure_sell_{treasure_id}_one',
+                    style=ButtonStyle.GREEN
+                ),
+                Button(
+                    label=await loc(ctx.guild_id, 'Shop', 'sell_all', values={'amount': 0}),
+                    custom_id=f'treasure_sell_{treasure_id}_all',
+                    style=ButtonStyle.GREEN
+                ),
+                go_back
+            ]
+            
+            if selected_treasure is not None:
                 selection_description = await loc(ctx.guild_id, 'Shop', 'Treasure_Sell', 'treasure_selected', values={
                     'selected_treasure': f"<:treasure:{selected_treasure.image}> {selected_treasure_data['name']}",
                     'sell_one': l_num(sell_price_one),
-                    'sell_all': l_num(sell_price_all),
-                })             
+                    'sell_all': l_num(sell_price_all)
+                })
+                
+                buttons[1].label = await loc(ctx.guild_id, 'Shop', 'sell_all', values={'amount': owned[selected_treasure.nid]})       
             else:
                 selection_description = await loc(ctx.guild_id, 'Shop', 'Treasure_Sell', 'treasure_not_selected')
                 
@@ -739,8 +756,7 @@ class Shop(Extension):
                 description=await loc(ctx.guild_id, 'Shop', 'Treasure_Sell', 'description', values={
                     'wool_market': stock,
                     'user_wool': wool_counter,
-                    'selected_treasure': selection_description,
-                    'currently_owned': await loc(ctx.guild_id, 'Shop', 'currently_owned', values={'amount': amount}),
+                    'selected_treasure': selection_description
                 }),
                 thumbnail=magpie
             )
@@ -760,25 +776,6 @@ class Shop(Extension):
                     custom_id=f'select_treasure',
                     disabled=True
                 )
-                
-            if selected_treasure is not None:
-                treasure_id = selected_treasure.id_
-            else:
-                treasure_id = 0
-            
-            buttons = [
-                Button(
-                    label=await loc(ctx.guild_id, 'Shop', 'sell'),
-                    custom_id=f'treasure_sell_{treasure_id}_one',
-                    style=ButtonStyle.GREEN
-                ),
-                Button(
-                    label=await loc(ctx.guild_id, 'Shop', 'sell_all'),
-                    custom_id=f'treasure_sell_{treasure_id}_all',
-                    style=ButtonStyle.GREEN
-                ),
-                go_back
-            ]
             
             if selected_treasure is None:
                 buttons[0].disabled = True

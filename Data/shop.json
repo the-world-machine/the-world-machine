@@ -1,0 +1,16 @@
+{
+    "last_reset_date": "2024-01-09 00:00:00",
+    "backgrounds": [
+        "Magpie",
+        "Refuge",
+        "Ruins"
+    ],
+    "treasures": [
+        "clover",
+        "amber",
+        "shirt"
+    ],
+    "stock_price": 1.5,
+    "stock_value": 0.3,
+    "motd": 1
+}

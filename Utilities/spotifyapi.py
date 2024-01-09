@@ -16,7 +16,7 @@ def create_track(data: dict):
         name=data['name'],
         artists=data['artists'][0]['name'],
         album=data['album'],
-        url=data['external_urls']['spotify'],
+        url=data['external_urls'].get('spotify', ''),
         duration=data['duration_ms'],
         uri=data['id']
     )
