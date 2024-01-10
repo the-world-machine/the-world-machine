@@ -105,12 +105,14 @@ class Music(Extension):
 
         queue = player.queue[(page * 10) - 10: (page * 10)]
         i = (page * 10) - 9
+        
+        user = await self.client.fetch_user(player.current.requester)
 
         for song in queue:
             title = song.title
             author = song.author
 
-            queue_list = f'{queue_list}**{i}**. ***{title}*** by {author}\n'
+            queue_list = f'{queue_list}**{i}**. ***{title}*** by {author} - {user.mention}\n'
 
             i += 1
 
@@ -145,7 +147,7 @@ class Music(Extension):
             return True
 
         if not voice_state or not voice_state.channel:
-            return False
+            return True
 
         if int(author.id) == player.current.requester:
             return True
@@ -161,8 +163,6 @@ class Music(Extension):
         if not voice_state or not voice_state.channel:
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
                                        ephemeral=True)
-
-        print(song)
 
         message = await fancy_message(ctx, f"[ Loading search results... {icons.icon_loading} ]")
 
@@ -257,7 +257,7 @@ class Music(Extension):
         player.current = None
         await self.lavalink.disconnect(ctx.guild_id)
 
-        await fancy_message(ctx, f"[ {ctx.author.mention} has stopped the player. ]")
+        await ctx.send(f"[ {ctx.author.mention} has stopped the player. ]")
 
     @slash_command(description="Additional controls for the Queue!")
     async def music_queue(self, ctx: SlashContext):
@@ -292,7 +292,7 @@ class Music(Extension):
 
         await player.skip()
 
-        await fancy_message(ctx, f'[ {ctx.user.mention} jumped to **{song.title}**! ]')
+        await ctx.send(ctx, f'[ {ctx.user.mention} jumped to **{song.title}**! ]')
 
     @music_queue.subcommand(sub_cmd_description="Remove a song from the queue.")
     @slash_option(name="position", description="The position of the song you want to remove.", opt_type=OptionType.INTEGER, required=True)
@@ -319,7 +319,7 @@ class Music(Extension):
 
         del player.queue[position]
 
-        await fancy_message(ctx, f'[ {ctx.user.mention} removed **{song.title}** from the queue. ]')
+        await ctx.send(f'[ {ctx.user.mention} removed **{song.title}** from the queue. ]')
 
     @remove.autocomplete('position')
     async def autocomplete_remove(self, ctx: AutocompleteContext):
@@ -466,7 +466,7 @@ class Music(Extension):
         for track in queue:
             if track.requester == int(ctx.user.id):
                 player.queue.remove(track)
-                return await fancy_message(ctx, f'[ {ctx.user.mention} removed **{track.title}** from the queue. ]')
+                return await ctx.send(f'[ {ctx.user.mention} removed **{track.title}** from the queue. ]')
 
     @listen()
     async def on_track_start(self, event: TrackStart):
@@ -495,7 +495,7 @@ class Music(Extension):
         if len(channel.voice_members) <= 2:
             text_channel = player.fetch('Channel')
 
-            await fancy_message(text_channel, f'[ Everyone has disconnected from {channel.mention}. To stop playing music, please use {self.stop.mention}. ]')
+            await fancy_message(text_channel, f'[ Everyone has disconnected from {channel.mention}. To stop playing music, please use ``/music stop``. ]')
 
     @staticmethod
     def get_buttons():
@@ -504,31 +504,29 @@ class Music(Extension):
             Button(
                 style=ButtonStyle.RED,
                 emoji=PartialEmoji(id=1019286929059086418),
-                custom_id="queue"
+                custom_id="queue",
+                label="Open Queue"
             ),
 
             Button(
                 style=ButtonStyle.RED,
                 emoji=PartialEmoji(id=1019286926404091914),
-                custom_id="loop"
+                custom_id="loop",
+                label="Loop Track"
             ),
 
             Button(
                 style=ButtonStyle.RED,
                 emoji=PartialEmoji(id=1019286927888883802),
-                custom_id="playpause"
-            ),
-
-            Button(
-                style=ButtonStyle.RED,
-                emoji=PartialEmoji(id=1042887337526444123),
-                custom_id="lyrics"
+                custom_id="playpause",
+                label="Pause"
             ),
 
             Button(
                 style=ButtonStyle.RED,
                 emoji=PartialEmoji(id=1019286930296410133),
-                custom_id="skip"
+                custom_id="skip",
+                label="Skip"
             )
         ]
 
@@ -544,12 +542,14 @@ class Music(Extension):
             Button(
                 style=ButtonStyle.BLUE,
                 emoji=PartialEmoji(id=1031309497706225814),
-                custom_id="shuffle"
+                custom_id="shuffle",
+                label="Shuffle Queue"
             ),
             Button(
                 style=ButtonStyle.GREY,
                 emoji=PartialEmoji(id=1019286926404091914),
-                custom_id="loopqueue"
+                custom_id="loopqueue",
+                label="Loop Queue"
             ),
 
             Button(
@@ -606,15 +606,21 @@ class Music(Extension):
                 if player.paused:
                     player_state = 'Paused'
                     niko = '<:nikosleepy:1027492467337080872>'
+                    main_buttons[2].label = 'Resume'
+                    main_buttons[2].style = ButtonStyle.GREEN
                 else:
                     player_state = 'Now Playing...'
                     niko = '<a:vibe:1027325436360929300>'
+                    main_buttons[2].label = 'Pause'
+                    main_buttons[2].style = ButtonStyle.RED
 
                 if player.loop == 1:
                     player_state = 'Now Looping...'
-                    main_buttons[4].disabled = True
+                    main_buttons[1].label = 'Stop Looping'
+                    main_buttons[1].style = ButtonStyle.GREEN
                 else:
-                    main_buttons[4].disabled = False
+                    main_buttons[1].label = 'Loop Track'
+                    main_buttons[1].style = ButtonStyle.RED
 
                 user = await self.bot.fetch_member(player.current.requester, player.guild_id)
 
@@ -680,23 +686,23 @@ class Music(Extension):
         if ctx.custom_id == 'loop':
             if not player.loop:
                 player.set_loop(1)
-                await fancy_message(ctx.channel, f'[ {ctx.author.mention} Started Looping. ]')
+                await ctx.channel.send(f'[ {ctx.author.mention} Started Looping. ]')
             else:
                 player.set_loop(0)
-                await fancy_message(ctx.channel, f'[ {ctx.author.mention} Stopped Looping. ]')
+                await ctx.channel.send(f'[ {ctx.author.mention} Stopped Looping. ]')
 
         if ctx.custom_id == 'playpause':
             await player.set_pause(not player.paused)
 
             if player.paused:
-                await fancy_message(ctx.channel, f'[ {ctx.author.mention} Paused. ]')
+                await ctx.channel.send(f'[ {ctx.author.mention} Paused. ]')
             else:
-                await fancy_message(ctx.channel, f'[ {ctx.author.mention} Resumed. ]')
+                await ctx.channel.send(f'[ {ctx.author.mention} Resumed. ]')
 
         if ctx.custom_id == 'skip':
             await player.skip()
 
-            await fancy_message(ctx.channel, f'[ {ctx.author.mention} Skipped. ]')
+            await ctx.channel.send(f'[ {ctx.author.mention} Skipped. ]')
 
     @component_callback('shuffle', 'loopqueue', 'left', 'right')
     async def queue_buttons(self, ctx: ComponentContext):
@@ -723,15 +729,15 @@ class Music(Extension):
 
         if ctx.custom_id == 'shuffle':
             random.shuffle(player.queue)
-            message = await fancy_message(ctx.channel, f'[ {ctx.author.mention} Shuffled the Queue. ]')
+            message = await ctx.channel.send(f'[ {ctx.author.mention} Shuffled the Queue. ]')
 
         if ctx.custom_id == 'loopqueue':
             if player.loop == 2:
                 player.set_loop(0)
-                message = await fancy_message(ctx.channel, f'[ {ctx.author.mention} Stopped Looping the Queue. ]')
+                message = await ctx.channel.send(f'[ {ctx.author.mention} Stopped Looping the Queue. ]')
             else:
                 player.set_loop(2)
-                message = await fancy_message(ctx.channel, f'[ {ctx.author.mention} is Looping the Queue. ]')
+                message = await ctx.channel.send(f'[ {ctx.author.mention} is Looping the Queue. ]')
 
         embed = await self.get_queue_embed(player, page)
 
