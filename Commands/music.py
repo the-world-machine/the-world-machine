@@ -1,5 +1,6 @@
 import asyncio
 import random
+import time
 import uuid
 from urllib import parse
 
@@ -101,7 +102,7 @@ class Music(Extension):
         return embed
 
     async def get_queue_embed(self, player: Player, page: int):
-        queue_list = ''
+        queue_list = []
 
         queue = player.queue[(page * 10) - 10: (page * 10)]
         i = (page * 10) - 9
@@ -112,7 +113,11 @@ class Music(Extension):
             title = song.title
             author = song.author
 
-            queue_list = f'{queue_list}**{i}**. ***{title}*** by {author} - {user.mention}\n'
+            queue_list.append(EmbedField(
+                name=f'{i}. {title}',
+                value=f'*by {author}* - Requested by {user.mention}',
+                inline=False
+            ))
 
             i += 1
 
@@ -125,33 +130,48 @@ class Music(Extension):
             time = time + t.duration / 1000
 
         hours = int(time / 3600)
-        minutes = int((time % 3600) / 60)
+        minutes = int(hours / 60)
 
-        description = f'### Currently Playing:\n**{track.title}** from **{track.author}** <:Sun:1026207773559619644>\n\n*There are currently* ***{len(player.queue)}*** *songs in the queue.*\n*Approximately* ***{hours} hours*** and ***{minutes} minutes*** *left.*\n### Next Up...\n{queue_list}'
+        description = f'### Currently Playing:\n**{track.title}** from **{track.author}** <:Sun:1026207773559619644>\n\n*There are currently* ***{len(player.queue)}*** *songs in the queue.*\n*Approximately* ***{hours} hours*** and ***{minutes} minutes*** *left.*\n### Next Up...'
 
         queue_embed = Embed(description=description, color=0x8b00cc)
 
         queue_embed.set_author(name=f'Queue for {guild.name}', icon_url=guild.icon.url)
         queue_embed.set_thumbnail(url=self.get_cover_image(track.identifier))
         queue_embed.set_footer(text='Use /music_queue remove to remove a track.\nUse /music_queue jump to jump to a track.')
+        queue_embed.fields = queue_list
 
         return queue_embed
 
-    async def can_modify(self, player: Player, author: User, guild_id: Snowflake):
-
-        requester_member: Member = await self.bot.fetch_member(player.current.requester, guild_id)
-
-        voice_state = requester_member.voice
+    async def can_modify(self, track_author: int, author: Member, guild_id: Snowflake):
+        
+        track_author_member: Member = await self.bot.fetch_member(track_author, guild_id)
 
         if Permissions.MANAGE_CHANNELS in author.guild_permissions:
             return True
 
-        if not voice_state or not voice_state.channel:
+        if not track_author_member.voice or not track_author_member.voice.channel:
             return True
 
-        if int(author.id) == player.current.requester:
+        if int(author.id) == track_author:
             return True
 
+        return False
+    
+    player_user_cooldown = {}
+    
+    async def on_cooldown(self, author: Member):
+        
+        if Permissions.MANAGE_CHANNELS in author.guild_permissions:
+            return False
+
+        cooldown_time = self.player_user_cooldown.get(author.id, 0)
+        
+        if cooldown_time > time.time():
+            return True
+        
+        self.player_user_cooldown[author.id] = time.time() + 30
+        
         return False
 
     @music.subcommand(sub_cmd_description="Play a song!")
@@ -266,6 +286,9 @@ class Music(Extension):
     @music_queue.subcommand(sub_cmd_description="Jump to a song!")
     @slash_option(name="position", description="The position of the song you want to jump to.", opt_type=OptionType.INTEGER, required=True)
     async def jump(self, ctx: SlashContext, position: int):
+        
+        if await self.on_cooldown(ctx.author):
+            return await fancy_message(ctx, "[ You are on cooldown! ]", color=0xff0000, ephemeral=True)
 
         voice_state = ctx.author.voice
         if not voice_state or not voice_state.channel:
@@ -292,7 +315,7 @@ class Music(Extension):
 
         await player.skip()
 
-        await ctx.send(ctx, f'[ {ctx.user.mention} jumped to **{song.title}**! ]')
+        await ctx.send(f'[ {ctx.user.mention} jumped to **{song.title}**! ]')
 
     @music_queue.subcommand(sub_cmd_description="Remove a song from the queue.")
     @slash_option(name="position", description="The position of the song you want to remove.", opt_type=OptionType.INTEGER, required=True)
@@ -314,6 +337,9 @@ class Music(Extension):
 
         if position > len(player.queue) or position < 0:
             return await fancy_message(ctx, "[ Invalid position! ]", color=0xff0000, ephemeral=True)
+        
+        if not self.can_modify(player.queue[position].requester, ctx.author, ctx.guild_id):
+            return await fancy_message(ctx, "[ You can't remove this song. ]", color=0xff0000, ephemeral=True)
 
         song = player.queue[position]
 
@@ -700,6 +726,9 @@ class Music(Extension):
                 await ctx.channel.send(f'[ {ctx.author.mention} Resumed. ]')
 
         if ctx.custom_id == 'skip':
+            
+            player.set_loop(0)
+            
             await player.skip()
 
             await ctx.channel.send(f'[ {ctx.author.mention} Skipped. ]')
@@ -728,6 +757,10 @@ class Music(Extension):
         message = None
 
         if ctx.custom_id == 'shuffle':
+            
+            if await self.on_cooldown(ctx.author):
+                return await fancy_message(ctx, "[ You are on cooldown! ]", color=0xff0000, ephemeral=True)
+            
             random.shuffle(player.queue)
             message = await ctx.channel.send(f'[ {ctx.author.mention} Shuffled the Queue. ]')
 

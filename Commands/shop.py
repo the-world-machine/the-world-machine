@@ -486,13 +486,13 @@ class Shop(Extension):
                     custom_id=f'nikogotchi_buy_{i}'
                 )
                 
-                if user_wool < capsule['cost']:
-                    button.disabled = True
-                    button.style = ButtonStyle.GRAY
-                    
                 if nikogotchi.nikogotchi_available or nikogotchi.data:
                     button.disabled = True
                     button.style = ButtonStyle.RED
+                
+                if user_wool < capsule['cost']:
+                    button.disabled = True
+                    button.style = ButtonStyle.GRAY
                     
                 buttons.append(button)
                 
