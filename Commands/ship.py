@@ -14,7 +14,7 @@ class Command(Extension):
     @slash_option(name="what", description="Second person. Can be a user.", opt_type=OptionType.STRING, required=True)
     async def ship(self, ctx: SlashContext, who: str, what: str):
 
-        msg = await fancy_message(ctx, f"[ Coming up with ship name... {icons.loading()} ]")
+        msg = await fancy_message(ctx, f"[ Coming up with ship name... {icons.icon_loading} ]")
 
         if '<' in who:
             parsed_id = who.strip('<@>')

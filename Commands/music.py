@@ -703,7 +703,7 @@ class Music(Extension):
             embed = await self.get_lyrics(player.current)
             return await ctx.edit(message, embed=embed)
 
-        if not await self.can_modify(player, ctx.author, ctx.guild.id):
+        if not await self.can_modify(player.current.requester, ctx.author, ctx.guild.id):
             await fancy_message(ctx, '[ You cannot modify the player. ]', ephemeral=True, color=0xff0d13)
             return
 
