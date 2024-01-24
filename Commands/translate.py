@@ -14,7 +14,7 @@ class Command(Extension):
 
         target_language = await Database.fetch('UserData', ctx.author.id, 'translation_language')
 
-        message = await generate_text(f'Translate this message to {target_language} with new lines intact and no quotation marks: "{ctx.target.content}".')
+        message = await generate_text(f'Translate this message "{ctx.target.content}" please do it in the context of a native {target_language} speaker.')
         message = message.strip('\n')
         message = message.strip('"')
 
