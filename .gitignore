@@ -7,12 +7,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-*/workspace.xml
-
-Profile Viewer/background.png
-Profile Viewer/icon.png
-
-**/.idea/workspace.xml
-**/.idea/tasks.xml
+**/.idea/workspace.xml **/.idea/tasks.xml
 
 blob/*

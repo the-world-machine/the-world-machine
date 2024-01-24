@@ -5,7 +5,6 @@ import aiohttp
 
 class Command(Extension):
 
-    
     @slash_command(description='A random wikipedia article.')
     async def random_wikipedia(self, ctx: SlashContext):
         async with aiohttp.ClientSession() as session:

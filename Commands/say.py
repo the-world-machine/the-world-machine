@@ -134,7 +134,6 @@ class TextBoxGeneration(Extension):
             custom_id="menu_component_char"
         )
 
-    
     @slash_command(description='Generate a OneShot textbox!')
     @slash_option(description='What you want the character to say.', max_length=180, name='text',
                   opt_type=OptionType.STRING, required=True)

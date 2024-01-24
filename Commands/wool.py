@@ -33,7 +33,6 @@ class Command(Extension):
     async def wool(self, ctx: SlashContext):
         pass
 
-    
     @wool.subcommand(sub_cmd_description='Check your balance.')
     @slash_option(description='Check someone else\'s balance...', name='user', opt_type=OptionType.USER)
     async def balance(self, ctx: SlashContext, user: User = None):
@@ -49,7 +48,6 @@ class Command(Extension):
         else:
             await fancy_message(ctx, f'[ **{user.username}** has <:wool:1044668364422918176>**{wool}**. ]')
 
-    
     @wool.subcommand(sub_cmd_description='Find out who has the most wool.')
     async def leaderboard(self, ctx: SlashContext):
 
@@ -80,7 +78,6 @@ class Command(Extension):
 
         await msg.edit(embeds=embed)
 
-    
     @wool.subcommand(sub_cmd_description='Grab your daily wool.')
     async def daily(self, ctx: SlashContext):
 

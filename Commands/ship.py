@@ -9,7 +9,6 @@ from Utilities.text_generation import generate_text
 
 class Command(Extension):
 
-    
     @slash_command(description="Ship two people together.")
     @slash_option(name="who", description="First person. Can be a user.", opt_type=OptionType.STRING, required=True)
     @slash_option(name="what", description="Second person. Can be a user.", opt_type=OptionType.STRING, required=True)

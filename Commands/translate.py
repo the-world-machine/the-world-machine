@@ -6,7 +6,7 @@ from Utilities.text_generation import generate_text
 
 
 class Command(Extension):
-    
+
     @message_context_menu(name='💡 Translate...')
     async def translate(self, ctx: ContextMenuContext):
 
