@@ -209,6 +209,7 @@ class Command(Extension):
     async def nikogotchi(self, ctx: SlashContext):
         pass
 
+    
     @nikogotchi.subcommand(sub_cmd_description="Check out your Nikogotchi!")
     async def check(self, ctx: SlashContext):
 
@@ -632,6 +633,7 @@ class Command(Extension):
 
         await ctx.edit_origin(embed=embed, components=[ActionRow(select), ActionRow(*buttons)])
 
+    
     @nikogotchi.subcommand(sub_cmd_description='Send away your Nikogotchi.')
     async def send_away(self, ctx: SlashContext):
 
@@ -665,6 +667,7 @@ class Command(Extension):
 
             await ctx.edit(embed=embed, components=[])
 
+    
     @nikogotchi.subcommand(sub_cmd_description='Rename your Nikogotchi.')
     @slash_option('name', description='Rename your Nikogotchi.', opt_type=OptionType.STRING, required=True)
     async def rename(self, ctx: SlashContext, name):
@@ -680,6 +683,7 @@ class Command(Extension):
         await self.save_nikogotchi(nikogotchi, ctx.author.id)
         await fancy_message(ctx, f'[ Successfully renamed **{old_name}** to **{nikogotchi.name}**! ]', ephemeral=True)
 
+    
     @nikogotchi.subcommand(sub_cmd_description='Show off your Nikogotchi, or view someone else\'s.!')
     @slash_option('user', description='The user to view.', opt_type=OptionType.USER, required=True)
     async def show(self, ctx: SlashContext, user: User):
@@ -714,6 +718,7 @@ class Command(Extension):
 
         await ctx.send(embed=embed)
 
+    
     @nikogotchi.subcommand(sub_cmd_description='Trade your Nikogotchi with someone else!')
     @slash_option('user', description='The user to trade with.', opt_type=OptionType.USER, required=True)
     async def trade(self, ctx: SlashContext, user: User):
@@ -779,6 +784,7 @@ class Command(Extension):
 
             await button_ctx.edit_origin(embed=embed, components=[])
 
+    
     @slash_command(description='View the treasure you currently have, or someone else\'s!')
     @slash_option('user', description='The user to view.', opt_type=OptionType.USER, required=True)
     async def treasure(self, ctx: SlashContext, user: User):

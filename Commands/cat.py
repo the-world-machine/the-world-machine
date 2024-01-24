@@ -8,6 +8,7 @@ import json
 
 class Command(Extension):
 
+    
     @slash_command(description="Get a random picture of a cat.")
     async def cat(self, ctx: SlashContext):
 

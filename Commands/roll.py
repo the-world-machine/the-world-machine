@@ -4,6 +4,7 @@ import random
 
 class Command(Extension):
 
+    
     @slash_command(description='Roll a dice.')
     @slash_option(description='What sided dice to roll.', min_value=1, max_value=9999, name='sides', opt_type=OptionType.INTEGER, required=True)
     @slash_option(description='How many to roll.', min_value=1, max_value=10, name='amount', opt_type=OptionType.INTEGER)
