@@ -15,7 +15,7 @@ class Command(Extension):
     current_limit = 0
 
     wool_finds = [
-        'You sheared some sheep for wool.',
+        'You prayed to The World Machine for some wool.',
         'You dug around a trashcan and found some wool.',
         'You tore up your old bedsheets for some wool.',
         'You summoned the devil and asked for some wool.',
@@ -40,7 +40,7 @@ class Command(Extension):
         if user is None:
             user = ctx.user
 
-        wool: int = await db.fetch('user_data', 'wool', user.id)
+        wool: int = await db.fetch('UserData', user.id, 'wool')
 
         if user is None:
             await fancy_message(ctx, f'[ You have <:wool:1044668364422918176>**{wool}**. ]')
@@ -81,12 +81,7 @@ class Command(Extension):
     @wool.subcommand(sub_cmd_description='Grab your daily wool.')
     async def daily(self, ctx: SlashContext):
 
-        get_time = await db.fetch('user_data', 'daily_wool_timestamp', ctx.user.id)
-
-        if get_time is None:
-            last_reset_time = datetime(2000, 1, 1, 0, 0, 0)
-        else:
-            last_reset_time = datetime.strptime(get_time, '%Y-%m-%d %H:%M:%S')
+        last_reset_time = await db.fetch('UserData', ctx.user.id, 'daily_wool_timestamp')
 
         now = datetime.now()
 
@@ -97,7 +92,7 @@ class Command(Extension):
         # reset the limit if it is a new day
         if now >= last_reset_time:
             reset_time = datetime.combine(now.date(), now.time()) + timedelta(days=1)
-            await db.update('user_data', 'daily_wool_timestamp', ctx.user.id, reset_time.strftime("%Y-%m-%d %H:%M:%S"))
+            await db.update('UserData', 'daily_wool_timestamp', ctx.user.id, reset_time)
 
         random.shuffle(self.wool_finds)
 
@@ -113,8 +108,7 @@ class Command(Extension):
             amount = random.randint(100, 300)
             message = f'You found <:wool:1044668364422918176>**{amount}**.'
 
-        wool: int = await db.fetch('user_data', 'wool', ctx.user.id)
-        await db.update('user_data', 'wool', ctx.user.id, wool + amount)
-        await badge_manager.check_wool_value(ctx, wool + amount)
+        wool: int = await db.fetch('UserData', ctx.user.id, 'wool')
+        await db.update('UserData', 'wool', ctx.user.id, wool + amount)
 
         await fancy_message(ctx, f'*{response}*\n{message}')

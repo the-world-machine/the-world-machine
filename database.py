@@ -54,8 +54,8 @@ class Database(Extension):
 
     @staticmethod
     async def fetch(table: str, primary_key: Union[int, Snowflake], what: str = None) -> any:
-        if type(primary_key) == Snowflake:
-            primary_key = int(primary_key)
+            
+        primary_key = str(primary_key)
 
         select_sql = f"SELECT * FROM {table} WHERE p_key = {primary_key}"
             
@@ -105,9 +105,8 @@ class Database(Extension):
         
         elif data is None:
             data = 'NULL'
-
-        if type(p_key) == Snowflake:
-            p_key = int(p_key)
+            
+        p_key = str(p_key)
             
         if type(data) == dict or type(data) == list or type(data) == bool:
             data = json.dumps(data)
@@ -128,7 +127,7 @@ class Database(Extension):
     @staticmethod
     async def get_leaderboard(sort_by: str):
 
-        sql = f'SELECT * FROM user_data ORDER BY {sort_by} DESC LIMIT 10;'
+        sql = f'SELECT * FROM UserData ORDER BY {sort_by} DESC LIMIT 10;'
     
         cursor = await Database.execute(sql)
         data = await cursor.fetchall()

@@ -42,13 +42,8 @@ class Command(Extension):
             await fancy_message(ctx, "[ Can't give yourself a sun! ]", color=0xFF0000, ephemeral=True)
             return
 
-        get_sun_reset_time = await db.fetch('user_data', 'daily_sun_timestamp', ctx.user.id)
-
-        if get_sun_reset_time is None:
-            last_reset_time = datetime(2000, 1, 1, 0, 0, 0)
-        else:
-            last_reset_time = get_sun_reset_time
-
+        last_reset_time = await db.fetch('UserData', ctx.user.id, 'daily_sun_timestamp')
+        
         now = datetime.now()
 
         if now < last_reset_time:
@@ -58,7 +53,7 @@ class Command(Extension):
         # reset the limit if it is a new day
         if now >= last_reset_time:
             reset_time = now + timedelta(days=1)
-            await db.update('user_data', 'daily_sun_timestamp', ctx.user.id, reset_time.strftime('%Y-%m-%d %H:%M:%S'))
+            await db.update('UserData', 'daily_sun_timestamp', ctx.user.id, reset_time)
 
         await bm.increment_value(ctx, 'suns')
         await bm.increment_value(ctx, 'suns', user)

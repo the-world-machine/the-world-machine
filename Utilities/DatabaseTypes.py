@@ -30,6 +30,8 @@ class UserData:
     owned_badges: list[str]
     ask_limit: int
     last_asked: datetime
+    daily_wool_timestamp: datetime
+    daily_sun_timestamp: datetime
     times_asked: int
     times_transmitted: int
     times_shattered: int
