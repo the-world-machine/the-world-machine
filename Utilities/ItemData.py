@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import aiohttp
 
-api_url = 'https://api.npoint.io/001c837c0b983ecf0b9d' # If you see this, you can use this endpoint too!
+api_url = 'https://api.npoint.io/6940a9826da1e0473197' # If you see this, you can use this endpoint too!
 
 async def fetch_item(item_type: str, item_index: int = -1) -> dict:
     '''
