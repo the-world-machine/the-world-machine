@@ -1,4 +1,4 @@
-from database import Database
+import database
 from typing import Union
 import importlib
 import os
@@ -15,7 +15,10 @@ def load_languages():
             languages[language] = module
 
 async def get_lang(guild_id: int):
-    server_language: str = await Database.fetch('ServerData', guild_id, 'language')
+    
+    server_data = await database.ServerData(guild_id).fetch()
+    
+    server_language: str = server_data.language
 
     language_module = importlib.reload(languages[server_language])
     

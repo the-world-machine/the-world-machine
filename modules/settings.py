@@ -1,7 +1,7 @@
 import json
 from interactions import *
 
-from database import Database as db
+import database as db
 from Utilities.fancysend import fancy_message
 
 
@@ -25,13 +25,15 @@ class Command(Extension):
         sub_cmd_description='The transmission channel to use to allow other servers to call. Leave blank to disable.')
     @slash_default_member_permission(Permissions.MANAGE_GUILD)
     @slash_option(description='DEFAULT: NO CHANNEL SET', name='channel', opt_type=OptionType.CHANNEL)
-    async def transmit_channel(self, ctx: SlashContext, channel):
+    async def transmit_channel(self, ctx: SlashContext, channel: GuildText):
+        
+        server_data = await db.fetch_server_data(ctx.guild_id)
 
         if channel is None:
-            await db.update('ServerData', 'transmit_channel', ctx.guild_id, None)
+            await server_data.update(transmit_channel=None)
             return await fancy_message(ctx, '[ Successfully disabled transmission calls. ]', ephemeral=True)
 
-        await db.update('ServerData', 'transmit_channel', ctx.guild_id, int(channel.id))
+        await server_data.update(transmit_channel=str(channel.id))
         return await fancy_message(ctx, f'[ Successfully allowed other servers to call to {channel.mention}. ]',
                                    ephemeral=True)
 
@@ -40,8 +42,10 @@ class Command(Extension):
     @slash_default_member_permission(Permissions.MANAGE_GUILD)
     @slash_option(description='DEFAULT: TRUE', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def transmit_images(self, ctx: SlashContext, value):
+        
+        server_data = await db.fetch_server_data(ctx.guild_id)
 
-        await db.update('ServerData', 'transmit_images', ctx.guild_id, value)
+        await server_data.update(transmit_images=value)
 
         if value:
             return await fancy_message(ctx, '[ Successfully enabled transmission images. ]', ephemeral=True)
@@ -53,8 +57,10 @@ class Command(Extension):
     @slash_default_member_permission(Permissions.MANAGE_GUILD)
     @slash_option(description='DEFAULT: FALSE', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def transmit_anonymous(self, ctx: SlashContext, value):
+        
+        server_data = await db.fetch_server_data(ctx.guild_id)
 
-        await db.update('ServerData', 'transmit_anonymous', ctx.guild_id, value)
+        await server_data.update(transmit_anonymous=value)
 
         if value:
             return await fancy_message(ctx, '[ Successfully enabled anonymous mode. ]', ephemeral=True)
@@ -64,7 +70,10 @@ class Command(Extension):
     @transmission_settings.subcommand(sub_cmd_description='Block a server from being able to call.')
     @slash_option(description='Server to block.', name='server', opt_type=OptionType.STRING, required=True, autocomplete=True)
     async def block_server(self, ctx: SlashContext, server: str):
-        block_list: list[int] = await db.fetch('ServerData', ctx.guild_id, 'blocked_servers')
+        
+        server_data = await db.fetch_server_data(ctx.guild_id)
+        
+        block_list = server_data.blocked_servers
         
         try:
             server_id = int(server)
@@ -74,22 +83,21 @@ class Command(Extension):
         if server_id in block_list:
             block_list.remove(server_id)
             
-            data = json.dumps(block_list)
-            
-            await db.update('ServerData', 'blocked_servers', ctx.guild_id, data)
+            await server_data.update(blocked_servers=block_list)
             
             return await fancy_message(ctx, f'[ Successfully unblocked server `{server}`. ]', ephemeral=True)
         
         block_list.append(server_id)
         
-        data = json.dumps(block_list)
-        
-        await db.update('ServerData', 'blocked_servers', ctx.guild_id, data)
+        await server_data.update(blocked_servers=block_list)
         return await fancy_message(ctx, f'[ Successfully blocked server `{server}`. ]', ephemeral=True)
         
     @block_server.autocomplete('server')
     async def block_server_autocomplete(self, ctx: AutocompleteContext):
-        transmitted_servers = await db.fetch('ServerData', ctx.guild_id, 'transmittable_servers')
+        
+        server_data = await db.fetch_server_data(ctx.guild_id)
+        
+        transmitted_servers = server_data.transmittable_servers
         
         server = ctx.input_text
         

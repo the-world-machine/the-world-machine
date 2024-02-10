@@ -8,10 +8,9 @@ import aiohttp
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from interactions import PartialEmoji, User
 from Utilities.ItemData import fetch_background, fetch_badge
-from Utilities.DatabaseTypes import fetch_user
 from Localization.Localization import l_num
 
-from database import Database as db
+import database as db
 
 icons = []
 shop_icons = []
@@ -66,7 +65,7 @@ async def draw_badges(user: User):
     user_id = user.id
     user_pfp = user.avatar_url
 
-    user_data = await fetch_user(user_id)
+    user_data = await db.UserData(user_id).fetch()
 
     get_profile_background = await fetch_background(user_data.equipped_bg)
     bg = await GetImage(get_profile_background['image'])

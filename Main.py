@@ -4,7 +4,7 @@ from interactions import *
 from interactions.api.events import MessageCreate, MemberAdd, Ready, GuildJoin
 import interactions.ext.prefixed_commands as prefixed_commands
 
-from database import Database
+from database import create_connection, new_entry, UserData, NikogotchiData, ServerData
 from load_data import *
 import load_commands
 import os
@@ -33,8 +33,7 @@ print("\nLoading Commands... 2/4")
 load_commands.load_commands(client)
 
 print('\nLoading Additional Extensions... 3/4')
-client.load_extension('database')
-print('Successfully loaded database.')
+
 client.load_extension("interactions.ext.sentry", token=load_config("SENTRY-TOKEN"))  # Debugging and errors.
 client.load_extension("Utilities.dev_commands")
 
@@ -51,6 +50,10 @@ async def pick_avatar():
 @listen(Ready)
 async def on_ready():
     print("\nFinalizing... 4/4")
+    
+    create_connection()
+    
+    print('Successfully created database connection')
 
     await client.change_presence(status=Status.ONLINE,
                                  activity=Activity(name=load_config("MOTD"), type=ActivityType.PLAYING))

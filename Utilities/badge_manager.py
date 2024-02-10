@@ -1,14 +1,14 @@
-from database import Database as db
+import database as db
 from interactions import *
 from Utilities.ItemData import fetch_badge
-from Utilities.DatabaseTypes import fetch_user
+
 import aiofiles
 import json
 
 async def earn_badge(ctx: GuildChannel, badge_name: str, badge_data: dict, target: User, send_message: bool = True):
     channel = ctx
     
-    user_data = await fetch_user(target.id)
+    user_data = await db.UserData(target.id)
 
     emoji = PartialEmoji(id=badge_data['emoji'])
 
@@ -50,7 +50,7 @@ async def increment_value(ctx: SlashContext, value_to_increment: str, amount: in
     else:
         user = ctx.author
 
-    user_data = await fetch_user(user.id)
+    user_data = await db.UserData(user.id)
     json_data = user_data.__dict__
 
     await user_data.increment_value(value_to_increment, amount)

@@ -10,9 +10,8 @@ from interactions.api.events import Component
 
 import Data.capsule_characters as chars
 from Localization.Localization import loc
-from Utilities.DatabaseTypes import fetch_nikogotchi, fetch_user
 from Utilities.ItemData import fetch_treasure
-from database import Database
+from database import UserData, NikogotchiData
 from Utilities.bot_icons import icon_loading
 from Utilities.fancysend import *
 
@@ -23,7 +22,7 @@ class Nikogotchi:
     immortal: bool
     rarity: int
     status: int
-    emoji: int
+    emoji: str
     health: float
     hunger: float
     attention: float
@@ -36,7 +35,7 @@ class Nikogotchi:
 class Command(Extension):
 
     async def get_nikogotchi(self, uid: int):
-        nikogotchi_data = await fetch_nikogotchi(uid)
+        nikogotchi_data = await NikogotchiData(uid).fetch()
 
         if not nikogotchi_data.data:
             return None
@@ -45,17 +44,17 @@ class Command(Extension):
 
     async def save_nikogotchi(self, nikogotchi: Nikogotchi, uid: int):
         
-        nikogotchi_data = await fetch_nikogotchi(uid)
+        nikogotchi_data = await NikogotchiData(uid).fetch()
         
-        data = json.dumps(nikogotchi.__dict__,)
+        data = nikogotchi.__dict__
 
         await nikogotchi_data.update(data=data)
         
     async def delete_nikogotchi(self, uid: int):
         
-        nikogotchi_data = await fetch_nikogotchi(uid)
+        nikogotchi_data = await NikogotchiData(uid).fetch()
         
-        await nikogotchi_data.update(data='{}')
+        await nikogotchi_data.update(data={})
 
     def nikogotchi_buttons(self, owner_id: int):
         prefix = 'action_'
@@ -90,7 +89,7 @@ class Command(Extension):
         ]
 
     async def get_nikogotchi_age(self, uid: int):
-        nikogotchi_data = await fetch_nikogotchi(uid)
+        nikogotchi_data = await NikogotchiData(uid).fetch()
 
         return relativedelta.relativedelta(datetime.now(), nikogotchi_data.hatched)
 
@@ -178,11 +177,14 @@ class Command(Extension):
 
             for treasure in found_treasure:
 
-                if index in looked_over_treasures:
+                if treasure in looked_over_treasures:
                     continue
+                
+                amount = found_treasure.count(treasure)
 
-                treasures += f'<:any:{treasure["image"]}> {treasure["name"]}\n'
-                looked_over_treasures.append(index)
+                treasures += f'<:any:{treasure["image"]}> {treasure["name"]} - **x{amount}**\n'
+                
+                looked_over_treasures.append(treasure)
 
             treasure_found = f'''
             {n.name} found some treasures!\n\n{treasures}
@@ -214,7 +216,7 @@ class Command(Extension):
 
         uid = ctx.author.id
 
-        nikogotchi_data = await fetch_nikogotchi(uid)
+        nikogotchi_data = await NikogotchiData(uid).fetch()
 
         if nikogotchi_data.data:
             msg = await fancy_message(ctx, f'[ Loading Nikogotchi... {icon_loading} ]')
@@ -235,9 +237,9 @@ class Command(Extension):
             selected_nikogotchi: chars.Nikogotchi = random.choice(viable_nikogotchi)
 
             await nikogotchi_data.update(
-                data = json.dumps({
+                data = {
                     'name': selected_nikogotchi.name,
-                    'emoji': selected_nikogotchi.emoji,
+                    'emoji': str(selected_nikogotchi.emoji),
                     'rarity': selected_nikogotchi.rarity.value,
                     'status': 2,
                     'immortal': False,
@@ -248,8 +250,8 @@ class Command(Extension):
                     'pancake_dialogue': selected_nikogotchi.pancake_dialogue,
                     'pet_dialogue': selected_nikogotchi.pet_dialogue,
                     'cleaned_dialogue': selected_nikogotchi.cleaned_dialogue,
-                }),
-                
+                },
+            
                 last_interacted = datetime.now(),
                 hatched = datetime.now(),
                 nikogotchi_available = False
@@ -326,7 +328,7 @@ class Command(Extension):
         if custom_id == 'exit':
             await ctx.delete()
             
-        nikogotchi_data = await fetch_nikogotchi(uid)
+        nikogotchi_data = await NikogotchiData(uid).fetch()
         nikogotchi = await self.get_nikogotchi(uid)
         
         last_interacted = nikogotchi_data.last_interacted
@@ -454,7 +456,7 @@ class Command(Extension):
 
         if nikogotchi.status == 3:
             
-            user_data = await fetch_user(uid)
+            user_data = await UserData(uid).fetch()
             treasures = await fetch_treasure('all')
 
             treasures_found = []
@@ -464,9 +466,9 @@ class Command(Extension):
                 treasure = -1
                 if value > 0:
                     treasure = random.choice(["journal", "bottle", "shirt"])
-                if value > 3500:
-                    treasure = random.choice(["amber", "pen", "card"])
                 if value > 4500:
+                    treasure = random.choice(["amber", "pen", "card"])
+                if value > 4900:
                     treasure = random.choice(["die", "sun", "clover"])
 
                 treasure_loc = await loc(ctx.guild.id, 'Items', 'Treasures', treasure)
@@ -499,7 +501,7 @@ class Command(Extension):
     async def feed_nikogotchi(self, ctx):
         food_options = []
 
-        nikogotchi_data = await fetch_nikogotchi(ctx.author.id)
+        nikogotchi_data = await NikogotchiData(ctx.author.id).fetch()
         
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
         
@@ -575,7 +577,7 @@ class Command(Extension):
         if ctx.author.id != uid:
             return
 
-        nikogotchi_data = await fetch_nikogotchi(uid)
+        nikogotchi_data = await NikogotchiData(uid).fetch()
         
         pancakes = nikogotchi_data.pancakes
         golden_pancakes = nikogotchi_data.golden_pancakes
@@ -790,7 +792,7 @@ class Command(Extension):
         all_treasures = await fetch_treasure('all')
         treasure_string = ''
         
-        user_data = await fetch_user(user.id)
+        user_data = await UserData(user.id).fetch()
         owned_treasures = user_data.owned_treasures
 
         for treasure_nid, item in all_treasures.items():

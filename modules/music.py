@@ -22,6 +22,11 @@ from load_data import load_config
 spotify = Spotify(client_id=load_config("SpotifyID"), secret=load_config("SpotifySecret"))
 
 class Music(Extension):
+    
+    # Base Command
+    @slash_command(description="Listen to music using The World Machine!")
+    async def music(self, ctx: SlashContext):
+        pass
 
     def __init__(self, client):
         self.client = client
@@ -29,21 +34,16 @@ class Music(Extension):
 
     @listen()
     async def on_ready(self):
-        # Initializing lavalink instance on bot startup
-        self.lavalink: Lavalink = Lavalink(self.client)
+        # Initializing lavalink instance on bot startup        self.lavalink: Lavalink = Lavalink(self.client)
 
         node_information: dict = load_config("Music")
 
         # Connecting to local lavalink server
-        self.lavalink.add_node(node_information['ip'], node_information['port'], node_information['password'], "us")
+        #self.lavalink.add_node(node_information['ip'], node_information['port'], node_information['password'], "us")
 
         self.lavalink.client.register_source(CustomSearch())
 
         print("Music Command Loaded.")
-
-    @slash_command(description="Listen to music using The World Machine!")
-    async def music(self, ctx: SlashContext):
-        pass
 
     async def get_playing_embed(self, player_status: str, player: Player, allowed_control: bool):
 

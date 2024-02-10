@@ -4,7 +4,6 @@ from interactions import *
 
 import Utilities.bot_icons as icons
 from Utilities.fancysend import *
-from Utilities.text_generation import generate_text
 
 
 class Command(Extension):
@@ -13,9 +12,7 @@ class Command(Extension):
     @slash_option(name="who", description="First person. Can be a user.", opt_type=OptionType.STRING, required=True)
     @slash_option(name="what", description="Second person. Can be a user.", opt_type=OptionType.STRING, required=True)
     async def ship(self, ctx: SlashContext, who: str, what: str):
-
-        msg = await fancy_message(ctx, f"[ Coming up with ship name... {icons.icon_loading} ]")
-
+        
         if '<' in who:
             parsed_id = who.strip('<@>')
             user = await self.bot.fetch_user(int(parsed_id))
@@ -27,8 +24,7 @@ class Command(Extension):
 
             what = user.display_name
 
-        if who == what:
-            await msg.delete()
+        if who == ctx.author.display_name and who == what:
             return await fancy_message(ctx, "[ Do you need a hug? ]", color=0xff0000, ephemeral=True)
 
         seed = len(who) + len(what)
@@ -36,7 +32,10 @@ class Command(Extension):
 
         love_percentage = random.randint(0, 100)
 
-        name = await generate_text(f'Combine the names {who} and {what} together. Just the result please.')
+        name_a_part = who[0 : len(who) // 2] # Get the first half of the first name.
+        name_b_part = what[-len(what) // 2 :] # Get the last half of the second name.
+        
+        name = name_a_part + name_b_part # Combine the names together.
 
         emoji = '💖'
         description = ''
@@ -52,7 +51,7 @@ class Command(Extension):
             description = 'There\'s interest!'
         if love_percentage <= 50:
             emoji = '❓'
-            description = 'Maybe?'
+            description = 'Potentially?'
         if love_percentage < 30:
             emoji = '❌'
             description = 'No interest.'
@@ -74,7 +73,7 @@ class Command(Extension):
 
         embed = Embed(
             title=name,
-            description=f'Compatibility: **{love_percentage}%** {emoji}\n{length}',
+            description=f'{name} has a compatibility of: **{love_percentage}%** {emoji}\n{length}',
             color=0xd72d42
         )
 
