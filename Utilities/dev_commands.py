@@ -2,7 +2,7 @@
 import json
 from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
 from interactions import Extension
-from database import Database as db
+import database as db
 from load_data import load_config
 from importlib import reload, import_module
 import aiohttp

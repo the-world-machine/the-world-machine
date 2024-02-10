@@ -1,8 +1,8 @@
 from interactions import *
 from Utilities.fancysend import *
-from database import Database
+from database import UserData
 
-from Utilities.text_generation import generate_text
+from Utilities.ai_text import generate_text
 
 
 class Command(Extension):
@@ -12,7 +12,9 @@ class Command(Extension):
 
         await ctx.defer(ephemeral=True)
 
-        target_language = await Database.fetch('UserData', ctx.author.id, 'translation_language')
+        user_data = await UserData(ctx.target.author.id).fetch()
+        
+        target_language = user_data.translation_language
 
         message = await generate_text(f'Translate this message "{ctx.target.content}" please do it in the context of a native {target_language} speaker.')
         message = message.strip('\n')

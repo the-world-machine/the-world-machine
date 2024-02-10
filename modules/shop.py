@@ -1,17 +1,15 @@
+from dataclasses import asdict
 from typing import Union
 from interactions import *
 from interactions.api.events import Component
-from Utilities.DatabaseTypes import fetch_nikogotchi, fetch_user
 from Utilities.ItemData import fetch_background, fetch_item, fetch_treasure
 from Utilities.fancysend import *
 from Utilities.bot_icons import *
 from Utilities.ShopData import DictItem, Item, ShopData, fetch_shop_data, reset_shop_data
-from Utilities.CommandHandler import twm_cmd, twm_subcmd
 from datetime import datetime, timedelta
-from database import Database
+from database import NikogotchiData, UserData
 from Localization.Localization import loc, l_num
 import re
-
 
 class Shop(Extension):
     
@@ -76,7 +74,7 @@ class Shop(Extension):
         
         stock_price = self.daily_shop.stock_price
         
-        user_data = await fetch_user(ctx.author.id)
+        user_data = await UserData(ctx.author.id).fetch()
         
         all_treasures = await fetch_treasure('all')
         owned_treasure = user_data.owned_treasures
@@ -133,7 +131,7 @@ class Shop(Extension):
         
         await self.load_shop(ctx.guild_id)
         
-        user_data = await fetch_user(ctx.author.id)
+        user_data = await UserData(ctx.author.id).fetch()
         
         match = self.r_treasure_buy.match(ctx.component.custom_id)
         
@@ -202,7 +200,7 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        user = await fetch_user(ctx.author.id)
+        user = await UserData(ctx.author.id).fetch()
         
         match = self.r_buy_bg.match(ctx.component.custom_id)
         
@@ -251,8 +249,8 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        user_data = await fetch_user(ctx.author.id)
-        nikogotchi = await fetch_nikogotchi(ctx.author.id)
+        user_data = await UserData(ctx.author.id).fetch()
+        nikogotchi = await NikogotchiData(ctx.author.id).fetch()
         
         match = self.r_buy_nikogotchi.match(ctx.component.custom_id)
         
@@ -297,7 +295,8 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        user_data = await fetch_user(ctx.author.id)
+        user_data = await UserData(ctx.author.id).fetch()
+        nikogotchi_data = await NikogotchiData(ctx.author.id).fetch()
         
         match = self.r_buy_object.match(ctx.component.custom_id)
         
@@ -306,17 +305,12 @@ class Shop(Extension):
         
         item_category = match.group(1)
         item_id = int(match.group(2))
-    
-        try:
-            bg_page = int(match.group(3))
-        except:
-            bg_page = 0
         
         footer_text = ''
         
         async def update():
             
-            embed, components = await self.embed_manager(ctx, item_category, bg_page)
+            embed, components = await self.embed_manager(ctx, item_category, 0)
             
             embed.set_footer(footer_text)
             
@@ -334,11 +328,10 @@ class Shop(Extension):
             'what': await loc(ctx.guild_id, 'Items', item_category, item.id, 'name', values={'item': item.id}),
             'cost': l_num(item.cost)
         })
-
-        pancake = await Database.fetch('NikogotchiData', ctx.author.id, item.id)
-        pancake += 1
         
-        await Database.update('NikogotchiData', item.id, ctx.author.id, pancake)
+        json_data = asdict(nikogotchi_data)
+        
+        await nikogotchi_data.update(**{item.id: json_data[item.id] + 1})
         
         await user_data.update(wool=user_data.wool - item.cost)
         await update()
@@ -397,7 +390,7 @@ class Shop(Extension):
 
         await self.load_shop(ctx.guild_id)
         
-        user_data = await fetch_user(ctx.author.id)
+        user_data = await UserData(ctx.author.id).fetch()
         
         user_wool: int = user_data.wool
         
@@ -467,7 +460,7 @@ class Shop(Extension):
         
         elif category == 'capsules':
             
-            nikogotchi = await fetch_nikogotchi(ctx.author.id)
+            nikogotchi = await NikogotchiData(ctx.author.id).fetch()
             capsules: dict = await fetch_item('capsules')
             
             caspule_text = ''
@@ -512,13 +505,16 @@ class Shop(Extension):
         
             pancake_data = await fetch_item('pancakes')
             
+            nikogotchi_data = await NikogotchiData(ctx.author.id).fetch()
+            json_data = asdict(nikogotchi_data)
+            
             pancake_text = ''
             buttons: list[Button] = []
             for id_, pancake in enumerate(pancake_data):
                 
                 pancake = Item(**pancake)
                 
-                owned = await Database.fetch('NikogotchiData', ctx.author.id, pancake.id)
+                owned = json_data[pancake.id]
                 
                 amount_owned = await loc(ctx.guild_id, 'Shop', 'currently_owned', values={'amount': owned})
                 pancake_loc = await loc(ctx.guild_id, 'Items', 'pancakes', pancake.id)
@@ -622,11 +618,13 @@ class Shop(Extension):
             buttons: list[Button] = []
             bottom_buttons: list[Button] = []
             
+            user_data = await UserData(ctx.author.id).fetch()
+            
+            owned = user_data.owned_treasures
+            
             for treasure in treasure_stock:
                 
                 price = int(treasure.cost * self.daily_shop.stock_price)
-                
-                owned = await Database.fetch('UserData', ctx.author.id, 'owned_treasures')
                 
                 amount_owned = await loc(ctx.guild_id, 'Shop', 'currently_owned', values={'amount': owned.get(treasure.nid, 0)})
                 treasure_loc = await loc(ctx.guild_id, 'Items', 'Treasures', treasure.nid)
@@ -686,7 +684,9 @@ class Shop(Extension):
             sell_price_one = 0
             sell_price_all = 0
             
-            owned = await Database.fetch('UserData', ctx.author.id, 'owned_treasures')
+            user_data = await UserData(ctx.author.id).fetch()
+            
+            owned = user_data.owned_treasures
             all_treasures = await fetch_treasure('all')
             
             if selected_treasure is not None:

@@ -8,11 +8,11 @@ import aiohttp
 import humanfriendly
 from interactions import *
 from interactions.api.events import MessageCreate, Component
-
-from Utilities.DatabaseTypes import ServerData, fetch_server
 import load_data
 from Utilities.badge_manager import increment_value
 from Utilities.fancysend import *
+
+from database import UserData, ServerData
 
 from Utilities.TransmissionConnectionManager import *
 
@@ -34,7 +34,7 @@ class Transmit(Extension):
     @transmit.subcommand(sub_cmd_description='Connect to a server you already know.')
     async def call(self, ctx: SlashContext):
 
-        server_data = await fetch_server(ctx.guild.id)
+        server_data = await ServerData(ctx.guild_id).fetch()
         
         can_transmit = server_data.transmit_channel
         server_ids = server_data.transmittable_servers
@@ -78,7 +78,7 @@ class Transmit(Extension):
         select_results = await self.client.wait_for_component(components=server_list)
 
         other_server = int(select_results.ctx.values[0])
-        other_server_data = await fetch_server(other_server)
+        other_server_data = await ServerData(other_server).fetch()
         
         if other_server in server_data.blocked_servers:
             return await fancy_message(select_results.ctx, '[ Sorry, but this server is blocked. ]', color=0xfa272d, ephemeral=True)
@@ -86,7 +86,7 @@ class Transmit(Extension):
         if ctx.guild_id in other_server_data.blocked_servers:
             return await fancy_message(select_results.ctx, '[ Sorry, but this server has blocked you. ]', color=0xfa272d, ephemeral=True)
 
-        get_channel = await fetch_server(other_server)
+        get_channel = await ServerData(other_server).fetch()
         get_channel = get_channel.transmit_channel
 
         if not get_channel:
@@ -153,7 +153,7 @@ class Transmit(Extension):
     async def connect(self, ctx: SlashContext):
         
         await ctx.defer()
-        server_data = await fetch_server(ctx.guild_id)
+        server_data = await ServerData(ctx.guild_id).fetch()
 
         if available_initial_connections(server_data.blocked_servers):
             
@@ -252,7 +252,7 @@ class Transmit(Extension):
         else:
             other_server = await self.client.fetch_guild(transmission.connection_a.server_id)
 
-        server_data = await fetch_server(server_id)
+        server_data = await ServerData(server_id).fetch()
         transmittable_servers = server_data.transmittable_servers
         transmittable_servers[str(other_server.id)] = other_server.name
         
@@ -381,7 +381,7 @@ class Transmit(Extension):
             if message.author.id == self.client.user.id:
                 return
             
-            server_data = await fetch_server(guild.id)
+            server_data = await ServerData(guild.id).fetch()
             
             transmission = get_transmission(guild.id)
 

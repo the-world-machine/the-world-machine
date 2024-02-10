@@ -5,7 +5,7 @@ import json
 
 from interactions import SlashContext
 from Utilities.ItemData import fetch_background, fetch_item, fetch_treasure
-from database import Database
+import database
 from Localization.Localization import loc
 from dataclasses import dataclass
 import json
@@ -112,7 +112,19 @@ async def reset_shop_data(guild_id: int):
     
     data['last_reset_date'] = datetime.strftime(datetime(now.year, now.month, now.day, hour=0, minute=0, second=0), '%Y-%m-%d %H:%M:%S')
     
-    data['stock_value'] = round(random.uniform(-0.5, 0.5), 1)
+    is_positive = random.choice([True, False])
+    
+    if data['stock_price'] < 0.5:
+        is_positive = True
+    
+    if data['stock_price'] > 1.5:
+        is_positive = False
+    
+    if is_positive:
+        data['stock_value'] = round(random.uniform(0.3, 0.7), 1)
+    else:
+        data['stock_value'] = round(random.uniform(-0.3, -0.7), 1)    
+    
     price_change = data['stock_price'] + data['stock_value']
     
     data['stock_price'] = round(min(2, max(0.2, price_change)), 1)

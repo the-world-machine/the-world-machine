@@ -1,7 +1,7 @@
 import json
 from interactions import Embed, slash_command, SlashContext, SlashCommand, slash_option
 from Localization.Localization import loc
-from database import Database
+import database
 from datetime import datetime, timedelta
 import aiofiles
 
