@@ -1,7 +1,7 @@
 import json
 from interactions import *
 
-import database as db
+from database import ServerData
 from utilities.fancy_send import fancy_message
 
 
@@ -27,7 +27,7 @@ class Command(Extension):
     @slash_option(description='DEFAULT: NO CHANNEL SET', name='channel', opt_type=OptionType.CHANNEL)
     async def transmit_channel(self, ctx: SlashContext, channel: GuildText):
         
-        server_data = await db.fetch_server_data(ctx.guild_id)
+        server_data = await ServerData(ctx.guild_id).fetch()
 
         if channel is None:
             await server_data.update(transmit_channel=None)
@@ -43,7 +43,7 @@ class Command(Extension):
     @slash_option(description='DEFAULT: TRUE', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def transmit_images(self, ctx: SlashContext, value):
         
-        server_data = await db.fetch_server_data(ctx.guild_id)
+        server_data = await ServerData(ctx.guild_id).fetch()
 
         await server_data.update(transmit_images=value)
 
@@ -58,7 +58,7 @@ class Command(Extension):
     @slash_option(description='DEFAULT: FALSE', name='value', opt_type=OptionType.BOOLEAN, required=True)
     async def transmit_anonymous(self, ctx: SlashContext, value):
         
-        server_data = await db.fetch_server_data(ctx.guild_id)
+        server_data = await ServerData(ctx.guild_id).fetch()
 
         await server_data.update(transmit_anonymous=value)
 
@@ -68,10 +68,11 @@ class Command(Extension):
             return await fancy_message(ctx, '[ Successfully disabled anonymous mode. ]', ephemeral=True)
         
     @transmission_settings.subcommand(sub_cmd_description='Block a server from being able to call.')
+    @slash_default_member_permission(Permissions.MANAGE_GUILD)
     @slash_option(description='Server to block.', name='server', opt_type=OptionType.STRING, required=True, autocomplete=True)
     async def block_server(self, ctx: SlashContext, server: str):
         
-        server_data = await db.fetch_server_data(ctx.guild_id)
+        server_data = await ServerData(ctx.guild_id).fetch()
         
         block_list = server_data.blocked_servers
         
@@ -95,7 +96,7 @@ class Command(Extension):
     @block_server.autocomplete('server')
     async def block_server_autocomplete(self, ctx: AutocompleteContext):
         
-        server_data = await db.fetch_server_data(ctx.guild_id)
+        server_data = await ServerData(ctx.guild_id).fetch()
         
         transmitted_servers = server_data.transmittable_servers
         
@@ -129,6 +130,23 @@ class Command(Extension):
     @slash_option(description='DEFAULT: english', name='value', opt_type=OptionType.STRING, required=True, choices=available_languages)
     async def bot_language(self, ctx: SlashContext, value):
         
-        await db.update('ServerData', 'language', ctx.guild_id, value)
+        server_data = await ServerData(ctx.guild_id).fetch()
+        
+        await server_data.update(language=value)
         
         await ctx.send(f'[ Successfully changed the bot\'s language to `{value}`. ]', ephemeral=True)
+        
+    @server_settings.subcommand()
+    @slash_default_member_permission(Permissions.MANAGE_GUILD)
+    @slash_option(description='DEFAULT: TRUE', name='value', opt_type=OptionType.BOOLEAN, required=True)
+    async def allow_ai_chat(self, ctx: SlashContext, value: bool):
+        '''Enable/Disable Chatting with The World Machine.'''
+        
+        server_data: ServerData = await ServerData(ctx.guild_id).fetch()
+        
+        await server_data.update(allow_ask=value)
+        
+        if value:
+            return await fancy_message(ctx, '[ Successfully enabled AI Chat. ]', ephemeral=True)
+
+        return await fancy_message(ctx, '[ Successfully disabled AI Chat. ]', ephemeral=True)

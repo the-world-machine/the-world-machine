@@ -19,14 +19,6 @@ from utilities.transmission_connection_manager import *
 
 class Transmit(Extension):
 
-    async def change_status_waiting(self):
-        await self.client.change_presence(status=Status.IDLE,
-                                          activity=Activity(name="Transmission 📺", type=ActivityType.WATCHING))
-
-    async def change_status_normal(self):
-        await self.client.change_presence(status=Status.ONLINE,
-                                          activity=Activity(name=config_loader.load_config('MOTD'), type=ActivityType.PLAYING))
-
     @slash_command(description='Transmit to over servers!')
     async def transmit(self, ctx: SlashContext):
         pass
@@ -173,8 +165,6 @@ class Transmit(Extension):
 
             msg = await ctx.send(embeds=embed, components=cancel)
 
-            cancel_timer = 50
-
             async def check_(component: Component):
                 if ctx.user.id == component.ctx.user.id:
                     return True
@@ -184,28 +174,14 @@ class Transmit(Extension):
                         ephemeral=True)
                     return False
 
-            await self.change_status_waiting()
-
             task = asyncio.create_task(self.client.wait_for_component(components=cancel, check=check_))
 
             while not connection_alive(ctx.guild_id):
                 done, result = await asyncio.wait({task}, timeout=1)
 
                 if not done:
-                    cancel_timer -= 1
-
-                    embed.set_footer(
-                        text=f'[ This transmission will be automatically cancelled in {cancel_timer} seconds. ]')
 
                     await msg.edit(embeds=embed, components=cancel)
-
-                    if cancel_timer == 0:
-                        remove_connection(ctx.guild_id)
-
-                        embed = await self.on_cancel('timeout', ctx.guild_id, ctx)
-
-                        await msg.edit(embeds=embed, components=[])
-                        return
 
                     continue
 
@@ -437,7 +413,6 @@ class Transmit(Extension):
                     
                     
     async def on_cancel(self, cancel_reason, id: int, button_ctx=None):
-        await self.change_status_normal()
 
         if cancel_reason == 'timeout':
             return Embed(

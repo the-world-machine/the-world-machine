@@ -19,7 +19,7 @@ from utilities.fancy_send import *
 from utilities.music.spotify_api import Spotify
 from config_loader import load_config
 
-spotify = Spotify(client_id=load_config("SpotifyID"), secret=load_config("SpotifySecret"))
+spotify = Spotify(client_id=load_config('music', 'spotify', 'id'), secret=load_config('music', 'spotify', 'secret'))
 
 class Music(Extension):
     
@@ -36,7 +36,7 @@ class Music(Extension):
     async def on_ready(self):
         # Initializing lavalink instance on bot startup        self.lavalink: Lavalink = Lavalink(self.client)
 
-        node_information: dict = load_config("Music")
+        node_information: dict = load_config('music', 'lavalink')
 
         # Connecting to local lavalink server
         self.lavalink.add_node(node_information['ip'], node_information['port'], node_information['password'], "us")

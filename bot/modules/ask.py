@@ -1,17 +1,29 @@
 import asyncio
 from datetime import datetime, timedelta
+import re
 from interactions import *
 from interactions.api.events import *
 from utilities.fancy_send import *
 from utilities.profile.badge_manager import increment_value
 import utilities.bot_icons as bot_icons
 import utilities.ai_text as ai
-from database import UserData
+from database import UserData, ServerData
 
 class Command(Extension):
+    
+    @slash_command()
+    async def ask(self, ctx):
+        '''This command has been changed.'''
+        
+        await ctx.send(f'This command has been changed. To access it now, simply prefix your message with the bot\'s tag.\n\n{self.bot.user.mention} What is the meaning of life?', ephemeral=True)
 
     @listen()
-    async def ask(self, event: MessageCreate):
+    async def ai_chat(self, event: MessageCreate):
+        
+        server_data: ServerData = await ServerData(event.message.guild.id).fetch()
+        
+        if not server_data.allow_ask:
+            return
         
         message = event.message
         
@@ -25,23 +37,15 @@ class Command(Extension):
         
         await message.channel.trigger_typing()
         
-        response: str = await ai.chat(self.bot.user.id, message)
+        response: str = await ai.chat(self.bot.user.id, message, limit)
+
+        pattern = r'.* has said: '
+
+        text = re.sub(pattern, '', response)
         
-        response = response.removeprefix('<@1028058097383641118>: ')
+        await message.reply(content=f'{text}')
         
-        response = response.strip('[]')
-        
-        dialogue = response.split('¦')
-        
-        for i, text in enumerate(dialogue):
-            
-            if i == 0:
-                msg = await message.reply(content=f'[{text}]')
-                continue
-            
-            await asyncio.sleep(1)
-            
-            await msg.reply(content=f'[{text}]')
+        await increment_value(event.message, 'times_asked', 1, event.message.author)
 
     async def check(self, uid: int):
 

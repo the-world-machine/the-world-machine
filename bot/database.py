@@ -67,6 +67,7 @@ class ServerData(Collection):
     anonymous: bool = False
     transmit_images: bool = True
     language: str = 'english'
+    allow_ask: bool = True
 
 @dataclass
 class NikogotchiData(Collection):
@@ -81,7 +82,7 @@ class NikogotchiData(Collection):
     
 # ----------------------------------------------------
 
-connection_uri = load_config('Database')
+connection_uri = load_config('database')
 
 connection = None
 

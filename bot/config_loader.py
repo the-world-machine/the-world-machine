@@ -1,9 +1,17 @@
 import aiofiles
 import json
+import yaml
 
+def load_config(*args: str) -> any:
+    with open('bot/data/config.yaml', 'r') as f:
+        data = yaml.safe_load(f)
 
-def load_config(name: str) -> str:
-    with open(f'bot/data/config.json', 'r') as f:
-        raw_dict = f.read()
+    # Traverse the YAML structure based on the provided arguments
+    for arg in args:
+        if arg in data:
+            data = data[arg]
+        else:
+            # Handle the case where the specified key is not found
+            raise KeyError(f"Key '{arg}' not found in the configuration.")
 
-    return json.loads(raw_dict)[name]
+    return data

@@ -30,11 +30,12 @@ client = Client(
 prefixed_commands.setup(client, default_prefix='*')
 
 print("\nLoading Commands... 2/4")
+
 load_commands.load_commands(client)
 
 print('\nLoading Additional Extensions... 3/4')
 
-client.load_extension("interactions.ext.sentry", token=load_config("SENTRY-TOKEN"))  # Debugging and errors.
+client.load_extension("interactions.ext.sentry", token=load_config('sentry'))  # Debugging and errors.
 
 async def pick_avatar():
     get_avatars = os.listdir('bot/image/profile_pictures')
@@ -51,10 +52,9 @@ async def on_ready():
     
     create_connection()
     
-    print('Successfully created database connection')
+    print('Database Connected')
 
-    await client.change_presence(status=Status.ONLINE,
-                                 activity=Activity(name=load_config("MOTD"), type=ActivityType.PLAYING))
+    await client.change_presence(status=Status.ONLINE, activity=Activity(type=ActivityType.WATCHING, name='over OneShot'))
     chars.get_characters()
     await view.load_badges()
 
@@ -68,14 +68,15 @@ async def on_ready():
         
     load_languages()
     
-    print('Successfully loaded languages.')
+    print('Loaded Languages.')
 
     print("\n----------------------------------------")
     print("\nThe World Machine is ready!\n\n")
 
 
-client.start(load_config("Token"))
+client.start(load_config('token'))
 
+# Whenever a user joins a guild...
 @listen(MemberAdd)
 async def on_guild_join(event: MemberAdd):
     

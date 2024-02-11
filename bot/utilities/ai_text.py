@@ -1,17 +1,19 @@
 import openai
+import re
 from interactions import SlashContext, Message
 from config_loader import *
 
-openai.api_key = load_config("OpenAI")
+openai.api_key = load_config('open-ai')
 
 
-async def chat(bot_id: int, message: Message):
+async def chat(bot_id: int, message: Message, limit: int):
     system_prompt = ''
 
     with open('bot/data/askprompt.txt', 'r') as f:
         system_prompt = f.read()
         
     system_prompt = system_prompt.replace('+server', message.guild.name)
+    system_prompt = system_prompt.replace('+limit', str(limit))
         
     messages = await message.channel.fetch_messages(limit=10)
     
@@ -44,11 +46,11 @@ async def chat(bot_id: int, message: Message):
             if referenced_message is not None:
                 referenced_message_content = await format_message(referenced_message)
                 
-                indicator =  f'In response to {referenced_message.author.mention}\'s message ({referenced_message_content})\n\n{message.author.mention} has said: '
+                indicator =  f'In response to {referenced_message.author.display_name}\'s message ({referenced_message_content})\n\n{message.author.display_name} has said: '
                 
                 print(indicator)
             else:    
-                indicator = f'{message.author.mention} has said: '
+                indicator = f'{message.author.display_name} has said: '
             
             formatted_messages.append({'role': 'user', 'content': indicator + content})
             

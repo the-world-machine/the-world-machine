@@ -3,7 +3,7 @@ from lavalink.models import (DeferredAudioTrack, LoadResult, LoadType, PlaylistI
 from utilities.music.spotify_api import Spotify
 from config_loader import load_config
 
-spotify = Spotify(client_id=load_config("SpotifyID"), secret=load_config("SpotifySecret"))
+spotify = Spotify(client_id=load_config('music', 'spotify', 'id'), secret=load_config('music', 'spotify', 'secret'))
 
 
 
