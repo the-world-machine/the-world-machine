@@ -119,8 +119,6 @@ async def new_entry(collection: Collection):
     db = get_database()
     
     await db.get_collection(collection.__class__.__name__).update_one({'_id': collection._id}, {'$set': asdict(collection)}, upsert=True)
-    
-    print('Added new entry to database.' + collection.__class__.__name__ + ':'+ str(collection._id))
 
 async def update_in_database(collection: Collection, **kwargs):
     db = get_database()

@@ -102,7 +102,6 @@ class Spotify:
                             track = create_track(item['track'])
 
                             tracks.append(track)
-                            print(track.name)
 
                         url = get_items['next']
 

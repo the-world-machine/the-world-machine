@@ -47,8 +47,6 @@ async def chat(bot_id: int, message: Message, limit: int):
                 referenced_message_content = await format_message(referenced_message)
                 
                 indicator =  f'In response to {referenced_message.author.display_name}\'s message ({referenced_message_content})\n\n{message.author.display_name} has said: '
-                
-                print(indicator)
             else:    
                 indicator = f'{message.author.display_name} has said: '
             

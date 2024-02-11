@@ -25,8 +25,6 @@ async def load_badges():
     global badges
     global icons
 
-    print('Loading Badges...')
-
     images = []
     icons = []
     
@@ -43,6 +41,8 @@ async def load_badges():
         img = img.convert('RGBA')
         img = img.resize((35, 35), Image.NEAREST)
         icons.append(img)
+    
+    print('Loaded Badges')
 
 
 async def open_badges():

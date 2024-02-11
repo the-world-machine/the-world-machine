@@ -8,7 +8,7 @@ import json
 async def earn_badge(ctx: GuildChannel, badge_name: str, badge_data: dict, target: User, send_message: bool = True):
     channel = ctx
     
-    user_data = await db.UserData(target.id)
+    user_data = await db.UserData(target.id).fetch()
 
     emoji = PartialEmoji(id=badge_data['emoji'])
 
