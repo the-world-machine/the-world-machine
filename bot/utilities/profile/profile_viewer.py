@@ -70,8 +70,8 @@ async def draw_badges(user: User):
     get_profile_background = await fetch_background(user_data.equipped_bg)
     bg = await GetImage(get_profile_background['image'])
 
-    fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 25)  # Font
-    title_fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 25)  # Font
+    fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
+    title_fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
 
     d = ImageDraw.Draw(bg)
 
