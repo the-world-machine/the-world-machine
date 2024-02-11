@@ -7,11 +7,10 @@ bot/data/explosions.txt
 .mypy_cache
 .vscode
 
-**config.yaml
-
 __pycache__/
 *.py[cod]
 *$py.class
 
 
 blob/*
+bot/data/config.yaml
