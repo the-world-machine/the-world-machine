@@ -1,12 +1,16 @@
 # World Machine
-Data/config.json
-Data/last_shop_reset_date.json
-Data/explosions.txt
+bot/data/config.json
+bot/data/last_shop_reset_date.json
+bot/data/explosions.txt
+
+.idea
+.mypy_cache
+.vscode
+.twm.code_workspace
 
 __pycache__/
 *.py[cod]
 *$py.class
 
-**/.idea/workspace.xml **/.idea/tasks.xml
 
 blob/*

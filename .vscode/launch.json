@@ -6,9 +6,9 @@
     "configurations": [
         {
             "name": "Debug The World Machine",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
-            "program": "Main.py",
+            "program": "bot/main.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
