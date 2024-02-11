@@ -6,7 +6,6 @@ bot/data/explosions.txt
 .idea
 .mypy_cache
 .vscode
-.twm.code_workspace
 
 __pycache__/
 *.py[cod]
