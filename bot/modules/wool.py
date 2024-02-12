@@ -102,10 +102,13 @@ class Command(Extension):
     )
     async def give(self, ctx: SlashContext, user: User, amount: int):
         
+        if ctx.author.id == user.id:
+            return await ctx.send('[ This would have no effect, why did you even try? ]', ephemeral=True)
+        
         if amount == -1:
             if self.wool_stealers[ctx.author.id]:
                 if self.wool_stealers[ctx.author.id] == user.id:
-                    return await ctx.send('[ You can\'t steal wool from this person again! ]')
+                    return await ctx.send('[ You can\'t steal wool from this person again! ]', ephemeral=True)
                     
             self.wool_stealers[ctx.author.id] = user.id
 
