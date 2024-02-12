@@ -38,7 +38,7 @@ print('\nLoading Additional Extensions... 3/4')
 client.load_extension("interactions.ext.sentry", token=load_config('sentry'))  # Debugging and errors.
 
 async def pick_avatar():
-    get_avatars = os.listdir('bot/image/profile_pictures')
+    get_avatars = os.listdir('bot/images/profile_pictures')
     random_avatar = random.choice(get_avatars)
 
     avatar = File('bot/images/profile_pictures' + random_avatar)
