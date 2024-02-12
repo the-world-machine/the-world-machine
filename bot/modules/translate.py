@@ -1,9 +1,11 @@
 from interactions import *
+from config_loader import load_config
 from utilities.fancy_send import *
 from database import UserData
 
-from utilities.ai_text import generate_text
+import deepl
 
+translator = deepl.Translator(load_config('deepl'))
 
 class Command(Extension):
 
@@ -21,8 +23,6 @@ class Command(Extension):
         if ctx.target.embeds:
            content = f'{content}\n\n`EMBED:` {ctx.target.embeds[0].description}' 
 
-        message = await generate_text(f'Translate this message "{content}" please do it in the context of a native {target_language} speaker.')
-        message = message.strip('\n')
-        message = message.strip('"')
+        message = translator.translate_text(content, target_lang=target_language)
 
-        await ctx.send(message, ephemeral=True)
+        await ctx.send(message.text, ephemeral=True)
