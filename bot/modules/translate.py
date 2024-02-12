@@ -21,7 +21,7 @@ class Command(Extension):
         if ctx.target.embeds:
            content = f'{content}\n\n`EMBED:` {ctx.target.embeds[0].description}' 
 
-        message = await generate_text(f'Translate this message "{ctx.target.content}" please do it in the context of a native {target_language} speaker.')
+        message = await generate_text(f'Translate this message "{content}" please do it in the context of a native {target_language} speaker.')
         message = message.strip('\n')
         message = message.strip('"')
 
