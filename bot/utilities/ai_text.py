@@ -37,7 +37,7 @@ async def chat(bot_id: int, message: Message, limit: int):
         
         if message.author.bot:
             if message.embeds:
-                return
+                continue
         
         content = await format_message(message)
         
