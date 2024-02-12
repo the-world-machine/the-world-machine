@@ -106,7 +106,7 @@ class Command(Extension):
             return await ctx.send('[ This would have no effect, why did you even try? ]', ephemeral=True)
         
         if amount == -1:
-            if self.wool_stealers[ctx.author.id]:
+            if ctx.author.id in self.wool_stealers.keys():
                 if self.wool_stealers[ctx.author.id] == user.id:
                     return await ctx.send('[ You can\'t steal wool from this person again! ]', ephemeral=True)
                     
