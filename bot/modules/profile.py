@@ -33,7 +33,7 @@ class Command(Extension):
     @slash_option(description='Who you want to give it to.', name='user', opt_type=OptionType.USER, required=True)
     async def give(self, ctx: SlashContext, user: User):
         
-        user_data = await db.UserData(user.id)
+        user_data = await db.UserData(user.id).fetch()
 
         if user.bot:
             await fancy_message(ctx, "[ Can't send bots suns! ]", color=0xFF0000, ephemeral=True)

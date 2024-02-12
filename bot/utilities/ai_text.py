@@ -35,6 +35,10 @@ async def chat(bot_id: int, message: Message, limit: int):
     
     for i, message in enumerate(messages):
         
+        if message.author.bot:
+            if message.embeds:
+                return
+        
         content = await format_message(message)
         
         referenced_message = await message.fetch_referenced_message()
