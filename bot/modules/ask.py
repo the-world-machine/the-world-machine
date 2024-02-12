@@ -20,12 +20,15 @@ class Command(Extension):
     @listen()
     async def ai_chat(self, event: MessageCreate):
         
-        server_data: ServerData = await ServerData(event.message.guild.id).fetch()
+        message = event.message
+        
+        if message.guild is None:
+            return
+        
+        server_data: ServerData = await ServerData(message.guild.id).fetch()
         
         if not server_data.allow_ask:
             return
-        
-        message = event.message
         
         if not message.content.startswith(f'<@{self.bot.user.id}>'):
             return

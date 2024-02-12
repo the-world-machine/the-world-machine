@@ -13,11 +13,12 @@ import aiofiles
 class TextBoxGeneration(Extension):
 
     @staticmethod
-    async def generate_welcome_message(guild: Guild, user: Member):
+    async def generate_welcome_message(guild: Guild, user: Member, message: str):
 
         uuid = str(uuid4())
 
-        message = f'Hello, {user.username}! Welcome to {guild.name}! We hope you enjoy your stay.'
+        message = message.replace('[user]', user.username)
+        message = message.replace('[server]', guild.name)
 
         await TextBoxGeneration.generate_dialogue(message,
                                                   'https://cdn.discordapp.com/emojis/1023573458296246333.webp?size=128&quality=lossless',
@@ -34,7 +35,7 @@ class TextBoxGeneration(Extension):
         icon = await TextBoxGeneration.GetImage(image_url=image_url) # ...And the niko face selected in the command
         icon = icon.resize((96, 96)) # This doesn't need to be done for the OneShot characters, but for avatars and the elusive eyebrow raise.
 
-        fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 20)  # Font
+        fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 20)  # Font
 
         d = ImageDraw.Draw(img)  # Textbox background
         # The X and Y starting positions

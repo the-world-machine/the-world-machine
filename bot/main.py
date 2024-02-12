@@ -4,7 +4,7 @@ from interactions import *
 from interactions.api.events import MessageCreate, MemberAdd, Ready, GuildJoin
 import interactions.ext.prefixed_commands as prefixed_commands
 
-from database import create_connection, new_entry, UserData, NikogotchiData, ServerData
+from database import ServerData, create_connection
 from config_loader import *
 import load_commands
 import os
@@ -14,12 +14,12 @@ import utilities.profile.badge_manager as badge_manager
 import utilities.fetch_capsule_characters as chars
 from localization.loc import load_languages
 
+from modules.textbox import TextBoxGeneration
+
 from utilities.shop.fetch_shop_data import fetch_shop_data
 
 print('\nStarting The World Machine... 1/4')
-intents = Intents.DEFAULT | \
-          Intents.MESSAGE_CONTENT | \
-          Intents.MESSAGES
+intents = Intents.DEFAULT | Intents.MESSAGE_CONTENT | Intents.MESSAGES | Intents.GUILD_MEMBERS | Intents.GUILDS
 
 client = Client(
     intents=intents,
@@ -73,13 +73,21 @@ async def on_ready():
     print("\n----------------------------------------")
     print("\nThe World Machine is ready!\n\n")
 
-
-client.start(load_config('token'))
-
 # Whenever a user joins a guild...
 @listen(MemberAdd)
 async def on_guild_join(event: MemberAdd):
     
-    print('someone joined the server')
+    # If not the main bot, please don't send welcome messages.
+    if client.user.id != 1015629604536463421:
+        return
     
-    await event.guild.system_channel.send('welcome ' + event.member.mention)
+    # Check to see if we should generate a welcome message
+    server_data: ServerData = await ServerData(event.guild_id).fetch()
+    
+    if not server_data.welcome_message:
+        return
+
+    # Generate welcome textbox.
+    await TextBoxGeneration.generate_welcome_message(event.guild, event.member, server_data.welcome_message)
+
+client.start(load_config('token'))

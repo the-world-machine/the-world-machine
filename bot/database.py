@@ -68,6 +68,7 @@ class ServerData(Collection):
     transmit_images: bool = True
     language: str = 'english'
     allow_ask: bool = True
+    welcome_message: str = ''
 
 @dataclass
 class NikogotchiData(Collection):
