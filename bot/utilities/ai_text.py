@@ -37,20 +37,16 @@ async def chat(bot_id: int, message: Message, limit: int):
         
         content = await format_message(message)
         
-        if message.author.id == bot_id:
-            formatted_messages.append({'role': 'assistant', 'content': content})
-        else:
+        referenced_message = await message.fetch_referenced_message()
             
-            referenced_message = await message.fetch_referenced_message()
+        if referenced_message is not None:
+            referenced_message_content = await format_message(referenced_message)
             
-            if referenced_message is not None:
-                referenced_message_content = await format_message(referenced_message)
-                
-                indicator =  f'In response to {referenced_message.author.display_name}\'s message ({referenced_message_content})\n\n{message.author.display_name} has said: '
-            else:    
-                indicator = f'{message.author.display_name} has said: '
-            
-            formatted_messages.append({'role': 'user', 'content': indicator + content})
+            indicator =  f'In response to {referenced_message.author.display_name}\'s message ({referenced_message_content})\n\n{message.author.display_name} has said: '
+        else:    
+            indicator = f'{message.author.display_name} has said: '
+        
+        formatted_messages.append({'role': 'user', 'content': indicator + content})
             
     formatted_messages.append({"role": "system", "content": system_prompt})
     
