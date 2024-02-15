@@ -200,32 +200,6 @@ class Command(Extension):
         await ctx.send(
             f"[ Successfully changed the bot's language to `{value}`. ]", ephemeral=True
         )
-    
-    @server_settings.subcommand()
-    @slash_option(
-        description="DEFAULT: TRUE",
-        name="value",
-        opt_type=OptionType.BOOLEAN,
-        required=True,
-    )
-    async def allow_ai_chat(self, ctx: SlashContext, value: bool):
-        """Enable/Disable Chatting with The World Machine."""
-        
-        if not await self.check(ctx):
-            return
-
-        server_data: ServerData = await ServerData(ctx.guild_id).fetch()
-
-        await server_data.update(allow_ask=value)
-
-        if value:
-            return await fancy_message(
-                ctx, "[ Successfully enabled AI Chat. ]", ephemeral=True
-            )
-
-        return await fancy_message(
-            ctx, "[ Successfully disabled AI Chat. ]", ephemeral=True
-        )
 
     @server_settings.subcommand()
     async def welcome_message(self, ctx: SlashContext):
