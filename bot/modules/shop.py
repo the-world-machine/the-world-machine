@@ -8,7 +8,7 @@ from utilities.bot_icons import *
 from utilities.shop.fetch_shop_data import DictItem, Item, ShopData, fetch_shop_data, reset_shop_data
 from datetime import datetime, timedelta
 from database import NikogotchiData, UserData
-from localization.loc import loc, l_num
+from localization.loc import l, fnum
 import re
 
 class Shop(Extension):
@@ -109,12 +109,12 @@ class Shop(Extension):
             sell_price = int(amount_of_treasure * treasure.cost * stock_price)
             owned_treasure[treasure_id] = 0
             
-            footer_text = await loc(ctx.guild_id, 'Shop', 'sold_all', values={'what': treasure_data['name'], 'amount': l_num(amount_of_treasure), 'cost': l_num(sell_price)})
+            footer_text = await loc(ctx.guild_id, 'Shop', 'sold_all', values={'what': treasure_data['name'], 'amount': fnum(amount_of_treasure), 'cost': fnum(sell_price)})
         else:
             sell_price = int(treasure.cost * stock_price)
             owned_treasure[treasure_id] -= 1
             
-            footer_text = await loc(ctx.guild_id, 'Shop', 'sold', values={'what': treasure_data['name'], 'cost': l_num(sell_price)})
+            footer_text = await loc(ctx.guild_id, 'Shop', 'sold', values={'what': treasure_data['name'], 'cost': fnum(sell_price)})
             
         await user_data.update(
             owned_treasures=owned_treasure,
@@ -177,11 +177,11 @@ class Shop(Extension):
                 price += int(treasure_price)
                 amount += 1
                 
-            footer_text = await loc(ctx.guild_id, 'Shop', 'bought_all', values={'what': name, 'cost': l_num(price), 'amount': l_num(amount)})
+            footer_text = await loc(ctx.guild_id, 'Shop', 'bought_all', values={'what': name, 'cost': fnum(price), 'amount': fnum(amount)})
         else:
             price = int(treasure_price)
             amount = 1
-            footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={'what': name, 'cost': l_num(price)})
+            footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={'what': name, 'cost': fnum(price)})
         
         owned_treasure = user_data.owned_treasures
         
@@ -233,7 +233,7 @@ class Shop(Extension):
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': await loc(ctx.guild_id, 'Items', 'Backgrounds', bg.nid),
-            'cost': l_num(bg.cost)
+            'cost': fnum(bg.cost)
         })
         
         await user.update(
@@ -284,7 +284,7 @@ class Shop(Extension):
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': capsule_data['name'],
-            'cost': l_num(nikogotchi_capsule.cost)
+            'cost': fnum(nikogotchi_capsule.cost)
         })
         
         await update()
@@ -326,7 +326,7 @@ class Shop(Extension):
         
         footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': await loc(ctx.guild_id, 'Items', item_category, item.id, 'name', values={'item': item.id}),
-            'cost': l_num(item.cost)
+            'cost': fnum(item.cost)
         })
         
         json_data = asdict(nikogotchi_data)
@@ -399,7 +399,7 @@ class Shop(Extension):
         key_owned = await loc(ctx.guild_id, 'Shop', 'key_owned')
         key_general = await loc(ctx.guild_id, 'Shop', 'key_general')
         
-        wool_counter = await loc(ctx.guild_id, 'Shop', 'user_wool', values={'wool': l_num(user_wool)})
+        wool_counter = await loc(ctx.guild_id, 'Shop', 'user_wool', values={'wool': fnum(user_wool)})
         magpie = EmbedAttachment('https://cdn.discordapp.com/attachments/1025158352549982299/1176956900928131143/Magpie.webp')
         
         go_back = Button(
@@ -470,7 +470,7 @@ class Shop(Extension):
                 
                 capsule_data = await loc(ctx.guild_id, 'Items', 'capsules', capsule['id'])
                 
-                caspule_text += f'<:capsule:{capsule["image"]}>  **{capsule_data["name"]}** - {icon_wool}{l_num(capsule["cost"])}\n*{capsule_data["description"]}*\n\n'
+                caspule_text += f'<:capsule:{capsule["image"]}>  **{capsule_data["name"]}** - {icon_wool}{fnum(capsule["cost"])}\n*{capsule_data["description"]}*\n\n'
                 
                 button = Button(
                     label=await loc(ctx.guild_id, 'Shop', 'buy'),
@@ -520,7 +520,7 @@ class Shop(Extension):
                 pancake_loc = await loc(ctx.guild_id, 'Items', 'pancakes', pancake.id)
                 
                 pancake_text += f'''
-                <:pancake:{pancake.image}>  **{pancake_loc['name']}** - {icon_wool}{l_num(pancake.cost)}
+                <:pancake:{pancake.image}>  **{pancake_loc['name']}** - {icon_wool}{fnum(pancake.cost)}
                 *{pancake_loc['description']}*
                 {amount_owned}\n'''
                 
@@ -559,7 +559,7 @@ class Shop(Extension):
             
             background_name = await loc(ctx.guild_id, 'Items', 'Backgrounds', background.nid)
             background_description = await loc(ctx.guild_id, 'Shop', 'Backgrounds', 'description', values={
-                'cost': l_num(background.cost),
+                'cost': fnum(background.cost),
                 'key': key_owned,
                 'name': background_name,
                 'user_wool': wool_counter
@@ -630,7 +630,7 @@ class Shop(Extension):
                 treasure_loc = await loc(ctx.guild_id, 'Items', 'Treasures', treasure.nid)
                 
                 treasure_text += f'''
-                <:treasure:{treasure.image}>  **{treasure_loc['name']}** - ~~{icon_wool}{l_num(treasure.cost)}~~ - {icon_wool}{l_num(price)}
+                <:treasure:{treasure.image}>  **{treasure_loc['name']}** - ~~{icon_wool}{fnum(treasure.cost)}~~ - {icon_wool}{fnum(price)}
                 *{treasure_loc['description']}*
                 {amount_owned}\n'''
                 
@@ -743,8 +743,8 @@ class Shop(Extension):
             if selected_treasure is not None:
                 selection_description = await loc(ctx.guild_id, 'Shop', 'Treasure_Sell', 'treasure_selected', values={
                     'selected_treasure': f"<:treasure:{selected_treasure.image}> {selected_treasure_data['name']}",
-                    'sell_one': l_num(sell_price_one),
-                    'sell_all': l_num(sell_price_all)
+                    'sell_one': fnum(sell_price_one),
+                    'sell_all': fnum(sell_price_all)
                 })
                 
                 buttons[1].label = await loc(ctx.guild_id, 'Shop', 'sell_all', values={'amount': owned[selected_treasure.nid]})       

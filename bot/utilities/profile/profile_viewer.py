@@ -8,7 +8,7 @@ import aiohttp
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 from interactions import PartialEmoji, User
 from utilities.shop.fetch_items import fetch_background, fetch_badge
-from localization.loc import l_num
+from localization.loc import fnum
 
 import database as db
 
@@ -28,7 +28,7 @@ async def load_badges():
     images = []
     icons = []
     
-    badges = await fetch_badge('all')
+    badges = await fetch_badge()
 
     for _, badge in badges.items():
         images.append(badge['image'])
@@ -52,10 +52,6 @@ async def open_badges():
     return json.loads(strdata)
 
 
-async def open_backgrounds():
-    return await db.get_items('Backgrounds')
-
-
 async def draw_badges(user: User):
     if wool_icon is None:
         await load_badges()
@@ -63,12 +59,12 @@ async def draw_badges(user: User):
     msg = f'{user.username}\'s Profile'
 
     user_id = user.id
-    user_pfp = user.avatar_url
+    user_pfp = user.display_avatar.url
 
-    user_data = await db.UserData(user_id).fetch()
+    user_data: db.UserData = await db.UserData(user_id).fetch()
 
-    get_profile_background = await fetch_background(user_data.equipped_bg)
-    bg = await GetImage(get_profile_background['image'])
+    backgrounds = await fetch_background()
+    bg = await GetImage(backgrounds[user_data.equipped_bg]['image'])
 
     fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
     title_fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
@@ -136,11 +132,11 @@ async def draw_badges(user: User):
 
     coins = user_data.wool
     sun = user_data.suns
-    d.text((648, 70), f'{l_num(coins)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
+    d.text((648, 70), f'{fnum(coins)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
     bg.paste(wool_icon, (659, 63), wool_icon.convert('RGBA'))
 
-    d.text((648, 32), f'{l_num(sun)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
+    d.text((648, 32), f'{fnum(sun)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
     bg.paste(sun_icon, (659, 25), sun_icon.convert('RGBA'))
 
@@ -152,5 +148,8 @@ async def draw_badges(user: User):
 async def GetImage(image_url):
     async with aiohttp.ClientSession() as session:
         async with session.get(image_url) as resp:
-            image = io.BytesIO(await resp.read())
+            img_data = await resp.read()
+            
+            image = io.BytesIO(img_data)
+            
             return Image.open(image)

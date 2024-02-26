@@ -4,6 +4,8 @@ from interactions import *
 from interactions.api.events import MessageCreate, MemberAdd, Ready, GuildJoin
 import interactions.ext.prefixed_commands as prefixed_commands
 
+from localization.loc import l, fnum
+
 from database import ServerData, create_connection
 from config_loader import *
 import load_commands
@@ -12,7 +14,6 @@ import random
 import utilities.profile.profile_viewer as view
 import utilities.profile.badge_manager as badge_manager
 import utilities.fetch_capsule_characters as chars
-from localization.loc import load_languages
 
 from modules.textbox import TextBoxGeneration
 
@@ -66,10 +67,6 @@ async def on_ready():
         except:
             pass
         
-    load_languages()
-    
-    print('Loaded Languages.')
-
     print("\n----------------------------------------")
     print("\nThe World Machine is ready!\n\n")
 
@@ -82,7 +79,7 @@ async def on_guild_join(event: MemberAdd):
         return
     
     # Check to see if we should generate a welcome message
-    server_data: ServerData = await ServerData(event.guild_id).fetch()
+    server_data: ServerData = await ServerData(event.guild_id).fetch() # type: ignore
     
     if not server_data.welcome_message:
         return

@@ -88,7 +88,7 @@ class Music(Extension):
 
         progress_bar = ''.join(progress_bar_l)
 
-        current = lavalink.format_time(player.position)
+        current = lavalink.format_time(player.position) # type: ignore
         total = lavalink.format_time(track.duration)
 
         description = f'From **{track.author}**\n\n{progress_bar}\n{current} <:Sun:1026207773559619644> {total}'

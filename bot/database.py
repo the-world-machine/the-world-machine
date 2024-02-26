@@ -1,17 +1,15 @@
 from dataclasses import asdict, dataclass, field
-import json
 from typing import Union, Dict, List
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
-from interactions import Snowflake, Extension, listen
-from interactions.api.events import Startup
 from config_loader import load_config
 from datetime import datetime
+from interactions import Snowflake
 
 # Define the Database Schema for The World Machine:
 @dataclass
 class Collection:
-    _id: str
+    _id: Union[str, Snowflake]
         
     async def update(self, **kwargs):
         '''
@@ -137,3 +135,10 @@ async def update_in_database(collection: Collection, **kwargs):
     updated_instance = collection.__class__(**updated_data)
 
     return updated_instance
+
+async def fetch_items():
+    db = get_database()
+    
+    data = await db.get_collection('ItemData').find_one({"access": 'ItemData'})
+    
+    return data

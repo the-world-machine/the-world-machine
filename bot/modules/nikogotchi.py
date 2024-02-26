@@ -10,7 +10,7 @@ from interactions import *
 from interactions.api.events import Component
 
 import utilities.fetch_capsule_characters as chars
-from localization.loc import loc
+from localization.loc import l
 from utilities.shop.fetch_items import fetch_treasure
 from database import UserData, NikogotchiData
 from utilities.bot_icons import icon_loading

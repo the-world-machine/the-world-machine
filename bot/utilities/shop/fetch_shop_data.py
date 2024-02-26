@@ -7,7 +7,7 @@ import json
 from interactions import SlashContext
 from utilities.shop.fetch_items import fetch_background, fetch_item, fetch_treasure
 import database
-from localization.loc import loc
+from localization.loc import l
 from dataclasses import dataclass
 import json
 

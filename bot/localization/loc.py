@@ -1,49 +1,54 @@
-import database
 from typing import Union
-import importlib
-import os
+from yaml import safe_load
+import utilities.bot_icons as icons
 
 languages = {}
-
-def load_languages():
-    
-    for file in os.listdir('bot/localization/locales'):
-        if file.endswith('.py'):
-            language = file.replace('.py', '')
-            module = importlib.import_module(f'localization.locales.{language}')
             
-            languages[language] = module
-
-async def get_lang(guild_id: int):
+def fetch_language(locale: str):
     
-    server_data = await database.ServerData(guild_id).fetch()
+    locale_value = locale
     
-    server_language: str = server_data.language
+    if '_' in locale:
+        l_prefix = locale.split('_')[0] # Create prefix for locale, for example en_UK and en_US becomes en_.
 
-    language_module = importlib.reload(languages[server_language])
+        if locale.startswith(l_prefix):
+            locale_value = l_prefix + '_#'
     
-    data = getattr(language_module, 'text')
-    return data
-
-async def loc(guild_id: int, *args: str, values: dict = {}) -> Union[str, list[str], dict]:
-    t = await get_lang(guild_id)
-
-    # Call the 'text' function with the 'l_args' dictionary
-    text: dict = t(values)
-
-    # Get the values for the specified category and value
-    for arg in args:
-        text = text.get(arg, None)
+    with open(f'bot/localization/locales/{locale_value}.yaml', 'r') as f:
+        return safe_load(f)
+    
+def assign_variables(result: str, **variables: str):
+    
+    general_icons = {
+        '&wool_icon': icons.icon_wool,
+        '&loading_icon': icons.icon_loading
+    }
+    
+    for name, icon in general_icons.items():
+        result = result.replace(name, icon)
+    
+    for name, data in variables.items():
+        result = result.replace(f'&{name}', data)
         
-        if text is None:
-            break
+    return result    
 
-    if text is None:
-        result = f'⚠️ ``{args}`` is not localized.'
-    else:
-        result = text
+def l(locale: str, localization_path: str, **variables: str) -> Union[str, list[str], dict]:
     
-    return result
+    value = fetch_language(locale)
 
-def l_num(num: int) -> str:
+    parsed_path = localization_path.split('.')
+    
+    # Get the values for the specified category and value
+    for path in parsed_path:
+        
+        try:
+            value = value[path]
+        except:
+            return f'`{localization_path}` is not a valid localization path.'
+    
+    result = value
+    
+    return assign_variables(result, **variables)
+
+def fnum(num: int) -> str:
     return f'{num:>,}'

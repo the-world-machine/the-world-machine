@@ -5,7 +5,7 @@ from utilities.fancy_send import fancy_message
 import database as db
 import utilities.profile.badge_manager as badge_manager
 import utilities.bot_icons as icons
-from localization.loc import l_num
+from localization.loc import fnum
 
 from datetime import datetime, timedelta
 
@@ -51,7 +51,10 @@ class Command(Extension):
 
         wool: int = user_data.wool
 
-        await fancy_message(ctx, f'[ **{user.username}** has <:wool:1044668364422918176>**{l_num(wool)}**. ]')
+        await fancy_message(
+            ctx,
+            f"[ **{user.username}** has <:wool:1044668364422918176>**{fnum(wool)}**. ]",
+        )
         
     @wool.subcommand(sub_cmd_description='Give someone your wool.')
     @slash_option(description='Who to give your wool to...', name='user', required=True, opt_type=OptionType.USER)
@@ -66,9 +69,23 @@ class Command(Extension):
             
         await this_user.update(wool=this_user.wool - amount)
         await other_user.update(wool=other_user.wool + amount)
-        
-        await fancy_message(ctx, f'{ctx.author.mention} gave away {icons.icon_wool}{l_num(amount)} to {user.mention}, how generous!')
-        
+
+        if amount > 0:
+            await fancy_message(
+                ctx,
+                f"{ctx.author.mention} gave away {icons.icon_wool}{fnum(amount)} to {user.mention}, how generous!",
+            )
+        elif amount == 0:
+            await fancy_message(
+                ctx,
+                f"{ctx.author.mention} gave away {icons.icon_wool}{fnum(amount)} to {user.mention}, not very generous!",
+            )
+        else:
+            await fancy_message(
+                ctx,
+                f"{ctx.author.mention} stole {icons.icon_wool}{fnum(amount)} from {user.mention}, why!?",
+            )
+
     @wool.subcommand()
     async def daily(self, ctx: SlashContext):
         '''Command has been renamed to /pray.'''
@@ -114,10 +131,10 @@ class Command(Extension):
         amount = int(random.uniform(amount[0], amount[1]))
         
         if amount > 0:
-            value = f'You got {l_num(amount)} wool!'
+            value = f"You got {fnum(amount)} wool!"
             color = 0x00FF00
         else:
-            value = f'You lost {l_num(abs(amount))} wool...'
+            value = f"You lost {fnum(abs(amount))} wool..."
             color = 0xFF0000
 
         await user_data.update(wool=user_data.wool + amount)
@@ -265,8 +282,8 @@ class Command(Extension):
                         ticker += f'{s} ┋ '
             
             return Embed(
-                description=f'## Slot Machine\n\n{ctx.author.mention} has bet {icons.icon_wool}{l_num(amount)}.\n{ticker}',
-                color=0x8b00cc
+                description=f"## Slot Machine\n\n{ctx.author.mention} has bet {icons.icon_wool}{fnum(amount)}.\n{ticker}",
+                color=0x8B00CC,
             )
             
         msg = await ctx.send(embed=generate_embed(0, -1, slot_images))
@@ -335,11 +352,15 @@ class Command(Extension):
         
         if calculate_value > 0:
             if jackpot_bonus > 1:
-                result_embed.color=0xffff00
-                result_embed.set_footer(text=f'JACKPOT! 🎉 {ctx.author.username} won back {l_num(abs(calculate_value))} wool!')
+                result_embed.color = 0xFFFF00
+                result_embed.set_footer(
+                    text=f"JACKPOT! 🎉 {ctx.author.username} won back {fnum(abs(calculate_value))} wool!"
+                )
             else:
-                result_embed.color=0x00ff00
-                result_embed.set_footer(text=f'{ctx.author.username} won back {l_num(abs(calculate_value))} wool!')
+                result_embed.color = 0x00FF00
+                result_embed.set_footer(
+                    text=f"{ctx.author.username} won back {fnum(abs(calculate_value))} wool!"
+                )
         else:
             result_embed.color=0xff0000
             result_embed.set_footer(text=f'{ctx.author.username} lost it all... better luck next time!')
