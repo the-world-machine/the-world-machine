@@ -57,6 +57,12 @@ class UserData(Collection):
             raise TypeError(f'Value for key "{key}" is not an integer.')
         
         return await self.update(**{key: value + amount})
+    
+    async def manage_wool(self, amount: int):
+        if self.wool + amount <= 0:
+            amount = 0
+            
+        return await self.increment_value('wool', amount)
 @dataclass
 class ServerData(Collection):
     transmit_channel: str = None

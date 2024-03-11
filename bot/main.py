@@ -55,7 +55,7 @@ async def on_ready():
     
     print('Database Connected')
 
-    await client.change_presence(status=Status.ONLINE, activity=Activity(type=ActivityType.WATCHING, name='over OneShot'))
+    await client.change_presence(status=Status.ONLINE, activity=Activity(type=ActivityType.PLAYING, name='OneShot'))
     chars.get_characters()
     await view.load_badges()
 

@@ -41,7 +41,7 @@ class Shop(Extension):
         
         treasure = ctx.values[0]
         
-        embed, components = await self.embed_manager(ctx, 'Sell_Treasures', {'selected_treasure': treasure})
+        embed, components = await self.embed_manager(ctx, 'Sell_Treasures', selected_treasure=treasure)
         
         await ctx.edit(embed=embed, components=components)
 
@@ -52,7 +52,7 @@ class Shop(Extension):
         
         await self.load_shop(ctx.guild_id)
         
-        embed, components = await self.embed_manager(ctx, 'Sell_Treasures', {'selected_treasure': None})
+        embed, components = await self.embed_manager(ctx, 'Sell_Treasures', selected_treasure=None)
         
         await ctx.edit(embed=embed, components=components)
         
@@ -76,45 +76,47 @@ class Shop(Extension):
         
         user_data = await UserData(ctx.author.id).fetch()
         
-        all_treasures = await fetch_treasure('all')
+        all_treasures = await fetch_treasure()
         owned_treasure = user_data.owned_treasures
         
         amount_of_treasure = owned_treasure[treasure_id]
         
         treasure = DictItem(nid=treasure_id, **all_treasures[treasure_id], type=0)
         
-        footer_text = ''
+        result_text = ''
         
-        treasure_data = await loc(ctx.guild_id, 'Items', 'Treasures', treasure.nid)
+        treasure_loc: dict = l(ctx.guild_locale, f'items.treasures.{treasure_id}')
         
         async def update():
             
             if amount_to_sell == 'all':
-                embed, components = await self.embed_manager(ctx, 'Sell_Treasures', {'selected_treasure': None})
+                embed, components = await self.embed_manager(ctx, 'Sell_Treasures', selected_treasure=None)
             else:
-                embed, components = await self.embed_manager(ctx, 'Sell_Treasures', {'selected_treasure': treasure_id})
+                embed, components = await self.embed_manager(ctx, 'Sell_Treasures', selected_treasure=treasure_id)
             
-            embed.set_footer(footer_text)
+            embed.set_footer(result_text)
             
             await ctx.edit(embed=embed, components=components)
             
         if amount_of_treasure <= 0:
-            footer_text = f"You don't have any {treasure_data['name']} to sell!"
+            result_text = l(ctx.guild_locale, 'shop.fail')
             await update()
             return
             
         sell_price = 0
             
         if amount_to_sell == 'all':
+            amount = amount_of_treasure
+            
             sell_price = int(amount_of_treasure * treasure.cost * stock_price)
             owned_treasure[treasure_id] = 0
-            
-            footer_text = await loc(ctx.guild_id, 'Shop', 'sold_all', values={'what': treasure_data['name'], 'amount': fnum(amount_of_treasure), 'cost': fnum(sell_price)})
         else:
+            amount = 1
+            
             sell_price = int(treasure.cost * stock_price)
             owned_treasure[treasure_id] -= 1
             
-            footer_text = await loc(ctx.guild_id, 'Shop', 'sold', values={'what': treasure_data['name'], 'cost': fnum(sell_price)})
+        result_text = l(ctx.guild_locale, 'shop.traded', item_name=treasure_loc['name'], amount=amount, price=sell_price)
             
         await user_data.update(
             owned_treasures=owned_treasure,
@@ -123,7 +125,7 @@ class Shop(Extension):
         
         await update()
         
-    r_treasure_buy = re.compile(r'treasure_buy_(.*)_(.*)')
+    r_treasure_buy = re.compile(r'treasure_buy_(.*)_(.*)_(.*)')
     @component_callback(r_treasure_buy)
     async def buy_treasure_callback(self, ctx: ComponentContext):
         
@@ -140,35 +142,36 @@ class Shop(Extension):
         
         treasure_id = match.group(1)
         amount_to_buy = match.group(2)
+        max_amount = int(match.group(3))
         
-        all_treasures = await fetch_treasure('all')
+        all_treasures = await fetch_treasure()
         
         treasure = DictItem(nid=treasure_id, **all_treasures[treasure_id], type=0)
         
-        footer_text = ''
+        result_text = ''
         
         treasure_price = treasure.cost * self.daily_shop.stock_price
         
         async def update():
             embed, components = await self.embed_manager(ctx, 'Treasures')
-            embed.set_footer(footer_text)
+            embed.set_footer(result_text)
             
             await ctx.edit(embed=embed, components=components)
         
         if user_data.wool < treasure_price:
-            footer_text = 'You cannot afford this item.'
+            result_text = l(ctx.guild_id, 'shop.traded_fail')
             return await update()
 
         current_balance = user_data.wool
         price = 0
         amount = 0
         
-        t_data = await loc(ctx.guild_id, 'Items', 'Treasures', treasure.nid)
+        treasure_loc: dict = l(ctx.guild_id, f'items.treasures.{treasure.nid}')
         
-        name = t_data['name']
+        name = treasure_loc['name']
         
-        if amount_to_buy == 'All':
-            while True:
+        if amount_to_buy == 'max':
+            for _ in range(max_amount):
                 current_balance -= treasure_price
                 
                 if current_balance <= 0:
@@ -177,11 +180,12 @@ class Shop(Extension):
                 price += int(treasure_price)
                 amount += 1
                 
-            footer_text = await loc(ctx.guild_id, 'Shop', 'bought_all', values={'what': name, 'cost': fnum(price), 'amount': fnum(amount)})
+            result_text = l(ctx.guild_locale, 'shop.')
         else:
             price = int(treasure_price)
             amount = 1
-            footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={'what': name, 'cost': fnum(price)})
+        
+        result_text = l(ctx.guild_locale, 'shop.traded', item_name=name, amount=amount, price=price)
         
         owned_treasure = user_data.owned_treasures
         
@@ -210,28 +214,28 @@ class Shop(Extension):
         bg_id = match.group(1)
         page = int(match.group(2))
         
-        bg_data = await fetch_background(bg_id)
+        bg_data = await fetch_background()
         bg = DictItem(nid=bg_id, **bg_data)
         
         owned_backgrounds = user.owned_backgrounds
         
         async def update():
-            embed, components = await self.embed_manager(ctx, 'Backgrounds', {'page': page})
-            embed.set_footer(footer_text)
+            embed, components = await self.embed_manager(ctx, 'Backgrounds', page=page)
+            embed.set_footer(result_text)
             
             await ctx.send(embed=embed, components=components, ephemeral=True)
         
         if bg.nid in owned_backgrounds:
-            footer_text = await loc(ctx.guild_id, 'Shop', 'already_owned')
+            result_text = await loc(ctx.guild_id, 'Shop', 'already_owned')
             return await update()
         
         if user.wool < bg.cost:
-            footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
+            result_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
         owned_backgrounds.append(bg.nid)
         
-        footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
+        result_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': await loc(ctx.guild_id, 'Items', 'Backgrounds', bg.nid),
             'cost': fnum(bg.cost)
         })
@@ -258,7 +262,7 @@ class Shop(Extension):
             return
         
         capsule_id = int(match.group(1))        
-        footer_text = ''
+        result_text = ''
         
         capsules = await fetch_item('capsules')
         
@@ -267,22 +271,22 @@ class Shop(Extension):
         
         async def update():
             embed, components = await self.embed_manager(ctx, 'capsules')
-            embed.set_footer(footer_text)
+            embed.set_footer(result_text)
             
             await ctx.edit(embed=embed, components=components)
         
         if nikogotchi.data or nikogotchi.nikogotchi_available:
-            footer_text = await loc(ctx.guild_id, 'Shop', 'already_owned')
+            result_text = await loc(ctx.guild_id, 'Shop', 'already_owned')
             return await update()
         
         if user_data.wool < nikogotchi_capsule.cost:
-            footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
+            result_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
         await nikogotchi.update(nikogotchi_available=True, rarity=capsule_id)
         await user_data.update(wool=user_data.wool - nikogotchi_capsule.cost)
         
-        footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
+        result_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': capsule_data['name'],
             'cost': fnum(nikogotchi_capsule.cost)
         })
@@ -306,13 +310,13 @@ class Shop(Extension):
         item_category = match.group(1)
         item_id = int(match.group(2))
         
-        footer_text = ''
+        result_text = ''
         
         async def update():
             
             embed, components = await self.embed_manager(ctx, item_category, 0)
             
-            embed.set_footer(footer_text)
+            embed.set_footer(result_text)
             
             return await ctx.edit(embed=embed, components=components)
 
@@ -321,10 +325,10 @@ class Shop(Extension):
         item = Item(**item)
             
         if user_data.wool < item.cost:
-            footer_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
+            result_text = await loc(ctx.guild_id, 'Shop', 'cannot_buy')
             return await update()
         
-        footer_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
+        result_text = await loc(ctx.guild_id, 'Shop', 'bought', values={
             'what': await loc(ctx.guild_id, 'Items', item_category, item.id, 'name', values={'item': item.id}),
             'cost': fnum(item.cost)
         })
@@ -386,7 +390,7 @@ class Shop(Extension):
         
         await ctx.edit(embed=embed, components=components)
     
-    async def embed_manager(self, ctx: SlashContext, category: str, args: dict = None) -> Union[list[BaseComponent], Embed, None]:
+    async def embed_manager(self, ctx: SlashContext, category: str, **kwargs) -> Union[list[BaseComponent], Embed, None]:
 
         await self.load_shop(ctx.guild_id)
         
@@ -461,7 +465,7 @@ class Shop(Extension):
         elif category == 'capsules':
             
             nikogotchi = await NikogotchiData(ctx.author.id).fetch()
-            capsules: dict = await fetch_item('capsules')
+            capsules: dict = await fetch_item()
             
             caspule_text = ''
             buttons = []
@@ -552,7 +556,7 @@ class Shop(Extension):
         
         elif category == 'Backgrounds':
             
-            bg_page = args['page']
+            bg_page = kwargs['page']
             
             background: DictItem = self.daily_shop.background_stock[bg_page]
             user_backgrounds = user_data.owned_backgrounds
@@ -679,7 +683,7 @@ class Shop(Extension):
         
         elif category == 'Sell_Treasures':
             
-            selected_treasure = args['selected_treasure']
+            selected_treasure = kwargs['selected_treasure']
             selected_treasure_data = None
             sell_price_one = 0
             sell_price_all = 0

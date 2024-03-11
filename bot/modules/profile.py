@@ -3,11 +3,9 @@ import os
 from datetime import datetime, timedelta
 
 import aiofiles
-from interactions import *
+from interactions import Extension, SlashContext, User, OptionType, slash_command, slash_option, SlashCommandChoice, Button, ButtonStyle, File
 
 import utilities.profile.badge_manager as bm
-from utilities.shop.fetch_items import fetch_badge
-import utilities.bot_icons as icons
 import utilities.profile.profile_viewer as profile_viewer
 import database as db
 from utilities.fancy_send import *

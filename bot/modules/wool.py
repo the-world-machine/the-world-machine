@@ -62,13 +62,13 @@ class Command(Extension):
     async def give(self, ctx: SlashContext, user: User, amount: int):
         
         this_user: db.UserData = await db.UserData(ctx.author.id).fetch()
-        other_user: db.UserData = await db.UserData(user.id).fetch()
+        target_user: db.UserData = await db.UserData(user.id).fetch()
         
         if this_user.wool < amount:
             return await fancy_message(ctx, '[ You cannot give this amount of wool because you don\'t have it! ]', color=0xff0000)
             
-        await this_user.update(wool=this_user.wool - amount)
-        await other_user.update(wool=other_user.wool + amount)
+        await this_user.manage_wool(-amount)
+        await target_user.manage_wool(amount)
 
         if amount > 0:
             await fancy_message(
@@ -83,7 +83,7 @@ class Command(Extension):
         else:
             await fancy_message(
                 ctx,
-                f"{ctx.author.mention} stole {icons.icon_wool}{fnum(amount)} from {user.mention}, why!?",
+                f"{ctx.author.mention} stole a single piece of wool from {user.mention}, why!?",
             )
 
     @wool.subcommand()
@@ -282,7 +282,7 @@ class Command(Extension):
                         ticker += f'{s} ┋ '
             
             return Embed(
-                description=f"## Slot Machine\n\n{ctx.author.mention} has bet {icons.icon_wool}{fnum(amount)}.\n{ticker}",
+                description=f"## Slot Machine\n\n{ctx.author.mention} has bet {icons.icon_wool}{fnum(win_amount)}.\n{ticker}",
                 color=0x8B00CC,
             )
             
@@ -336,30 +336,25 @@ class Command(Extension):
         else:
             jackpot_bonus = 1
                 
-        calculate_value = int(
+        win_amount = int(
             (slot_a_value + slot_b_value + slot_c_value) * jackpot_bonus * (amount / 2)
         )
         
-        if calculate_value < 0:
-            calculate_value = 0
+        if win_amount < 0:
+            win_amount = 0
+
+        await user_data.manage_wool(win_amount)
         
-        result = user_data.wool + calculate_value
-        
-        if result < 0:
-            result = 0
-            
-        await user_data.update(wool=result)
-        
-        if calculate_value > 0:
+        if win_amount > 0:
             if jackpot_bonus > 1:
                 result_embed.color = 0xFFFF00
                 result_embed.set_footer(
-                    text=f"JACKPOT! 🎉 {ctx.author.username} won back {fnum(abs(calculate_value))} wool!"
+                    text=f"JACKPOT! 🎉 {ctx.author.username} won back {fnum(abs(win_amount))} wool!"
                 )
             else:
                 result_embed.color = 0x00FF00
                 result_embed.set_footer(
-                    text=f"{ctx.author.username} won back {fnum(abs(calculate_value))} wool!"
+                    text=f"{ctx.author.username} won back {fnum(abs(win_amount))} wool!"
                 )
         else:
             result_embed.color=0xff0000

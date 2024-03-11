@@ -5,8 +5,8 @@ import textwrap
 
 import aiofiles
 import aiohttp
-from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
-from interactions import PartialEmoji, User
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance
+from interactions import User
 from utilities.shop.fetch_items import fetch_background, fetch_badge
 from localization.loc import fnum
 
@@ -64,24 +64,24 @@ async def draw_badges(user: User):
     user_data: db.UserData = await db.UserData(user_id).fetch()
 
     backgrounds = await fetch_background()
-    bg = await GetImage(backgrounds[user_data.equipped_bg]['image'])
+    image: Image = await GetImage(backgrounds[user_data.equipped_bg]['image'])
 
     fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
     title_fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
 
-    d = ImageDraw.Draw(bg)
+    base_profile = ImageDraw.Draw(image)
 
-    d.text((42, 32), msg, font=title_fnt, fill=(252, 186, 86), stroke_width=2, stroke_fill=(0, 0, 0))
+    base_profile.text((42, 32), msg, font=title_fnt, fill=(252, 186, 86), stroke_width=2, stroke_fill=(0, 0, 0))
 
     description = textwrap.fill(user_data.profile_description, 35)
 
-    d.text((210, 140), f"{description}", font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000, align='center')
+    base_profile.text((210, 140), f"{description}", font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000, align='center')
 
     pfp = await GetImage(user_pfp)
 
     pfp = pfp.resize((148, 148))
 
-    bg.paste(pfp, (42, 80), pfp.convert('RGBA'))
+    image.paste(pfp, (42, 80), pfp.convert('RGBA'))
 
     init_x = 60  # Start with the first column (adjust as needed)
     init_y = 310  # Start with the first row (adjust as needed)
@@ -95,23 +95,19 @@ async def draw_badges(user: User):
     current_row = 0 # Keep track of the current row
     current_column = 1 # Keep track of the current column
     
-    angle_amount = 20 # How much to rotate the icon by
-    
     badge_keys = list(badges.keys())
 
     for i, icon in enumerate(icons):
+        
         enhancer = ImageEnhance.Brightness(icon)
+        
         icon = enhancer.enhance(0)
-
+    
         if badge_keys[i] in user_data.owned_badges:
             icon = enhancer.enhance(1)
             
-            # Rotate the icon by a small random angle (e.g., between -10 and 10 degrees)
-            random_angle = random.uniform(-angle_amount, angle_amount)
-            icon = icon.rotate(random_angle)
-
-        bg.paste(icon, (x, y), icon)
-
+        image.paste(icon, (x, y), icon)
+            
         x += x_increment  # Move to the next column
 
         # If we have reached the end of a row
@@ -130,19 +126,19 @@ async def draw_badges(user: User):
             current_column += 1
             current_row = 0
 
-    coins = user_data.wool
+    wool = user_data.wool
     sun = user_data.suns
-    d.text((648, 70), f'{fnum(coins)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
+    base_profile.text((648, 70), f'{fnum(wool)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
-    bg.paste(wool_icon, (659, 63), wool_icon.convert('RGBA'))
+    image.paste(wool_icon, (659, 63), wool_icon.convert('RGBA'))
 
-    d.text((648, 32), f'{fnum(sun)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
+    base_profile.text((648, 32), f'{fnum(sun)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
-    bg.paste(sun_icon, (659, 25), sun_icon.convert('RGBA'))
+    image.paste(sun_icon, (659, 25), sun_icon.convert('RGBA'))
 
-    d.text((42, 251), 'Unlocked Stamps:', font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000)
+    base_profile.text((42, 251), 'Unlocked Stamps:', font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000)
 
-    bg.save('bot/images/profile_viewer/result.png')
+    image.save('bot/images/profile_viewer/result.png')
 
 
 async def GetImage(image_url):
