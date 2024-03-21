@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from database import fetch_items
-import aiohttp
+import asyncio
 
 async def fetch_item():
     

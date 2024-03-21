@@ -1,6 +1,5 @@
 import io
 import json
-import random
 import textwrap
 
 import aiofiles
@@ -31,17 +30,14 @@ async def load_badges():
     badges = await fetch_badge()
 
     for _, badge in badges.items():
-        images.append(badge['image'])
-
-    wool_icon = await GetImage('https://cdn.discordapp.com/emojis/1044668364422918176.png')
-    sun_icon = await GetImage('https://cdn.discordapp.com/emojis/1026207773559619644.png')
-
-    for image_url in images:
-        img = await GetImage(image_url)
+        img = await GetImage(f'https://cdn.discordapp.com/emojis/{badge["emoji"]}.png')
         img = img.convert('RGBA')
         img = img.resize((35, 35), Image.NEAREST)
         icons.append(img)
-    
+
+    wool_icon = await GetImage('https://i.postimg.cc/zXnhRLQb/1044668364422918176.png')
+    sun_icon = await GetImage('https://i.postimg.cc/J49XsNKW/1026207773559619644.png')
+
     print('Loaded Badges')
 
 

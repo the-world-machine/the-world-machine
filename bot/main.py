@@ -4,8 +4,6 @@ from interactions import *
 from interactions.api.events import MessageCreate, MemberAdd, Ready, GuildJoin
 import interactions.ext.prefixed_commands as prefixed_commands
 
-from localization.loc import l, fnum
-
 from database import ServerData, create_connection
 from config_loader import *
 import load_commands
@@ -17,8 +15,7 @@ import utilities.fetch_capsule_characters as chars
 
 from modules.textbox import TextBoxGeneration
 
-from utilities.shop.fetch_shop_data import fetch_shop_data
-
+from utilities.shop.fetch_shop_data import fetch_treasure
 print('\nStarting The World Machine... 1/4')
 intents = Intents.DEFAULT | Intents.MESSAGE_CONTENT | Intents.MESSAGES | Intents.GUILD_MEMBERS | Intents.GUILDS
 
@@ -49,6 +46,11 @@ async def pick_avatar():
 
 @listen(Ready)
 async def on_ready():
+    
+    ### space for testing
+    # return
+    ### space for testing
+    
     print("\nFinalizing... 4/4")
     
     create_connection()
@@ -63,7 +65,7 @@ async def on_ready():
         await pick_avatar()
     else:
         try:
-            await client.user.edit(avatar=File('bot/image/unstable.png'))
+            await client.user.edit(avatar=File('bot/images/unstable.png'))
         except:
             pass
         

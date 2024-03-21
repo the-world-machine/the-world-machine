@@ -6,19 +6,29 @@ shop:
   loading: "[ Loading Shop... [loading_icon] ]"
 
   user_wool: "**Current Balance:** [wool_icon]**[wool]**"
+  owned: "**Currently Owned:** [amount]"
 
-  button_buy: Trade
-  button_owned: Owned
-  button_too_poor: Cannot Afford
+  buttons:
+    buy: Trade
+    buy_all: Trade All
+    go_back: Go Back
+    owned: Owned
+    too_poor: Cannot Afford
+
+  main_title: Welcome!
 
   main: >
     Hey, Hey! Welcome to my emporium. I'm here always looking for the most interesting of treasures and [wool_icon]**Wool**...!
 
+
     I'm willing to trade many shiny and colorful treasures, background, capsules and more in exchange... think of it as a currency eh?
+
 
     To get started, simply select on one of the categories I have presented and then trade away! Keep in mind there are some items that change **daily** so keep an eye on those!
 
+
     [motd]
+
 
     [user_wool]
 
@@ -30,76 +40,117 @@ shop:
     - You're asking about what happened to that one trader before me? I wouldn't know. *I wouldn't know at all...* # During the World Machine Edition AMA Nightmargin jokingly said that Magpie hid a body which has not been found yet. Considering the fact that the purple trader is nowhere to be found in the remake, it is the most likely victim of this alleged crime.
     - "Do you like my bottle collection? I like my bottle collection. What do you mean it's all \"Hard Liquor\"? Is that what it says?" # Magpie's drink of choice is hard liquor, but only so he can collect the bottles afterwards.
 
-  traded: "> Successfully traded [wool_icon]**[price]** for *x[amount]* [item_icon]**[item_name](s)!**"
-  traded_sell: "> Sucessfully traded *x[amount]* [item_icon]**[item_name](s)** for [wool_icon]**[price]!**"
-  traded_idle: "> ..." # This doesn't really need to be translated, it's just here for convenience.
+  traded: "> Successfully traded [price] Wool for [amount] [item_name](s)!"
+  traded_sell: "> Sucessfully traded [amount] [item_name](s) for [price] Wool!"
   traded_fail: "> You cannot trade this. Please refresh the shop!"
 
+  stocks: >
+    ```Stock Value: [value]
+
+    Stock Price: [price]```
+
   nikogotchi:
+
+    title: Capsules
 
     main: >
       I see you're interested in this weird capsule thingamajig!
       If I recall correctly, this is used to unlock **Nikogotchis!**
       What are *Nikogotchis* you might ask? Well my dear customer, they are simple pets you can take care off, based of me, or any other...
 
+
       ...
+
 
       *AHEM* existential dread aside, feeding them with pancakes and taking good care of them will allow you to gather treasures! Which you can trade to me! Pretty cool right?
 
+
       So why not trade for a capsule today? Only [wool_icon]**[cost]**!
 
-      *Do keep in mind that you can only have* ***one capsule*** *per Nikogotchi.*
 
-      [result]
+      *Do keep in mind that you can only have* ***one capsule*** *per Nikogotchi.*
+    
 
       [user_wool]
 
     result: >
-      > You traded [wool_icon]**[amount]**, Magpie turns the gatchapon machine and...
-      > ### He gives you a [capsule_icon][capsule_name]! 
+      > You gave Magpie [amount] Wool, then he turns the gatchapon machine and...
+
+      > He gives you a [capsule_name]! 
 
     result_footer: Use [ /nikogotchi check ] to see your new Nikogotchi!
 
-  pancakes_main: >
-    Use these pancakes to feed your Nikogotchi!
+  pancakes:
 
-    [items]
+    title: Pancakes
 
-    [result]
+    main: >
+      Nikogotchis absolutely adore pancakes, and thankfully, you can trade some with me!
 
-    [user_wool]
 
-  backgrounds_main: "### Do you want to trade *[bg_name]* for [wool_icon]*[amount]*?"
+      [items]
+    
 
-  shop:
+      [user_wool]
 
-    no_user_treasures: "*It seems as though no one has traded anything in...*"
+  backgrounds:
+
+    title: Backgrounds
+
+    main: >
+      Do you want to trade the **'[bg_name]'** background for [wool_icon]**[amount]**?
+
+
+      *Keep in mind that these can always be equipped in the profile settings in the website.*
+
+
+      [user_wool]
+    
+    result: "> Successfully traded [amount] for [name]!"
+
+  treasures:
+
+    title: Treasures
+    sell_title: Sell Treasures
+
+    option: "[name] - [price] Wool"
+
     treasure_not_selected: "*You haven't selected any treasures to trade...*"
 
     buy_main: >
       You want to trade your [wool_icon]Wool for treasures? Then you've come to the right place! I've got plenty of treasures I've found, or treasure other users have traded in!
 
+
       [stock_market]
+      [selected_treasure]
 
-      [treasures]
-      ### Other Users Treasures:
-      [user_treasures]
-
-      [result]
 
       [user_wool]
 
-    sell_main: ]
+    sell_main: >
       Ah... You're intrerested in trading in your treasures! That's great!
       Whenever you trade in treasures, I can trade it to other people, so make sure you really want to trade it!
 
+
+      [stock_market]
       [selected_treasure]
 
-      [result]
 
       [user_wool]
 
-    sell_placeholder: What do you want to trade in?
+    selected_treasure: >
+      **Currently Selected:** [treasure_icon][treasure_name]
+
+
+      *[owned]*
+
+
+      **Trade One**: [wool_icon][price_one]
+
+      **Trade All**: [wool_icon][price_all] (x[amount])
+
+    placeholder: What do you want to trade in?
+    cannot_sell: You have nothing to trade in...
 
 items:
   treasures:
@@ -134,16 +185,20 @@ items:
   pancakes:
     pancakes:
       name: Pancakes
-      description: ]
+      description: >
         The bare minimum for feeding a Nikogotchi.
+
         *+25 🥞*
+
         *+1 ❤️*
     
     golden_pancakes:
       name: Golden Pancakes
-      description: ]
+      description: >
         Expensive, but worth it.
+
         *MAX 🥞*
+
         *+25 ❤️*
     
     glitched_pancakes:
@@ -174,6 +229,11 @@ items:
 interact:
   selected: "[ Currently doing an action towards [user]. ]"
   placeholder: Select an interaction.
+
+  twm_not_being_very_happy: "[ Don't touch me [user]. ]"
+  twm_questioning_if_youre_stupid_or_not: "[ [bot] is a discord bot, [user]. You can't really interact with it. ]"
+  twm_is_fed_up_with_you: "[ *Sigh* you cannot interact with yourself, [user]. ]"
+
   options:
     slap:
       name: Slap

@@ -1,16 +1,16 @@
 {
-    "last_reset_date": "2024-02-11 00:00:00",
+    "last_reset_date": "2024-03-21 00:00:00",
     "backgrounds": [
-        "The Author",
-        "Pancakes",
-        "Refuge"
+        "Ruins",
+        "Refuge",
+        "Lamplighter"
     ],
     "treasures": [
-        "die",
         "bottle",
-        "pen"
+        "amber",
+        "shirt"
     ],
-    "stock_price": 0.6,
-    "stock_value": 0.4,
-    "motd": 1
+    "stock_price": 0.2,
+    "stock_value": -0.5,
+    "motd": 0
 }

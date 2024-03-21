@@ -1,6 +1,5 @@
 import random
 from interactions import *
-from localization.loc import fnum, l
 from utilities.fancy_send import fancy_message
 import aiohttp
 
@@ -9,7 +8,7 @@ class Command(Extension):
     
     @slash_command(description='View how many servers the bot is in.')
     async def server_count(self, ctx: SlashContext):
-        await fancy_message(ctx, f'[ I am in **{len(self.client.guilds)}** servers. ]')
+        await fancy_message(ctx, f'[ I am in **{len(self.bot.guilds)}** servers. ]')
         
     @slash_command(description='View the bot\'s status.')
     async def bot_status(self, ctx: SlashContext):
@@ -71,10 +70,3 @@ class Command(Extension):
         embed.set_thumbnail('https://cdn.discordapp.com/emojis/1026181557230256128.png?size=96&quality=lossless')
 
         await ctx.send(embeds=embed)
-        
-    @slash_command()
-    async def test(self, ctx):
-        
-        wool = l('en_US', 'shop.user_wool', wool=fnum(10000000))
-        
-        await ctx.send(embed=Embed(description=l('en_US', 'shop.main', motd='Example MOTD', wool=wool)))

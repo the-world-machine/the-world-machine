@@ -79,4 +79,4 @@ class Command(Extension):
 
         embed.set_footer(text=description)
 
-        await msg.edit(embeds=embed)
+        await ctx.send(embeds=embed)

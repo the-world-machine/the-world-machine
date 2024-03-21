@@ -10,7 +10,7 @@ from interactions import *
 from interactions.api.events import Component
 
 import utilities.fetch_capsule_characters as chars
-from localization.loc import l
+from localization.loc import Localization
 from utilities.shop.fetch_items import fetch_treasure
 from database import UserData, NikogotchiData
 from utilities.bot_icons import icon_loading
@@ -36,7 +36,7 @@ class Nikogotchi:
 class Command(Extension):
 
     async def get_nikogotchi(self, uid: int):
-        nikogotchi_data = await NikogotchiData(uid).fetch()
+        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
 
         if not nikogotchi_data.data:
             return None
@@ -45,7 +45,7 @@ class Command(Extension):
 
     async def save_nikogotchi(self, nikogotchi: Nikogotchi, uid: int):
         
-        nikogotchi_data = await NikogotchiData(uid).fetch()
+        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
         
         data = nikogotchi.__dict__
 
@@ -90,7 +90,7 @@ class Command(Extension):
         ]
 
     async def get_nikogotchi_age(self, uid: int):
-        nikogotchi_data = await NikogotchiData(uid).fetch()
+        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
 
         return relativedelta.relativedelta(datetime.now(), nikogotchi_data.hatched)
 
@@ -217,7 +217,7 @@ class Command(Extension):
 
         uid = ctx.author.id
 
-        nikogotchi_data = await NikogotchiData(uid).fetch()
+        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
 
         if nikogotchi_data.data:
             msg = await fancy_message(ctx, f'[ Loading Nikogotchi... {icon_loading} ]')
@@ -307,7 +307,7 @@ class Command(Extension):
 
     r_nikogotchi_interaction = re.compile(r'action_(feed|pet|clean|findtreasure|refresh|callback|exit)_(\d+)$')
     @component_callback(r_nikogotchi_interaction)
-    async def nikogotchi_interaction(self, ctx: Union[ComponentContext, SlashContext]):
+    async def nikogotchi_interaction(self, ctx: ComponentContext):
         
         try:
             await ctx.defer(edit_origin=True)
@@ -329,7 +329,7 @@ class Command(Extension):
         if custom_id == 'exit':
             await ctx.delete()
             
-        nikogotchi_data = await NikogotchiData(uid).fetch()
+        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
         nikogotchi = await self.get_nikogotchi(uid)
         
         last_interacted = nikogotchi_data.last_interacted
@@ -457,14 +457,14 @@ class Command(Extension):
 
         if nikogotchi.status == 3:
             
-            user_data = await UserData(uid).fetch()
-            treasures = await fetch_treasure('all')
+            user_data: UserData = await UserData(uid).fetch()
+            treasures = await fetch_treasure()
 
             treasures_found = []
 
             for _ in range(round(time_difference)):
                 value = random.randint(0, 5000)
-                treasure = -1
+                treasure = ''
                 if value > 0:
                     treasure = random.choice(["journal", "bottle", "shirt"])
                 if value > 4500:
@@ -472,11 +472,11 @@ class Command(Extension):
                 if value > 4900:
                     treasure = random.choice(["die", "sun", "clover"])
 
-                treasure_loc = await loc(ctx.guild.id, 'Items', 'Treasures', treasure)
+                treasure_loc: dict = Localization(ctx.guild_locale).l(f'items.treasures.{treasure}')
                 
                 treasures_found.append({'name': treasure_loc['name'], 'image': treasures[treasure]['image']})
 
-                user_treasures = user_data.owned_treasures
+                user_treasures: dict[str, int] = user_data.owned_treasures
                 
                 user_treasures[treasure] = user_treasures.get(treasure, 0) + 1
                 await user_data.update(owned_treasures=user_treasures)
@@ -502,7 +502,7 @@ class Command(Extension):
     async def feed_nikogotchi(self, ctx):
         food_options = []
 
-        nikogotchi_data = await NikogotchiData(ctx.author.id).fetch()
+        nikogotchi_data: NikogotchiData = await NikogotchiData(ctx.author.id).fetch()
         
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
         
@@ -578,7 +578,7 @@ class Command(Extension):
         if ctx.author.id != uid:
             return
 
-        nikogotchi_data = await NikogotchiData(uid).fetch()
+        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
         
         pancakes = nikogotchi_data.pancakes
         golden_pancakes = nikogotchi_data.golden_pancakes
@@ -704,7 +704,7 @@ class Command(Extension):
 
         embed.author = EmbedAuthor(
             name=f'Owned by {user.username}',
-            icon_url=user.avatar_url
+            icon_url=user.avatar.url
         )
 
         embed.description = f'''
@@ -790,15 +790,15 @@ class Command(Extension):
             color=0x8b00cc,
         )
 
-        all_treasures = await fetch_treasure('all')
+        all_treasures = await fetch_treasure()
         treasure_string = ''
         
-        user_data = await UserData(user.id).fetch()
+        user_data: UserData = await UserData(user.id).fetch()
         owned_treasures = user_data.owned_treasures
 
         for treasure_nid, item in all_treasures.items():
             
-            treasure_loc = await loc(ctx.guild_id, 'Items', 'Treasures')
+            treasure_loc: dict = Localization(ctx.guild_locale).l(f'items.treasures')
             
             name = treasure_loc[treasure_nid]['name']
             
