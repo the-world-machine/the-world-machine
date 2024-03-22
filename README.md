@@ -8,7 +8,7 @@ For more information, check out our website: https://www.theworldmachine.xyz/inv
 ## Contributing:
 
 ### Localization
-In `bot/localization/locales` there are different localization files. Using `english.py` as a base, you are free to contribute your own language to the bot. As of current, only the `/shop` command supports localization.
+In `bot/localization/locales` there are different localization files. Using `base.yaml` as a base, you are free to contribute your own language to the bot. As of current, only the `/shop`, `/interact` and `/nikogotchi` commands supports localization.
 
 ### Pull Requests
 As with any other repo, pull requests and bug reporting is always welcomed.
