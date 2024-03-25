@@ -485,7 +485,7 @@ class Command(Extension):
             buttons[1].disabled = True
             buttons[2].disabled = False
 
-            buttons[2].label = str(loc.l('nikogotchi.buttons.call_back'))
+            buttons[2].label = str(loc.l('nikogotchi.components.call_back'))
             buttons[2].custom_id = f'action_callback_{uid}'
             
             embed = await self.get_main_nikogotchi_embed(ctx.locale, age, dialogue, treasures_found, nikogotchi)
