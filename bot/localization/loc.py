@@ -61,14 +61,7 @@ def assign_variables(result: str, **variables: str):
     for name, data in {**variables, **general_icons}.items():
         
         if type(data) != str:
-            
-            how_big_is_this_number = len(str(data))
-            
-            if how_big_is_this_number < 17:
-                data = fnum(data)
-            else:
-                # A bit hacky, but if the number is really big, then it's most likely a snowflake.
-                data = f'<:icon:{data}>'
+            data = fnum(data)
         
         result = result.replace(f'[{name}]', data)
         

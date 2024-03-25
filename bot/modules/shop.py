@@ -523,7 +523,7 @@ class Shop(Extension):
                 amount_owned = localization.l('shop.owned', amount=owned)
                 pancake_loc: dict = localization.l(f'items.pancakes.{pancake.id}')
                 
-                pancake_text += f"<:pancake:{pancake.image}>  **{pancake_loc['name']}** - {icon_wool}{fnum(pancake.cost)}\n{pancake_loc['description']}\n{amount_owned}\n"
+                pancake_text += f"<:pancake:{pancake.image}>  **{pancake_loc['name']}** - {icon_wool}{fnum(pancake.cost)} - {amount_owned}\n{pancake_loc['description']}\n"
                 
                 button = Button(
                     label=b_trade,

@@ -1,38 +1,33 @@
-# 💡 The World Machine 💡
+# The World Machine
 
-### A quirky little bot based off the videogame Oneshot!
-(https://store.steampowered.com/app/420530/OneShot/)
+### A discord bot based off the videogame OneShot, and built using the interactions-py library.
 
-### We have various fun features such as:
+For more information, check out our website: https://www.theworldmachine.xyz/invite
 
-🎶 A dynamic music module that supports Spotify and Soundcloud!
+---
+## Contributing:
 
-📺 Transmissions, based off userphone, which allows you to talk to other servers!
+### Localization
+In `bot/localization/locales` there are different localization files. Using `base.yaml` as a base, you are free to contribute your own language to the bot. As of current, only the `/shop`, `/interact` and `/nikogotchi` commands supports localization.
 
-🪪 Show off your style with global profiles! Customize your background and description, and show off rare badges you earned or bought!
+### Pull Requests
+As with any other repo, pull requests and bug reporting is always welcomed.
 
-💬 Generate accurate Oneshot textboxes, anywhere, anytime. Now can you can make Niko say anything!
+### Crediting
+Contributing in any way to the discord bot will have your name be put in the website's credits and a role assigned on the discord.
 
-🤖 Talk to The World Machine! Using ChatGPT's API you can chat with the (sassy) entity, ask it questions and more!
-
-💥 Also included is... destroying lightbulbs?*
-
-###### * The creator of The World Machine does not condone destroying lightbulbs in real life, results could be catastrophic. Symptoms might include the sun being missing.
-
------------------
-## Compiling The World Machine
-#### ⚠️ THIS PROJECT IS NOT MEANT TO BE EASY TO FORK OR CHANGE. THIS IS SIMPLY TO ALLOW THIS PROJECT TO BE TRANSPARENT WITH ITS CODE AND ALLOW CONTRIBUTORS TO PULL REQUESTS AND SUCH.
+---
+## Running your own instance:
 
 ### Step 1: Download Dependencies.
 Download Python 3.11 and set it as your main interpreter in your code editor. To download dependencies, run this in your console:
 ```commandline
 pip install -r requirements.txt
 ```
-This should install all the libraries needed to run this bot.
+This should install all dependencies needed to run the bot.
 
-### Step 2: config.json
-To store API keys, passwords and more, there needs to be a 'config.json' file containing everything.
-I won't disclose what those key pair values are, but with trial and error, I am sure you can eventually get everything.
+### Step 2: config.yaml
+In `bot/data` there is file called `example_config.yaml` which has information for APIs and other sensitive information that should be included. You need to create a file in the same directory called `config.yaml` with the information filled.
 
-### Step 3: Enjoy your World Machine clone.
-Maybe it'll be better than this project!
+### Step 3: Running the bot.
+If everything is done right, the bot should run.
