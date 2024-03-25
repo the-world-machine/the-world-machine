@@ -1,14 +1,13 @@
 import io
 import json
-import random
 import textwrap
 
 import aiofiles
 import aiohttp
-from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
-from interactions import PartialEmoji, User
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance
+from interactions import User
 from utilities.shop.fetch_items import fetch_background, fetch_badge
-from localization.loc import l_num
+from localization.loc import fnum
 
 import database as db
 
@@ -28,20 +27,17 @@ async def load_badges():
     images = []
     icons = []
     
-    badges = await fetch_badge('all')
+    badges = await fetch_badge()
 
     for _, badge in badges.items():
-        images.append(badge['image'])
-
-    wool_icon = await GetImage('https://cdn.discordapp.com/emojis/1044668364422918176.png')
-    sun_icon = await GetImage('https://cdn.discordapp.com/emojis/1026207773559619644.png')
-
-    for image_url in images:
-        img = await GetImage(image_url)
+        img = await GetImage(f'https://cdn.discordapp.com/emojis/{badge["emoji"]}.png')
         img = img.convert('RGBA')
         img = img.resize((35, 35), Image.NEAREST)
         icons.append(img)
-    
+
+    wool_icon = await GetImage('https://i.postimg.cc/zXnhRLQb/1044668364422918176.png')
+    sun_icon = await GetImage('https://i.postimg.cc/J49XsNKW/1026207773559619644.png')
+
     print('Loaded Badges')
 
 
@@ -52,10 +48,6 @@ async def open_badges():
     return json.loads(strdata)
 
 
-async def open_backgrounds():
-    return await db.get_items('Backgrounds')
-
-
 async def draw_badges(user: User):
     if wool_icon is None:
         await load_badges()
@@ -63,29 +55,29 @@ async def draw_badges(user: User):
     msg = f'{user.username}\'s Profile'
 
     user_id = user.id
-    user_pfp = user.avatar_url
+    user_pfp = user.display_avatar.url
 
-    user_data = await db.UserData(user_id).fetch()
+    user_data: db.UserData = await db.UserData(user_id).fetch()
 
-    get_profile_background = await fetch_background(user_data.equipped_bg)
-    bg = await GetImage(get_profile_background['image'])
+    backgrounds = await fetch_background()
+    image: Image = await GetImage(backgrounds[user_data.equipped_bg]['image'])
 
     fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
     title_fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
 
-    d = ImageDraw.Draw(bg)
+    base_profile = ImageDraw.Draw(image)
 
-    d.text((42, 32), msg, font=title_fnt, fill=(252, 186, 86), stroke_width=2, stroke_fill=(0, 0, 0))
+    base_profile.text((42, 32), msg, font=title_fnt, fill=(252, 186, 86), stroke_width=2, stroke_fill=(0, 0, 0))
 
     description = textwrap.fill(user_data.profile_description, 35)
 
-    d.text((210, 140), f"{description}", font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000, align='center')
+    base_profile.text((210, 140), f"{description}", font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000, align='center')
 
     pfp = await GetImage(user_pfp)
 
     pfp = pfp.resize((148, 148))
 
-    bg.paste(pfp, (42, 80), pfp.convert('RGBA'))
+    image.paste(pfp, (42, 80), pfp.convert('RGBA'))
 
     init_x = 60  # Start with the first column (adjust as needed)
     init_y = 310  # Start with the first row (adjust as needed)
@@ -99,23 +91,19 @@ async def draw_badges(user: User):
     current_row = 0 # Keep track of the current row
     current_column = 1 # Keep track of the current column
     
-    angle_amount = 20 # How much to rotate the icon by
-    
     badge_keys = list(badges.keys())
 
     for i, icon in enumerate(icons):
+        
         enhancer = ImageEnhance.Brightness(icon)
+        
         icon = enhancer.enhance(0)
-
+    
         if badge_keys[i] in user_data.owned_badges:
             icon = enhancer.enhance(1)
             
-            # Rotate the icon by a small random angle (e.g., between -10 and 10 degrees)
-            random_angle = random.uniform(-angle_amount, angle_amount)
-            icon = icon.rotate(random_angle)
-
-        bg.paste(icon, (x, y), icon)
-
+        image.paste(icon, (x, y), icon)
+            
         x += x_increment  # Move to the next column
 
         # If we have reached the end of a row
@@ -134,23 +122,26 @@ async def draw_badges(user: User):
             current_column += 1
             current_row = 0
 
-    coins = user_data.wool
+    wool = user_data.wool
     sun = user_data.suns
-    d.text((648, 70), f'{l_num(coins)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
+    base_profile.text((648, 70), f'{fnum(wool)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
-    bg.paste(wool_icon, (659, 63), wool_icon.convert('RGBA'))
+    image.paste(wool_icon, (659, 63), wool_icon.convert('RGBA'))
 
-    d.text((648, 32), f'{l_num(sun)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
+    base_profile.text((648, 32), f'{fnum(sun)} x', font=fnt, fill=(255, 255, 255), anchor='rt', align='right', stroke_width=2,
            stroke_fill=0x000000)
-    bg.paste(sun_icon, (659, 25), sun_icon.convert('RGBA'))
+    image.paste(sun_icon, (659, 25), sun_icon.convert('RGBA'))
 
-    d.text((42, 251), 'Unlocked Stamps:', font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000)
+    base_profile.text((42, 251), 'Unlocked Stamps:', font=fnt, fill=(255, 255, 255), stroke_width=2, stroke_fill=0x000000)
 
-    bg.save('bot/images/profile_viewer/result.png')
+    image.save('bot/images/profile_viewer/result.png')
 
 
 async def GetImage(image_url):
     async with aiohttp.ClientSession() as session:
         async with session.get(image_url) as resp:
-            image = io.BytesIO(await resp.read())
+            img_data = await resp.read()
+            
+            image = io.BytesIO(img_data)
+            
             return Image.open(image)

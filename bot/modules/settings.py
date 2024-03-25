@@ -25,7 +25,7 @@ class Command(Extension):
 
     async def check(self, ctx: SlashContext):
 
-        if Permissions.MANAGE_GUILD not in ctx.author.guild_permissions:
+        if Permissions.MANAGE_GUILD not in ctx.member.guild_permissions:
             await ctx.send("[ You do not have the permissions to use this command. ]", ephemeral=True)
             return False
 
@@ -128,7 +128,7 @@ class Command(Extension):
         if not await self.check(ctx):
             return
 
-        server_data = await ServerData(ctx.guild_id).fetch()
+        server_data: ServerData = await ServerData(ctx.guild_id).fetch()
 
         block_list = server_data.blocked_servers
 
@@ -156,7 +156,7 @@ class Command(Extension):
     @block_server.autocomplete("server")
     async def block_server_autocomplete(self, ctx: AutocompleteContext):
 
-        server_data = await ServerData(ctx.guild_id).fetch()
+        server_data: ServerData = await ServerData(ctx.guild_id).fetch()
 
         transmitted_servers = server_data.transmittable_servers
 
@@ -174,31 +174,31 @@ class Command(Extension):
                 servers.append({"name": server_name, "value": server_id})
 
         await ctx.send(servers)
-
-    available_languages = [
-        SlashCommandChoice(name="English", value="english"),
-        SlashCommandChoice(name="Russian (Shop Only)", value="russian"),
-    ]
-
-    @server_settings.subcommand(sub_cmd_description="Change the bot's language.")
+    
+    @server_settings.subcommand()
     @slash_option(
-        description="DEFAULT: english",
+        description="DEFAULT: TRUE",
         name="value",
-        opt_type=OptionType.STRING,
+        opt_type=OptionType.BOOLEAN,
         required=True,
-        choices=available_languages,
     )
-    async def bot_language(self, ctx: SlashContext, value):
+    async def allow_ai_chat(self, ctx: SlashContext, value: bool):
+        """Enable/Disable Chatting with The World Machine."""
         
         if not await self.check(ctx):
             return
 
-        server_data = await ServerData(ctx.guild_id).fetch()
+        server_data: ServerData = await ServerData(ctx.guild_id).fetch()
 
-        await server_data.update(language=value)
+        await server_data.update(allow_ask=value)
 
-        await ctx.send(
-            f"[ Successfully changed the bot's language to `{value}`. ]", ephemeral=True
+        if value:
+            return await fancy_message(
+                ctx, "[ Successfully enabled AI Chat. ]", ephemeral=True
+            )
+
+        return await fancy_message(
+            ctx, "[ Successfully disabled AI Chat. ]", ephemeral=True
         )
 
     @server_settings.subcommand()

@@ -12,12 +12,10 @@ import random
 import utilities.profile.profile_viewer as view
 import utilities.profile.badge_manager as badge_manager
 import utilities.fetch_capsule_characters as chars
-from localization.loc import load_languages
 
 from modules.textbox import TextBoxGeneration
 
-from utilities.shop.fetch_shop_data import fetch_shop_data
-
+from utilities.shop.fetch_shop_data import fetch_treasure
 print('\nStarting The World Machine... 1/4')
 intents = Intents.DEFAULT | Intents.MESSAGE_CONTENT | Intents.MESSAGES | Intents.GUILD_MEMBERS | Intents.GUILDS
 
@@ -48,13 +46,18 @@ async def pick_avatar():
 
 @listen(Ready)
 async def on_ready():
+    
+    ### space for testing
+    # return
+    ### space for testing
+    
     print("\nFinalizing... 4/4")
     
     create_connection()
     
     print('Database Connected')
 
-    await client.change_presence(status=Status.ONLINE, activity=Activity(type=ActivityType.WATCHING, name='over OneShot'))
+    await client.change_presence(status=Status.ONLINE, activity=Activity(type=ActivityType.PLAYING, name='OneShot'))
     chars.get_characters()
     await view.load_badges()
 
@@ -62,14 +65,10 @@ async def on_ready():
         await pick_avatar()
     else:
         try:
-            await client.user.edit(avatar=File('bot/image/unstable.png'))
+            await client.user.edit(avatar=File('bot/images/unstable.png'))
         except:
             pass
         
-    load_languages()
-    
-    print('Loaded Languages.')
-
     print("\n----------------------------------------")
     print("\nThe World Machine is ready!\n\n")
 
@@ -82,7 +81,7 @@ async def on_guild_join(event: MemberAdd):
         return
     
     # Check to see if we should generate a welcome message
-    server_data: ServerData = await ServerData(event.guild_id).fetch()
+    server_data: ServerData = await ServerData(event.guild_id).fetch() # type: ignore
     
     if not server_data.welcome_message:
         return

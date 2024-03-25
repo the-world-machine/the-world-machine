@@ -1,49 +1,71 @@
-import database
+from genericpath import exists
 from typing import Union
-import importlib
-import os
+from yaml import safe_load
+import io
+import utilities.bot_icons as icons
+from dataclasses import dataclass
 
 languages = {}
 
-def load_languages():
+@dataclass
+class Localization:
+    locale: str
     
-    for file in os.listdir('bot/localization/locales'):
-        if file.endswith('.py'):
-            language = file.replace('.py', '')
-            module = importlib.import_module(f'localization.locales.{language}')
-            
-            languages[language] = module
+    def l(self, localization_path: str, **variables: str) -> Union[str, list[str], dict]:
+        value = fetch_language(self.locale)
 
-async def get_lang(guild_id: int):
-    
-    server_data = await database.ServerData(guild_id).fetch()
-    
-    server_language: str = server_data.language
-
-    language_module = importlib.reload(languages[server_language])
-    
-    data = getattr(language_module, 'text')
-    return data
-
-async def loc(guild_id: int, *args: str, values: dict = {}) -> Union[str, list[str], dict]:
-    t = await get_lang(guild_id)
-
-    # Call the 'text' function with the 'l_args' dictionary
-    text: dict = t(values)
-
-    # Get the values for the specified category and value
-    for arg in args:
-        text = text.get(arg, None)
+        parsed_path = localization_path.split('.')
         
-        if text is None:
-            break
-
-    if text is None:
-        result = f'⚠️ ``{args}`` is not localized.'
-    else:
-        result = text
+        # Get the values for the specified category and value
+        for path in parsed_path:
+            
+            try:
+                value = value[path]
+            except:
+                return f'`{localization_path}` is not a valid localization path.'
+        
+        result = value
+        
+        if type(result) == dict or type(result) == list:
+            return result
+        else:
+            return assign_variables(result, **variables)
+            
+def fetch_language(locale: str):
     
+    locale_value = locale
+    
+    if '-' in locale:
+        l_prefix = locale.split('-')[0] # Create prefix for locale, for example en_UK and en_US becomes en.
+
+        if locale.startswith(l_prefix):
+            locale_value = l_prefix + '-#'
+    
+    if exists(f'bot/localization/locales/{locale_value}.yaml'):
+        with open(f'bot/localization/locales/{locale_value}.yaml', 'r', encoding='utf-8') as f:
+            return safe_load(f)
+    else:
+        
+        print(f'Failed to load localization for {locale}.')
+        
+        with open(f'bot/localization/locales/en-#.yaml', 'r', encoding='utf-8') as f:
+            return safe_load(f)
+    
+def assign_variables(result: str, **variables: str):
+    
+    general_icons = {
+        'wool_icon': icons.icon_wool,
+        'loading_icon': icons.icon_loading
+    }
+    
+    for name, data in {**variables, **general_icons}.items():
+        
+        if type(data) != str:
+            data = fnum(data)
+        
+        result = result.replace(f'[{name}]', data)
+        
     return result
 
-def l_num(num: int) -> str:
+def fnum(num: int) -> str:
     return f'{num:>,}'

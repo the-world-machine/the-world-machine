@@ -13,16 +13,18 @@ class Command(Extension):
     async def translate(self, ctx: ContextMenuContext):
 
         await ctx.defer(ephemeral=True)
+        
+        target: Message = ctx.target
 
-        user_data = await UserData(ctx.target.author.id).fetch()
+        user_data: UserData = await UserData(target.author.id).fetch()
         
         target_language = user_data.translation_language
         
-        content = ctx.target.content
+        content = target.content
         
-        if ctx.target.embeds:
-           content = f'{content}\n\n`EMBED:` {ctx.target.embeds[0].description}' 
+        if target.embeds:
+           content = f'{content}\n\n`EMBED:` {target.embeds[0].description}' 
 
-        message = translator.translate_text(content, target_lang=target_language)
+        message: deepl.TextResult = translator.translate_text(content, target_lang=target_language)
 
         await ctx.send(message.text, ephemeral=True)

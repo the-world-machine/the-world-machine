@@ -1,13 +1,10 @@
 from datetime import datetime
 import random
-from typing import Union
 import aiofiles
 import json
 
-from interactions import SlashContext
-from utilities.shop.fetch_items import fetch_background, fetch_item, fetch_treasure
-import database
-from localization.loc import loc
+from utilities.shop.fetch_items import fetch_background, fetch_treasure
+from localization.loc import Localization
 from dataclasses import dataclass
 import json
 
@@ -15,7 +12,7 @@ import json
 class DictItem:
     nid: str
     cost: int
-    image: Union[int, str]
+    image: str
     type: int
         
 @dataclass
@@ -42,7 +39,7 @@ class ShopData:
         
         self.background_stock: list[DictItem] = []
         
-        all_bgs = await fetch_background('all')
+        all_bgs = await fetch_background()
         
         for nid in backgrounds:
             
@@ -55,7 +52,7 @@ class ShopData:
             
         self.treasure_stock: list[DictItem] = []
         
-        all_treasures = await fetch_treasure('all')
+        all_treasures = await fetch_treasure()
             
         for nid in treasures:
             
@@ -88,16 +85,16 @@ async def update_shop(shop_data: dict):
     async with aiofiles.open('bot/data/shop.json', 'w') as f:
         await f.write(json.dumps(shop_data, indent=4))
 
-async def reset_shop_data(guild_id: int):
+async def reset_shop_data(loc: str):
     
     data: dict = await fetch_shop()
     
-    unparsed_backgrounds = await fetch_background('all')
+    unparsed_backgrounds = await fetch_background()
     
     backgrounds = [bg for bg in unparsed_backgrounds if unparsed_backgrounds[bg]['type'] != 0]
         
-    treasures = await fetch_treasure('all')
-    motds = await loc(guild_id, 'Shop', 'MainShop', 'motds')
+    treasures = await fetch_treasure()
+    motds = Localization(loc).l('shop.motds')
     
     data['backgrounds'] = []
     data['treasures'] = []
