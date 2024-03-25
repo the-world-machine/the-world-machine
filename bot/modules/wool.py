@@ -282,7 +282,7 @@ class Command(Extension):
                         ticker += f'{s} ┋ '
             
             return Embed(
-                description=f"## Slot Machine\n\n{ctx.author.mention} has bet {icons.icon_wool}{fnum(win_amount)}.\n{ticker}",
+                description=f"## Slot Machine\n\n{ctx.author.mention} has bet {icons.icon_wool}{fnum(amount)}.\n{ticker}",
                 color=0x8B00CC,
             )
             
