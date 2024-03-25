@@ -42,7 +42,7 @@ class Command(Extension):
     
     async def start_interaction(self, ctx: SlashContext, who: User):
         
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
 
         if ctx.author.id == who.id:
             await fancy_message(ctx, loc.l('interact.twm_is_fed_up_with_you', user=ctx.author.mention), ephemeral=True, color=0XFF0000)
@@ -56,9 +56,9 @@ class Command(Extension):
             await fancy_message(ctx, loc.l('interact.twm_questioning_if_youre_stupid_or_not', bot=who.mention, user=ctx.author.mention), ephemeral=True, color=0XFF0000)
             return
         
-        menu = await self.open_interactions_select(ctx.guild_locale, who)
+        menu = await self.open_interactions_select(ctx.locale, who)
         
-        localization = Localization(ctx.guild_locale)
+        localization = Localization(ctx.locale)
         
         await ctx.send(content=localization.l('interact.selected', user=who.mention), components=menu, ephemeral=True)
     
@@ -72,7 +72,7 @@ class Command(Extension):
         interaction = result[0]
         user = result[1]
         
-        localization = Localization(ctx.guild_locale)
+        localization = Localization(ctx.locale)
         
         action = localization.l(f'interact.options.{interaction}.action', user=user)
         

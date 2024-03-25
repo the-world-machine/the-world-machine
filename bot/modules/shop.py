@@ -36,7 +36,7 @@ class Shop(Extension):
          
         await ctx.defer(edit_origin=True)
         
-        await self.load_shop(ctx.guild_locale)
+        await self.load_shop(ctx.locale)
         
         treasure = ctx.values[0]
         
@@ -74,7 +74,7 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        localization = Localization(ctx.guild_locale)
+        localization = Localization(ctx.locale)
         
         await self.load_shop(ctx.guild_id)
         
@@ -145,7 +145,7 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        localization = Localization(ctx.guild_locale)
+        localization = Localization(ctx.locale)
         
         await self.load_shop(ctx.guild_id)
         
@@ -214,7 +214,7 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        localization = Localization(ctx.guild_locale)
+        localization = Localization(ctx.locale)
         
         user: UserData = await UserData(ctx.author.id).fetch()
         
@@ -257,7 +257,7 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        localization = Localization(ctx.guild_locale)
+        localization = Localization(ctx.locale)
         
         user_data: UserData = await UserData(ctx.author.id).fetch()
         nikogotchi: NikogotchiData = await NikogotchiData(ctx.author.id).fetch()
@@ -293,7 +293,7 @@ class Shop(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        localization = Localization(ctx.guild_locale)
+        localization = Localization(ctx.locale)
         
         user_data: UserData = await UserData(ctx.author.id).fetch()
         nikogotchi_data: NikogotchiData = await NikogotchiData(ctx.author.id).fetch()
@@ -391,7 +391,7 @@ class Shop(Extension):
 
         await self.load_shop(ctx.guild_id)
         
-        localization = Localization(ctx.guild_locale)
+        localization = Localization(ctx.locale)
         
         user_data: UserData = await UserData(ctx.author.id).fetch()
         
@@ -857,7 +857,7 @@ class Shop(Extension):
         
         await ctx.defer(ephemeral=True)
         
-        await self.load_shop(ctx.guild_locale)
+        await self.load_shop(ctx.locale)
         
         embed, button = await self.embed_manager(ctx, 'main_shop')
         embed.color = 0x02f2c6

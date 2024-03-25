@@ -221,7 +221,7 @@ class Command(Extension):
 
         nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
         
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
 
         if nikogotchi_data.data:
             msg = await fancy_message(ctx, loc.l('nikogotchi.loading'))
@@ -331,7 +331,7 @@ class Command(Extension):
         if custom_id == 'exit':
             await ctx.delete()
             
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
             
         nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
         nikogotchi = await self.get_nikogotchi(uid)
@@ -407,7 +407,7 @@ class Command(Extension):
 
         dialogue = '...'
         
-        buttons = self.nikogotchi_buttons(uid, ctx.guild_locale)
+        buttons = self.nikogotchi_buttons(uid, ctx.locale)
         select = await self.feed_nikogotchi(ctx)
 
         if nikogotchi.status == 2:
@@ -431,7 +431,7 @@ class Command(Extension):
         if custom_id == 'callback':
             nikogotchi.status = 2
 
-        embed = await self.get_main_nikogotchi_embed(ctx.guild_locale, age, dialogue, [], nikogotchi)
+        embed = await self.get_main_nikogotchi_embed(ctx.locale, age, dialogue, [], nikogotchi)
 
         if not custom_id == 'feed':
             if nikogotchi.status == 2:
@@ -486,7 +486,7 @@ class Command(Extension):
             buttons[2].label = 'Call Back'
             buttons[2].custom_id = f'action_callback_{uid}'
             
-            embed = await self.get_main_nikogotchi_embed(ctx.guild_locale, age, dialogue, treasures_found, nikogotchi)
+            embed = await self.get_main_nikogotchi_embed(ctx.locale, age, dialogue, treasures_found, nikogotchi)
             embed.set_image(url='')
 
         await self.save_nikogotchi(nikogotchi, ctx.author.id)
@@ -503,7 +503,7 @@ class Command(Extension):
         
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
         
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
         
         options = False
 
@@ -586,7 +586,7 @@ class Command(Extension):
         hunger_increase = 0
         health_increase = 0
         
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
 
         if value == 'goldenpancake':
             if golden_pancakes <= 0:
@@ -628,10 +628,10 @@ class Command(Extension):
 
         await self.save_nikogotchi(nikogotchi, ctx.author.id)
 
-        buttons = self.nikogotchi_buttons(ctx.author.id, ctx.guild_locale)
+        buttons = self.nikogotchi_buttons(ctx.author.id, ctx.locale)
         select = await self.feed_nikogotchi(ctx)
 
-        embed = await self.get_main_nikogotchi_embed(ctx.guild_locale, await self.get_nikogotchi_age(ctx.author.id),
+        embed = await self.get_main_nikogotchi_embed(ctx.locale, await self.get_nikogotchi_age(ctx.author.id),
                                                      dialogue, [], nikogotchi)
 
         await ctx.edit_origin(embed=embed, components=[ActionRow(select), ActionRow(*buttons)])
@@ -639,7 +639,7 @@ class Command(Extension):
     @nikogotchi.subcommand(sub_cmd_description='Send away your Nikogotchi.')
     async def send_away(self, ctx: SlashContext):
         
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
 
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
         
@@ -676,7 +676,7 @@ class Command(Extension):
 
         nikogotchi = await self.get_nikogotchi(ctx.author.id)
         
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
 
         if nikogotchi is None:
             return await fancy_message(ctx, loc.l('nikogotchi.other.you_invalid'), ephemeral=True, color=0xff0000)
@@ -695,7 +695,7 @@ class Command(Extension):
 
         nikogotchi = await self.get_nikogotchi(uid)
         
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
 
         if nikogotchi is None:
             return await fancy_message(ctx, loc.l('nikogotchi.other.other_invalid'), ephemeral=True, color=0xff0000)
@@ -725,7 +725,7 @@ class Command(Extension):
         nikogotchi_one = await self.get_nikogotchi(ctx.author.id)
         nikogotchi_two = await self.get_nikogotchi(user.id)
         
-        loc = Localization(ctx.guild_locale)
+        loc = Localization(ctx.locale)
         
         if nikogotchi_one is None:
             return await fancy_message(ctx, loc.l('nikogotchi.other.you_invalid'), ephemeral=True, color=0xff0000)
@@ -776,7 +776,7 @@ class Command(Extension):
     @slash_option('user', description='The user to view.', opt_type=OptionType.USER, required=True)
     async def treasure(self, ctx: SlashContext, user: User):
         embed = Embed(
-            title=str(Localization(ctx.guild_locale).l('treasure.title', user=user.username)),
+            title=str(Localization(ctx.locale).l('treasure.title', user=user.username)),
             color=0x8b00cc,
         )
 
@@ -788,12 +788,12 @@ class Command(Extension):
 
         for treasure_nid, item in all_treasures.items():
             
-            treasure_loc: dict = Localization(ctx.guild_locale).l(f'items.treasures')
+            treasure_loc: dict = Localization(ctx.locale).l(f'items.treasures')
             
             name = treasure_loc[treasure_nid]['name']
             
             treasure_string += f'<:emoji:{item["image"]}> {name}: **{owned_treasures.get(treasure_nid, 0)}x**\n\n'
 
-        embed.description = str(Localization(ctx.guild_locale).l('treasure.description', user=user.mention, treasure=treasure_string))
+        embed.description = str(Localization(ctx.locale).l('treasure.description', user=user.mention, treasure=treasure_string))
 
         await ctx.send(embed=embed)
