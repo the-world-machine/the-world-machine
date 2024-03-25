@@ -328,10 +328,13 @@ nikogotchi:
     m_title: Give your Nikogotchi a name!
 
   status:
+    normal: Your Nikogotchi seems to be doing fine.
     pet: 🤨 [name] wants attention!
     dirty: 🛀 [name] wants to be cleaned!
     hungry: 🥞 [name] is feeling hungry...
     treasure: ⛏️ [name] is currently finding treasures for you!
+
+    age: "***[years]*** *years*, ***[months]*** *months*, and ***days*** *days*"
 
     danger: 🚨 [name] is at low health! Use Golden Pancakes to restore their health! 🚨
 

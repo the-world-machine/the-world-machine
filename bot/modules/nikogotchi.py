@@ -159,7 +159,7 @@ class Command(Extension):
             color=0x8b00cc
         )
 
-        nikogotchi_status = 'Your Nikogotchi seems to be doing okay.'
+        nikogotchi_status = loc.l('nikogotchi.status.normal')
 
         if n.attention < 20:
             nikogotchi_status = loc.l('nikogotchi.status.pet', name=n.name)
@@ -198,9 +198,11 @@ class Command(Extension):
 
         embed.set_author(name=nikogotchi_status)
 
+        age = loc.l('nikogotchi.status.age', years=age.days, months=age.months, days=age.days)
+        
         description = f'''
         {treasure_found}\n
-        ❤️  {health_progress_bar} ({int(n.health)} / 50)\n\n🍴  {hunger_progress_bar} ({n.hunger} / 50)\n🫂  {attention_progress_bar} ({n.attention} / 50)\n🧽  {cleanliness_progress_bar} ({n.cleanliness} / 50)\n\n⏰  ***{age.years}*** *years*, ***{age.months}*** *months*, ***{age.days}*** *days*
+        ❤️  {health_progress_bar} ({int(n.health)} / 50)\n\n🍴  {hunger_progress_bar} ({n.hunger} / 50)\n🫂  {attention_progress_bar} ({n.attention} / 50)\n🧽  {cleanliness_progress_bar} ({n.cleanliness} / 50)\n\n⏰  {age}
         '''
 
         embed.description = description
