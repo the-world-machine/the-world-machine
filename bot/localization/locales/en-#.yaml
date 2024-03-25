@@ -334,7 +334,7 @@ nikogotchi:
     hungry: 🥞 [name] is feeling hungry...
     treasure: ⛏️ [name] is currently finding treasures for you!
 
-    age: "***[years]*** *years*, ***[months]*** *months*, and ***days*** *days*"
+    age: "***[years]*** *years*, ***[months]*** *months*, and ***[days]*** *days*"
 
     danger: 🚨 [name] is at low health! Use Golden Pancakes to restore their health! 🚨
 
