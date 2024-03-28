@@ -36,6 +36,11 @@ class Music(Extension):
     async def on_ready(self):
         # Initializing lavalink instance on bot startup        self.lavalink: Lavalink = Lavalink(self.client)
 
+        self.assign_node()
+
+        print("Music module loaded.")
+        
+    def assign_node(self):
         node_information: dict = load_config('music', 'lavalink')
 
         # Connecting to local lavalink server
@@ -45,8 +50,6 @@ class Music(Extension):
             assert('Unable to grab Lavalink Object.')
 
         self.lavalink.client.register_source(CustomSearch())
-
-        print("Music module loaded.")
 
     async def get_playing_embed(self, player_status: str, player: Player, allowed_control: bool):
 
@@ -180,9 +183,9 @@ class Music(Extension):
     @music.subcommand(sub_cmd_description="Play a song!")
     @slash_option(name="song", description="Input a search term, or paste a link.", opt_type=OptionType.STRING, required=True, autocomplete=True)
     async def play(self, ctx: SlashContext, song: str):
-
+    
         # Getting user's voice state
-        voice_state = ctx.author.voice
+        voice_state = ctx.member.voice
         if not voice_state or not voice_state.channel:
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
                                        ephemeral=True)
@@ -209,7 +212,12 @@ class Music(Extension):
 
             return await ctx.channel.send(embeds=add_to_queue_embed)
         else:
-            await player.play()
+      
+            try:
+                await player.play()
+            except:
+                self.assign_node()
+                await player.play()
 
     def added_to_playlist_embed(self, ctx: SlashContext, player: Player, track: lavalink.AudioTrack):
         add_to_queue_embed = Embed(
@@ -219,8 +227,8 @@ class Music(Extension):
             color=0x1fef2f
         )
 
-        add_to_queue_embed.set_author(name='Requested by ' + ctx.author.user.username,
-                                      icon_url=ctx.author.user.avatar_url)
+        add_to_queue_embed.set_author(name='Requested by ' + ctx.member.username,
+                                      icon_url=ctx.member.avatar.url)
 
         add_to_queue_embed.set_thumbnail(self.get_cover_image(track.identifier))
         add_to_queue_embed.set_footer(text='Was this a mistake? Run /music remove_last to quickly remove.')
