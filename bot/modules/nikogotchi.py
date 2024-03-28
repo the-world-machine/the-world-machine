@@ -198,7 +198,7 @@ class Command(Extension):
 
         embed.set_author(name=nikogotchi_status)
 
-        age = loc.l('nikogotchi.status.age', years=age.days, months=age.months, days=age.days)
+        age = loc.l('nikogotchi.status.age', years=age.years, months=age.months, days=age.days)
         
         description = f'''
         {treasure_found}\n
