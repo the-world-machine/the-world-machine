@@ -38,7 +38,7 @@ async def earn_badge(ctx: GuildChannel, badge_name: str, badge_data: dict, targe
 
 
 async def increment_value(ctx: SlashContext, value_to_increment: str, amount: int = 1, target: User = None):
-    badges = await fetch_badge('all')
+    badges = await fetch_badge()
 
     guild = ctx.channel
 
