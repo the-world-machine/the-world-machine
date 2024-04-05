@@ -58,8 +58,14 @@ class Command(Extension):
         
     @wool.subcommand(sub_cmd_description='Give someone your wool.')
     @slash_option(description='Who to give your wool to...', name='user', required=True, opt_type=OptionType.USER)
-    @slash_option(description='The amount to give, as long as you can afford it.', name='amount', required=True, opt_type=OptionType.INTEGER)
+    @slash_option(description='The amount to give, as long as you can afford it.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=-1, max_value=999999)
     async def give(self, ctx: SlashContext, user: User, amount: int):
+        
+        if user.id == ctx.author.id:
+            return await fancy_message(ctx, '[ No. ]', color=0xff0000)
+        
+        if user.bot:
+            return await fancy_message(ctx, '[ Please do not. ]', 0xff0000)
         
         this_user: db.UserData = await db.UserData(ctx.author.id).fetch()
         target_user: db.UserData = await db.UserData(user.id).fetch()
