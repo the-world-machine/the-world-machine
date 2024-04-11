@@ -1,7 +1,6 @@
 import io
 import json
 import textwrap
-
 import aiofiles
 import aiohttp
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
@@ -60,7 +59,7 @@ async def draw_badges(user: User):
     user_data: db.UserData = await db.UserData(user_id).fetch()
 
     backgrounds = await fetch_background()
-    image: Image = await GetImage(backgrounds[user_data.equipped_bg]['image'])
+    image = await GetImage(backgrounds[user_data.equipped_bg]['image'])
 
     fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
     title_fnt = ImageFont.truetype("bot/font/TerminusTTF-Bold.ttf", 25)  # Font
@@ -137,7 +136,7 @@ async def draw_badges(user: User):
     image.save('bot/images/profile_viewer/result.png')
 
 
-async def GetImage(image_url):
+async def GetImage(image_url: str):
     async with aiohttp.ClientSession() as session:
         async with session.get(image_url) as resp:
             img_data = await resp.read()

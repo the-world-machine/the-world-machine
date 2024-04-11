@@ -31,7 +31,7 @@ class Command(Extension):
     @slash_option(description='Who you want to give it to.', name='user', opt_type=OptionType.USER, required=True)
     async def give(self, ctx: SlashContext, user: User):
         
-        user_data = await db.UserData(user.id).fetch()
+        user_data: db.UserData = await db.UserData(user.id).fetch()
 
         if user.bot:
             await fancy_message(ctx, "[ Can't send bots suns! ]", color=0xFF0000, ephemeral=True)
@@ -54,8 +54,8 @@ class Command(Extension):
             reset_time = now + timedelta(days=1)
             await user_data.update(daily_sun_timestamp=reset_time)
 
-        await bm.increment_value(ctx, 'suns')
-        await bm.increment_value(ctx, 'suns', user)
+        await bm.increment_value(ctx, 'suns', target=ctx.author)
+        await bm.increment_value(ctx, 'suns', target=user)
 
         await ctx.send(f'[ {ctx.author.mention} gave {user.mention} a sun! <:Sun:1026207773559619644> ]')
         

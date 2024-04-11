@@ -147,7 +147,7 @@ class TextBoxGeneration(Extension):
 
         await fancy_message(ctx, f"[ <@{ctx.user.id}>, select a character. ]", ephemeral=True, components=text__)
 
-        char = await self.client.wait_for_component(components=text__)
+        char = await self.bot.wait_for_component(components=text__)
 
         char_ctx = char.ctx
 
@@ -195,7 +195,7 @@ class TextBoxGeneration(Extension):
 
         await ctx.edit(embed=embed, components=select_menu)
 
-        char_ctx = await self.client.wait_for_component(components=select_menu)
+        char_ctx = await self.bot.wait_for_component(components=select_menu)
 
         await char_ctx.ctx.defer(edit_origin=True)
 

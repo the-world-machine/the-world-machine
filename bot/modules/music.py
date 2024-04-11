@@ -240,7 +240,7 @@ class Music(Extension):
     async def play_file(self, ctx: SlashContext, file: Attachment):
 
         # Getting user's voice state
-        voice_state = ctx.author.voice
+        voice_state = ctx.member.voice
 
         if not voice_state or not voice_state.channel:
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
@@ -250,13 +250,13 @@ class Music(Extension):
 
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
 
-        track: list[lavalink.AudioTrack] = await player.get_tracks(file.url)
+        fetched_tracks: list[lavalink.AudioTrack] = await player.get_tracks(file.url)
 
-        if len(track) == 0:
+        if len(fetched_tracks) == 0:
             return await fancy_message(ctx, "[ Attachment must either be a video or audio file. ]", color=0xff0000,
                                        ephemeral=True)
 
-        track: lavalink.AudioTrack = track[0]
+        track: lavalink.AudioTrack = fetched_tracks[0]
 
         track.title = file.filename
         track.uri = file.url
@@ -301,7 +301,7 @@ class Music(Extension):
         if await self.on_cooldown(ctx.author):
             return await fancy_message(ctx, "[ You are on cooldown! ]", color=0xff0000, ephemeral=True)
 
-        voice_state = ctx.author.voice
+        voice_state = ctx.member.voice
         if not voice_state or not voice_state.channel:
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000, ephemeral=True)
 
@@ -332,7 +332,7 @@ class Music(Extension):
     @slash_option(name="position", description="The position of the song you want to remove.", opt_type=OptionType.INTEGER, required=True)
     async def remove(self, ctx: SlashContext, position: int):
 
-        voice_state = ctx.author.voice
+        voice_state = ctx.member.voice
         if not voice_state or not voice_state.channel:
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
                                        ephemeral=True)
@@ -516,7 +516,7 @@ class Music(Extension):
 
     @listen()
     async def voice_state_update(self, event: VoiceUserLeave):
-        player: Player = self.lavalink.get_player(event.author.guild.id)
+        player: Player = self.lavalink.get_player(event.channel.guild.id)
 
         if player is None:
             return
@@ -607,15 +607,15 @@ class Music(Extension):
 
         async with aiohttp.ClientSession() as lyricsSession:
             async with lyricsSession.get(api_url) as jsondata:
-                lyrics: dict = await jsondata.json()
+                lyric_data: dict = await jsondata.json()
 
-        if 'error' in lyrics.keys():
+        if 'error' in lyric_data.keys():
             return Embed(title=f'{track.title} Lyrics', description='No Lyrics found.', color=0xFF0000)
 
-        lyrics = lyrics['lyrics']
+        lyrics = lyric_data['lyrics']
 
         if len(lyrics) > 4080:
-            song = f'{lyrics[:2080]}...\n\nGet the full lyrics [here.]({lyrics.url})'
+            song = f'{lyric_data[:2080]}...\n\nGet the full lyrics [here.]({lyrics.url})'
 
         return Embed(title=f'{track.title} Lyrics', description=lyrics, color=0x8b00cc, footer=EmbedFooter(text=f'Lyrics provided by Some Random API'))
 
