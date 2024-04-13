@@ -227,7 +227,7 @@ class Shop(Extension):
         page = int(match.group(2))
         
         bg_data = await fetch_background()
-        bg = DictItem(nid=bg_id, **bg_data)
+        bg = DictItem(nid=bg_id, **bg_data[bg_id])
         
         owned_backgrounds = user.owned_backgrounds
         
@@ -250,7 +250,7 @@ class Shop(Extension):
             wool=user.wool - bg.cost
         )
         
-        await update(localization.l('shop.traded_fail'))
+        await update(localization.l('shop.traded', price=bg.cost, amount=1, item_name=localization.l(f'items.backgrounds.{bg_id}')))
 
     @component_callback('nikogotchi_buy')
     async def buy_nikogotchi_callback(self, ctx: ComponentContext):
