@@ -4,7 +4,7 @@
 
 ### A discord bot based off the videogame OneShot, and built using the interactions-py library.
 
-For more information on what you can do with this bot, check out our [https://www.theworldmachine.xyz/invite](website.)
+For more information on what you can do with this bot, check out our [website.](https://www.theworldmachine.xyz/invite)
 
 ---
 ## Contributing:
