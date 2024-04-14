@@ -1,5 +1,7 @@
 # The World Machine
 
+![An Icon of The World Machine.](https://avatars.githubusercontent.com/u/160534184?s=280&v=4)
+
 ### A discord bot based off the videogame OneShot, and built using the interactions-py library.
 
 For more information, check out our website: https://www.theworldmachine.xyz/invite
