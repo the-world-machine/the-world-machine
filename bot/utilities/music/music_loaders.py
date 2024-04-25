@@ -14,7 +14,7 @@ class CustomAudioTrack(DeferredAudioTrack):
     # where large playlists are loaded.
 
     async def load(self, client):  # Load our 'actual' playback track using the metadata from this one.
-        result: LoadResult = await client.get_tracks('ytsearch:{0.title} {0.author}'.format(self))  # Search for our track on YouTube.
+        result: LoadResult = await client.get_tracks('ytmsearch:{0.title} {0.author}'.format(self))  # Search for our track on YouTube.
 
         first_track = result.tracks[0]  # Grab the first track from the results.
         base64 = first_track.track  # Extract the base64 string from the track.

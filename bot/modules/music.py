@@ -113,17 +113,23 @@ class Music(Extension):
         queue = player.queue[(page * 10) - 10: (page * 10)]
         i = (page * 10) - 9
         
-        user = await self.client.fetch_user(player.current.requester)
+        if player.current is None:
+            return await fancy_embed('[ There are no tracks in the player! ]')
 
         for song in queue:
             title = song.title
             author = song.author
+            requester = song.requester
+            
+            user = await self.bot.fetch_user(requester)
 
-            queue_list.append(EmbedField(
-                name=f'{i}. {title}',
-                value=f'*by {author}* - Requested by {user.mention}',
-                inline=False
-            ))
+            queue_list.append(
+                EmbedField(
+                    name=f'{i}. {title}',
+                    value=f'*by {author}* - Requested by {user.mention}',
+                    inline=False
+                )
+            )
 
             i += 1
 
@@ -194,8 +200,13 @@ class Music(Extension):
 
         # Connecting to voice channel and getting player instance
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
+        
+        if player is None:
+            self.assign_node
+            
+            player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
 
-        result: LoadResult = await self.lavalink.client.get_tracks(song, check_local=True)  # type: ignore
+        result: LoadResult = await self.lavalink.client.get_tracks(song, check_local=True)
         tracks = result.tracks
 
         if len(tracks) == 0:
@@ -598,8 +609,18 @@ class Music(Extension):
 
         return options
 
-    @staticmethod
-    async def get_lyrics(track: lavalink.AudioTrack):
+    @music.subcommand()
+    async def get_lyrics(self, ctx: SlashContext):
+        '''Get the lyrics of the current song playing.'''
+        
+        await ctx.defer(ephemeral=True)
+        
+        player = self.lavalink.get_player(ctx.guild_id)
+        
+        if player is None or player.current is None:
+            return await fancy_message(ctx, '[ No tracks are currently playing! ]', ephemeral=True)
+        
+        track = player.current
 
         parsed_title = parse.quote(f'{track.title} {track.author}')
 
@@ -610,14 +631,27 @@ class Music(Extension):
                 lyric_data: dict = await jsondata.json()
 
         if 'error' in lyric_data.keys():
-            return Embed(title=f'{track.title} Lyrics', description='No Lyrics found.', color=0xFF0000)
+            return await ctx.send(embed=Embed(title=f'{track.title} Lyrics', description='`[ No Lyrics found. ]`', color=0xFF0000))
 
         lyrics = lyric_data['lyrics']
 
         if len(lyrics) > 4080:
             song = f'{lyric_data[:2080]}...\n\nGet the full lyrics [here.]({lyrics.url})'
 
-        return Embed(title=f'{track.title} Lyrics', description=lyrics, color=0x8b00cc, footer=EmbedFooter(text=f'Lyrics provided by Some Random API'))
+        return await ctx.send(embed=Embed(title=f'{track.title} Lyrics', description=f'```{lyrics}```', color=0x8b00cc, footer=EmbedFooter(text=f'Lyrics provided by Some Random API')))
+    
+    @music.subcommand()
+    async def fetch_player(self, ctx: SlashContext):
+        '''Get the player.'''
+        
+        player = self.lavalink.get_player(ctx.guild_id)
+        
+        if player is None or player.current is None:
+            return await fancy_message(ctx, '[ No tracks are currently playing! ]', ephemeral=True)
+        
+        await fancy_message(ctx, '[ Player should open momentarily. ]', ephemeral=True)
+        
+        await self.on_player(player, ctx.channel)
 
     async def on_player(self, player: Player, channel: GuildText):
 
