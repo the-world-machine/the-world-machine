@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import random
 
 
-class Command(Extension):
+class WoolModule(Extension):
 
 
     current_limit = 0

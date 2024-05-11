@@ -3,7 +3,7 @@ from utilities.fancy_send import *
 from utilities.bot_icons import *
 from localization.loc import Localization
 
-class Command(Extension):
+class InteractModule(Extension):
     
     async def open_interactions_select(self, locale: str, user: User):
         option_list = []

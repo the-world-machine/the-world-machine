@@ -85,6 +85,16 @@ class NikogotchiData(Collection):
     golden_pancakes: int = 1
     glitched_pancakes: int = 0
     
+    level = 0
+    health = 50
+    energy = 5
+    hunger = 50
+    cleanliness = 50
+    happiness = 50
+    
+    id = 0
+    name = 'NONAME'
+    
 # ----------------------------------------------------
 
 connection_uri = load_config('database')

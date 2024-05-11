@@ -5,7 +5,7 @@ from database import ServerData
 from utilities.fancy_send import fancy_message
 
 
-class Command(Extension):
+class SettingsModule(Extension):
     @slash_command(description="Change settings for yourself.")
     async def user_settings(self, ctx: SlashContext):
         await fancy_message(

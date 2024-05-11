@@ -7,7 +7,7 @@ import deepl
 
 translator = deepl.Translator(load_config('deepl'))
 
-class Command(Extension):
+class TranslationModule(Extension):
 
     @message_context_menu(name='💡 Translate...')
     async def translate(self, ctx: ContextMenuContext):

@@ -6,7 +6,7 @@ import utilities.bot_icons as icons
 from utilities.fancy_send import *
 
 
-class Command(Extension):
+class ShippingModule(Extension):
 
     @slash_command(description="Ship two people together.")
     @slash_option(name="who", description="First person. Can be a user.", opt_type=OptionType.STRING, required=True)

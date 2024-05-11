@@ -17,7 +17,7 @@ from database import UserData, ServerData
 from utilities.transmission_connection_manager import *
 
 
-class Transmit(Extension):
+class TransmissionModule(Extension):
 
     @slash_command(description='Transmit to over servers!')
     async def transmit(self, ctx: SlashContext):
@@ -116,16 +116,18 @@ class Transmit(Extension):
         other_server_message = await fancy_message(other_server_channel, f'[ **{ctx.guild.name}** is calling you! ]', components=[connect_button, disconnect_button])
 
         try:
-            other_server_ctx = await self.bot.wait_for_component(components=[connect_button, disconnect_button], timeout=60)
+            other_server_component: Component = await self.bot.wait_for_component(components=[connect_button, disconnect_button], timeout=60)
         except:
 
             await other_server_message.edit(embed=embed_timeout_one, components=[])
             await message.edit(embed=embed_timeout_two)
             return
+        
+        other_server_ctx = other_server_component.ctx
 
-        await other_server_ctx.ctx.defer(edit_origin=True)
+        await other_server_ctx.defer(edit_origin=True)
 
-        button_id = other_server_ctx.ctx.custom_id
+        button_id = other_server_ctx.custom_id
 
         if button_id == 'decline_phone':
 
@@ -138,8 +140,8 @@ class Transmit(Extension):
 
             await asyncio.gather(
                 self.on_transmission(ctx.user, message, ctx.guild_id),
-                self.on_transmission(other_server_ctx.ctx.user, other_server_message, other_server)
-            )
+                self.on_transmission(other_server_ctx.user, other_server_message, other_server)
+            ) # type: ignore
 
     @transmit.subcommand(sub_cmd_description='Transmit to another server.')
     async def connect(self, ctx: SlashContext):
@@ -312,7 +314,7 @@ class Transmit(Extension):
 
     async def check_anonymous(self, guild_id: int, d_user: User, connection: Connection, server_data: ServerData):
 
-        user: Transmit.TransmitUser
+        user: TransmissionModule.TransmitUser
 
         if server_data.anonymous:
             
@@ -322,7 +324,7 @@ class Transmit(Extension):
 
             for i, character in enumerate(connection.characters):
                 if character['id'] == 0 or character['id'] == d_user.id:
-                    user = Transmit.TransmitUser(character['Name'], d_user.id, f'https://cdn.discordapp.com/emojis/{character["Image"]}.png')
+                    user = TransmissionModule.TransmitUser(character['Name'], d_user.id, f'https://cdn.discordapp.com/emojis/{character["Image"]}.png')
 
                     connection.characters[i].update({'id': d_user.id})
                     
@@ -330,9 +332,9 @@ class Transmit(Extension):
 
                     return user
 
-            user = Transmit.TransmitUser(selected_character['name'], d_user.id, selected_character['image'])
+            user = TransmissionModule.TransmitUser(selected_character['name'], d_user.id, selected_character['image'])
         else:
-            user = Transmit.TransmitUser(d_user.username, d_user.id, d_user.display_avatar.url)
+            user = TransmissionModule.TransmitUser(d_user.username, d_user.id, d_user.display_avatar.url)
 
         return user
 
@@ -458,4 +460,4 @@ class Transmit(Extension):
 
 
 def setup(bot):
-    Transmit(bot)
+    TransmissionModule(bot)

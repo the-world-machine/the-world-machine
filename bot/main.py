@@ -13,7 +13,7 @@ import utilities.profile.profile_viewer as view
 import utilities.profile.badge_manager as badge_manager
 import utilities.fetch_capsule_characters as chars
 
-from modules.textbox import TextBoxGeneration
+from modules.textbox import TextboxModule
 
 from utilities.shop.fetch_shop_data import fetch_treasure
 print('\nStarting The World Machine... 1/4')
@@ -87,6 +87,6 @@ async def on_guild_join(event: MemberAdd):
         return
 
     # Generate welcome textbox.
-    await TextBoxGeneration.generate_welcome_message(event.guild, event.member, server_data.welcome_message)
+    await TextboxModule.generate_welcome_message(event.guild, event.member, server_data.welcome_message)
 
 client.start(load_config('token'))

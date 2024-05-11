@@ -10,7 +10,7 @@ from database import NikogotchiData, UserData
 from localization.loc import Localization, fnum
 import re
 
-class Shop(Extension):
+class ShopModule(Extension):
     
     daily_shop: ShopData = None
     

@@ -33,7 +33,7 @@ class Nikogotchi:
     attention: float
     cleanliness: float
 
-class Command(Extension):
+class NikogotchiModule(Extension):
 
     async def get_nikogotchi(self, uid: int):
         nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()

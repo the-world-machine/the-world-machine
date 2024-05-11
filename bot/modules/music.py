@@ -21,7 +21,7 @@ from config_loader import load_config
 
 spotify = Spotify(client_id=load_config('music', 'spotify', 'id'), secret=load_config('music', 'spotify', 'secret'))
 
-class Music(Extension):
+class MusicModule(Extension):
     
     # Base Command
     @slash_command(description="Listen to music using The World Machine!")
@@ -662,7 +662,7 @@ class Music(Extension):
 
         player.store('uid', player_uid)
 
-        main_buttons = Music.get_buttons()
+        main_buttons = self.get_buttons()
 
         niko = '<a:vibe:1027325436360929300>'
         player_state = 'Now Playing...'
@@ -740,7 +740,7 @@ class Music(Extension):
 
             embed = await self.get_queue_embed(player, 1)
 
-            components = await Music.get_queue_buttons()
+            components = await self.get_queue_buttons()
             return await ctx.send(embed=embed, components=components, ephemeral=True)
 
         if ctx.custom_id == 'lyrics':
@@ -819,7 +819,7 @@ class Music(Extension):
 
         embed = await self.get_queue_embed(player, page)
 
-        components = await Music.get_queue_buttons()
+        components = await self.get_queue_buttons()
         await ctx.edit_origin(embed=embed, components=components)
         if message is not None:
             await asyncio.sleep(5)

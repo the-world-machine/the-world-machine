@@ -4,7 +4,7 @@ import utilities.profile.badge_manager as badge_manager
 from utilities.bot_icons import *
 
 
-class Command(Extension):
+class _Module(Extension):
 
     @slash_command(description="This is a Boilerplate Command.")
     @slash_option(name="option_name", description="This is a Boilerplate Option.", opt_type=OptionType.STRING)

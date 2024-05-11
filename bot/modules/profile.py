@@ -11,7 +11,7 @@ import database as db
 from utilities.fancy_send import *
 
 
-class Command(Extension):
+class ProfileModule(Extension):
 
     async def open_backgrounds(self):
         async with aiofiles.open('bot/data/backgrounds.json', 'r') as f:
