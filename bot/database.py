@@ -1,3 +1,4 @@
+from ast import Tuple
 from dataclasses import asdict, dataclass, field
 from typing import Union, Dict, List
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -86,14 +87,16 @@ class NikogotchiData(Collection):
     glitched_pancakes: int = 0
     
     level = 0
-    health = 50
-    energy = 5
-    hunger = 50
-    cleanliness = 50
-    happiness = 50
+    health: Dict[str, int] = field(default_factory={'value': 50, 'max': 50})
+    energy: Dict[str, int] = field(default_factory={'value': 5, 'max': 5})
+    hunger: Dict[str, int] = field(default_factory={'value': 50, 'max': 50})
+    cleanliness: Dict[str, int] = field(default_factory={'value': 50, 'max': 50})
+    happiness: Dict[str, int] = field(default_factory={'value': 50, 'max': 50})
     
-    id = 0
-    name = 'NONAME'
+    id: int = 0
+    name: str = ''
+    status: int = 0
+    immortal: bool = False
     
 # ----------------------------------------------------
 
