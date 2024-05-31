@@ -74,14 +74,19 @@ class ServerData(Collection):
     language: str = 'english'
     allow_ask: bool = True
     welcome_message: str = ''
+    
+@dataclass
+class NikogotchiInformation:
+    name: str
+    emoji: str
+    rarity: str
 
 @dataclass
-class NikogotchiData(Collection):
+class UserNikogotchi(Collection):
     last_interacted: datetime = field(default_factory=lambda: datetime(2000, 1, 1, 0, 0, 0))
     hatched: datetime = field(default_factory=lambda: datetime(2000, 1, 1, 0, 0, 0))
-    data: Dict[str, int] = field(default_factory=dict)
     nikogotchi_available: bool = False
-    rarity: int = 0
+    rarity: str = 'N/A'
     pancakes: int = 5
     golden_pancakes: int = 1
     glitched_pancakes: int = 0
@@ -93,10 +98,15 @@ class NikogotchiData(Collection):
     cleanliness: Dict[str, int] = field(default_factory={'value': 50, 'max': 50})
     happiness: Dict[str, int] = field(default_factory={'value': 50, 'max': 50})
     
-    id: int = 0
+    nikogotchi_id: int = 0
+    room_data: List[int] = field(default_factory=[0, 0, 0, 0, 1, 0, 0, 0 ,0])
     name: str = ''
     status: int = 0
     immortal: bool = False
+    
+    async def fetch_information(self):
+        data = await fetch_items()
+        return NikogotchiInformation(**data['nikogotchi'][self.nikogotchi_id])
     
 # ----------------------------------------------------
 

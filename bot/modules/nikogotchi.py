@@ -13,7 +13,7 @@ from interactions.api.events import Component
 from utilities.fetch_capsule_characters import nikogotchi_list
 from localization.loc import Localization
 from utilities.shop.fetch_items import fetch_treasure
-from database import UserData, NikogotchiData
+from database import UserData, UserNikogotchi
 from utilities.bot_icons import icon_loading
 from utilities.fancy_send import *
 
@@ -24,15 +24,15 @@ class NikogotchiModule(Extension):
         NORMAL = 1
         TREASURE_HUNTING = 2
 
-    async def save_nikogotchi(self, nikogotchi: NikogotchiData, uid: int):
+    async def save_nikogotchi(self, nikogotchi: UserNikogotchi, uid: int):
         
-        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
+        nikogotchi_data: UserNikogotchi = await UserNikogotchi(uid).fetch()
 
         await nikogotchi_data.update(**nikogotchi.__dict__)
         
     async def delete_nikogotchi(self, uid: int):
         
-        nikogotchi_data = await NikogotchiData(uid).fetch()
+        nikogotchi_data = await UserNikogotchi(uid).fetch()
         
         await nikogotchi_data.update(data={})
 
@@ -71,13 +71,13 @@ class NikogotchiModule(Extension):
         ]
 
     async def get_nikogotchi_age(self, uid: int):
-        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
+        nikogotchi_data: UserNikogotchi = await UserNikogotchi(uid).fetch()
 
         return relativedelta.relativedelta(datetime.now(), nikogotchi_data.hatched)
 
     async def get_main_nikogotchi_embed(self, uid: int, locale: str, age: relativedelta.relativedelta, dialogue: str, found_treasure: list[dict]):
         
-        n: NikogotchiData = await NikogotchiData(uid).fetch()
+        n: UserNikogotchi = await UserNikogotchi(uid).fetch()
         
         progress_bar = {
             'empty': {
@@ -202,7 +202,7 @@ class NikogotchiModule(Extension):
 
         uid = ctx.author.id
 
-        nikogotchi: NikogotchiData = await NikogotchiData(uid).fetch()
+        nikogotchi: UserNikogotchi = await UserNikogotchi(uid).fetch()
         
         loc = Localization(ctx.locale)
 
@@ -294,8 +294,8 @@ class NikogotchiModule(Extension):
             
         loc = Localization(ctx.locale)
             
-        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
-        nikogotchi: NikogotchiData = await NikogotchiData(uid).fetch()
+        nikogotchi_data: UserNikogotchi = await UserNikogotchi(uid).fetch()
+        nikogotchi: UserNikogotchi = await UserNikogotchi(uid).fetch()
         
         last_interacted = nikogotchi_data.last_interacted
 
@@ -371,7 +371,7 @@ class NikogotchiModule(Extension):
         buttons = self.nikogotchi_buttons(uid, ctx.locale)
         select = await self.feed_nikogotchi(ctx)
         
-        original_name = 
+        nikogotchi_info = await nikogotchi.fetch_information()
 
         if nikogotchi.status == 2:
             if custom_id == 'pet':
@@ -379,13 +379,13 @@ class NikogotchiModule(Extension):
                 attention_increase = 20
                 nikogotchi.happiness['value'] = min(50, nikogotchi.happiness['value'] + attention_increase)
 
-                dialogue = random.choice(loc.l(f'nikogotchi.dialogue.{nikogotchi.original_name}.pet'))
+                dialogue = random.choice(loc.l(f'nikogotchi.dialogue.{nikogotchi_info.name}.pet'))
 
             if custom_id == 'clean':
                 cleanliness_increase = 30
                 nikogotchi.cleanliness['value'] = min(50, nikogotchi.cleanliness['value'] + cleanliness_increase)
 
-                dialogue = random.choice(loc.l(f'nikogotchi.dialogue.{nikogotchi.original_name}.cleaned'))
+                dialogue = random.choice(loc.l(f'nikogotchi.dialogue.{nikogotchi_info.name}.cleaned'))
 
             if custom_id == 'findtreasure':
                 dialogue = loc.l('nikogotchi.finding_treasure')
@@ -413,7 +413,7 @@ class NikogotchiModule(Extension):
                 buttons[2].label = str(loc.l('nikogotchi.components.call_back'))
                 buttons[2].custom_id = f'action_callback_{uid}'
 
-        embed.set_image(url=f'https://cdn.discordapp.com/emojis/{nikogotchi.emoji}.png')
+        embed.set_image(url=f'https://cdn.discordapp.com/emojis/{nikogotchi_info.emoji}.png')
 
         if nikogotchi.status == 3:
             
@@ -462,9 +462,8 @@ class NikogotchiModule(Extension):
     async def feed_nikogotchi(self, ctx):
         food_options = []
 
-        nikogotchi_data: NikogotchiData = await NikogotchiData(ctx.author.id).fetch()
-        
-        nikogotchi = await self.get_nikogotchi(ctx.author.id)
+        nikogotchi_data: UserNikogotchi = await UserNikogotchi(ctx.author.id).fetch()
+        nikogotchi = await nikogotchi_data.fetch_information()
         
         loc = Localization(ctx.locale)
         
@@ -531,7 +530,6 @@ class NikogotchiModule(Extension):
 
         await ctx.defer(edit_origin=True)
 
-        nikogotchi = await self.get_nikogotchi(ctx.author.id)
         data = ctx.values[0].split('_')
         
         value = data[0]
@@ -540,7 +538,7 @@ class NikogotchiModule(Extension):
         if ctx.author.id != uid:
             return
 
-        nikogotchi_data: NikogotchiData = await NikogotchiData(uid).fetch()
+        nikogotchi_data: UserNikogotchi = await UserNikogotchi(uid).fetch()
         
         pancakes = nikogotchi_data.pancakes
         golden_pancakes = nikogotchi_data.golden_pancakes
@@ -656,7 +654,7 @@ class NikogotchiModule(Extension):
 
         uid = user.id
 
-        nikogotchi = await NikogotchiData(uid).fetch()
+        nikogotchi = await UserNikogotchi(uid).fetch()
         
         loc = Localization(ctx.locale)
 
