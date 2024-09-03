@@ -10,7 +10,7 @@ For more information on what you can do with this bot, check out our [website.](
 ## Contributing:
 
 ### Localization
-In `bot/localization/locales` there are different localization files. Using `base.yaml` as a base, you are free to contribute your own language to the bot. As of current, only the `/shop`, `/interact` and `/nikogotchi` commands supports localization.
+In `bot/localization/locales` there are different localization files. Using `en_#.yaml` as a base, you are free to contribute your own language to the bot. As of current, only the `/shop`, `/interact` and `/nikogotchi` commands supports localization.
 
 ### Pull Requests
 As with any other repo, pull requests and bug reporting is always welcomed.
