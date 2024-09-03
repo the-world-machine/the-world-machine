@@ -6,7 +6,7 @@ from utilities.fancy_send import *
 from utilities.bot_icons import *
 from utilities.shop.fetch_shop_data import DictItem, Item, ShopData, fetch_shop_data, reset_shop_data
 from datetime import datetime, timedelta
-from database import NikogotchiData, UserData
+from database import Nikogotchi, UserData
 from localization.loc import Localization, fnum
 import re
 
@@ -260,7 +260,7 @@ class ShopModule(Extension):
         localization = Localization(ctx.locale)
         
         user_data: UserData = await UserData(ctx.author.id).fetch()
-        nikogotchi: NikogotchiData = await NikogotchiData(ctx.author.id).fetch()
+        nikogotchi: Nikogotchi = await Nikogotchi(ctx.author.id).fetch()
         
         capsule_id = random.randint(0, 3)
         
@@ -276,13 +276,13 @@ class ShopModule(Extension):
             
             await ctx.edit(embed=embed, components=components)
         
-        if nikogotchi.data or nikogotchi.nikogotchi_available:
+        if nikogotchi.status > -1 or nikogotchi.available:
             return await update(localization.l('shop.traded_fail'))
         
         if user_data.wool < nikogotchi_capsule.cost:
             return await update(localization.l('shop.traded_fail'))
         
-        await nikogotchi.update(nikogotchi_available=True, rarity=capsule_id)
+        await nikogotchi.update(available=True, rarity=capsule_id)
         await user_data.update(wool=user_data.wool - nikogotchi_capsule.cost)
         
         await update(localization.l('shop.nikogotchi.result', amount=nikogotchi_capsule.cost, capsule_name=capsule_loc))
@@ -296,7 +296,7 @@ class ShopModule(Extension):
         localization = Localization(ctx.locale)
         
         user_data: UserData = await UserData(ctx.author.id).fetch()
-        nikogotchi_data: NikogotchiData = await NikogotchiData(ctx.author.id).fetch()
+        nikogotchi_data: Nikogotchi = await Nikogotchi(ctx.author.id).fetch()
         
         match = self.r_buy_object.match(ctx.custom_id)
         
@@ -461,7 +461,7 @@ class ShopModule(Extension):
         
         elif category == 'capsules':
             
-            nikogotchi: NikogotchiData = await NikogotchiData(ctx.author.id).fetch()
+            nikogotchi: Nikogotchi = await Nikogotchi(ctx.author.id).fetch()
             capsules: dict = await fetch_item()
             cost = 50_000
             
@@ -481,7 +481,7 @@ class ShopModule(Extension):
                 custom_id=f'nikogotchi_buy'
             )
                 
-            if nikogotchi.nikogotchi_available or nikogotchi.data:
+            if nikogotchi.available or nikogotchi.status > -1:
                 button.disabled = True
                 button.style = ButtonStyle.RED
                 button.label = b_owned
@@ -509,7 +509,7 @@ class ShopModule(Extension):
         
             pancake_data = await fetch_item()
             
-            nikogotchi_data: NikogotchiData = await NikogotchiData(ctx.author.id).fetch()
+            nikogotchi_data: Nikogotchi = await Nikogotchi(ctx.author.id).fetch()
             json_data = asdict(nikogotchi_data)
             
             pancake_text = ''

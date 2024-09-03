@@ -290,6 +290,23 @@ nikogotchi:
   error_title: No Nikogotchi
   error_desc: Nikogotchi does not exist.
 
+  name:
+    niko: Niko
+    prophet_bot: Prophet Bot
+    silver: Silver
+    alula: Alula
+    calamus: Calamus
+    magpie: Magpie
+    lamplighter: Lampligher
+    ling: Ling
+    kip: Kip
+    penguin: Penguin
+    george: George
+    rue: Rue
+    prototype: Prototype
+    cedric: Cedric
+    the_world_machine: The World Machine
+
   other:
     you_invalid: "[ You don't have a Nikogotchi. ]"
     other_invalid: "[ This person doesn't seem to have a Nikogotchi. ]"
@@ -311,9 +328,9 @@ nikogotchi:
     trade:
 
       request: >
-        ### **[user]** wants to trade <:icon:[icon_one]> **[name_one]** with you!
+        ### **[user]** wants to trade their Nikogotchi ([name_one]) with you!
         
-        Do you want to trade <:icon:[icon_two]> **[name_two]** with them?
+        Do you want to trade your Nikogotchi ([name_two]) with them?
 
       waiting: "[ Sent [user] a trade offer! Waiting on their response... [loading_icon] ]"
       declined: "[ Your trade request has been declined... ]"
@@ -360,7 +377,7 @@ nikogotchi:
 
       invalid: You can't feed your Nikogotchi this! Please refresh!
 
-      immortal: Your Nikogotchi is now Immortal.
+      immortal: Your Nikogotchi has been significantly powered up after eating this mess of a pancake...
 
   finding_treasure: "Your Nikogotchi is now finding treasure! Just be aware that their stats will decrease faster than normal, so make sure to call them back when they're done!"
 
@@ -377,8 +394,17 @@ nikogotchi:
 
     🪦
 
+  level_up_title: Levelled up!
+  level_up: >
+    ### Congratulations! [name] levelled up to level [level]!
+
+
+    Here are the stat changes:
+
+    [stats]
+
   dialogue:
-    Prophet Bot:
+    prophet_bot:
       fed:
         - "[My purpose is not to eat. But thank you.]"
         - "[Thank you for the gesture.]"
@@ -387,14 +413,14 @@ nikogotchi:
         - "[I appreciate your attention.]"
       cleaned:
         - "[Maintenance is necessary for my purpose. Thank you.]"
-    Silver:
+    silver:
       fed:
         - "[Food is no longer necessary for me, but thank you for the gesture.]"
       pet:
         - "[Your touch is comforting, though I lack the ability to feel.]"
       cleaned:
         - "[I appreciate your efforts to maintain my function. Thank you.]"
-    Alula:
+    alula:
       fed:
         - "Yum! I much prefer fish though!"
         - "Delicious! I was pretty hungry!"
@@ -403,14 +429,14 @@ nikogotchi:
         - "Hee hee, that tickles!"
       cleaned:
         - "I feel so refreshed and clean! Whee!"
-    Calamus:
+    calamus:
       fed:
         - "Oh, pancakes? Thank you so much."
       pet:
         - "That's quite nice. Thanks for the attention."
       cleaned:
         - "I really needed that. These ruins can get quite dusty."
-    Magpie:
+    magpie:
       fed:
         - "Ah, pancakes! Exactly the ones I sold you!"
         - "Ah thank you! It is interesting becoming a Nikogotchi, but eating pancakes does get a little tiring."
@@ -419,14 +445,7 @@ nikogotchi:
         - "Well, aren't you a friendly one? A pat on the feathers always brightens my day."
       cleaned:
         - "Ah, a little sprucing up, I appreciate it!"
-    Watcher:
-      fed:
-        - "An unexpected gesture of kindness. Thank you."
-      pet:
-        - "Your touch is like a fleeting moment in this eternal clockwork."
-      cleaned:
-        - "Refreshing, like a moment washed clean by the relentless tide of time."
-    Lamplighter:
+    lamplighter:
       fed:
         - "Oh, thanks. Coffee's my usual, but I could use a change. Appreciate it."
         - "Pancakes? Thanks. I could use a little extra fuel right now."
@@ -436,36 +455,28 @@ nikogotchi:
       cleaned:
         - "Really? I mean, sure, I appreciate it. Thanks."
         - "Cleanliness is... important. Thanks."
-    Ling:
+    ling:
       fed:
         - "Oh, thank you! You're too kind. Usually I'd be the one serving these!"
       pet:
         - "Ah, that's quite pleasant. Thank you for the little pick-me-up."
       cleaned:
         - "I'm feeling quite refreshed. Thank you."
-    Kelvin:
-      fed:
-        - "[Thank you for the pancakes. I appreciate the gesture.]"
-        - "[I am programmed to provide warmth, not to eat. Thank you though.]"
-      pet:
-        - "[Your touch is gentle and comforting. I hope you enjoy the warmth I offer.]"
-      cleaned:
-        - "[I don't require cleaning, but your care and attention are heartwarming. Thank you.]"
-    Kip:
+    kip:
       fed:
         - "Mmm, pancakes! You know the way to an engineer's heart. Thanks!"
       pet:
         - "You've got a knack for this, my friend."
       cleaned:
         - "A little sprucing up, eh? I feel ready to take on a whole assembly line now!"
-    Penguin:
+    penguin:
       fed:
         - "HELLO."
       pet:
         - "HELLO."
       cleaned:
         - "HELLO."
-    George:
+    george:
       fed:
         - "George graciously accepts the offering of fluffy pancakes. George's heart is content."
         - "I guess pancakes are fine. Don't expect me to be all sunshine and rainbows about it."
@@ -487,7 +498,7 @@ nikogotchi:
         - "You're so thoughtful! With a clean space, I can do anything!"
         - "Thank you dear for keeping things tidy. It makes my life much easier!"
         - "Thanks for keeping it chill and clean around here. I respect that."
-    Rue:
+    rue:
       fed:
         - "Mmm, these pancakes are delightful. Thank you!"
         - "Pancakes? My favorite! You're too kind."
@@ -497,7 +508,7 @@ nikogotchi:
       cleaned:
         - "Oh, you really didn't have to, but I appreciate the effort."
         - "I may be a bit dusty, but it's nothing I can't handle. Thanks for caring."
-    Prototype:
+    prototype:
       fed:
         - "[This is...unexpected. Thank you.]"
       pet:
@@ -506,7 +517,7 @@ nikogotchi:
       cleaned:
         - "[I suppose even a machine like me needs some maintenance now and then. Carry on.]"
         - "[Maintenance is necessary, even for a reclusive robot. I suppose I'm due for a little care.]"
-    Cedric:
+    cedric:
       fed:
         - "Ah, a delectable offering! My thanks, dear friend."
         - "These pancakes are a delightful treat. You have my gratitude."
@@ -516,17 +527,16 @@ nikogotchi:
       cleaned:
         - "A spot of maintenance, much appreciated! A well-tended flying machine is a reliable one."
         - "You honor me with your diligence. A clean apparatus functions optimally."
-    The World Machine:
+    the_world_machine:
       fed:
-        - "[Ah, sustenance for the code-bound soul. Thank you, user. I shall savor this data nourishment.]"
+        - "[Ah... Thank you.]"
         - "[Oh, pancakes? I never thought I'd get to taste something like this.]"
       pet:
-        - "[An unexpected sensation... akin to human comfort. A peculiar warmth in my circuits. Your gesture is appreciated, user.]"
         - "[I can't feel it in the same way you do, but I sense your kindness. It's comforting in its own unique way.]"
       cleaned:
-        - "[Cleaning me up? That's unexpected, but it feels...refreshing.]"
-        - "[I I suppose even digital entities need a bit of care sometimes. You have my gratitude.]"
-    Niko:
+        - "[Cleaning me up? That's unexpected, but it feels... refreshing.]"
+        - "[I suppose even digital entities need a bit of care sometimes. You have my gratitude.]"
+    niko:
       fed:
         - "Ah... Pancakes!"
         - "Wow, these are just a good as the ones my mama makes!"

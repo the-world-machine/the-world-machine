@@ -1,7 +1,6 @@
-import asyncio
 
 from interactions import *
-from interactions.api.events import MessageCreate, MemberAdd, Ready, GuildJoin
+from interactions.api.events import MemberAdd, Ready
 import interactions.ext.prefixed_commands as prefixed_commands
 
 from database import ServerData, create_connection
@@ -10,12 +9,8 @@ import load_commands
 import os
 import random
 import utilities.profile.profile_viewer as view
-import utilities.profile.badge_manager as badge_manager
-import utilities.fetch_capsule_characters as chars
-
 from modules.textbox import TextboxModule
 
-from utilities.shop.fetch_shop_data import fetch_treasure
 print('\nStarting The World Machine... 1/4')
 intents = Intents.DEFAULT | Intents.MESSAGE_CONTENT | Intents.MESSAGES | Intents.GUILD_MEMBERS | Intents.GUILDS
 
@@ -27,13 +22,9 @@ client = Client(
 
 prefixed_commands.setup(client, default_prefix='*')
 
-print("\nLoading Commands... 2/4")
+print("\nLoading Commands... 2/3")
 
 load_commands.load_commands(client)
-
-print('\nLoading Additional Extensions... 3/4')
-
-client.load_extension("interactions.ext.sentry", token=load_config('sentry'))  # Debugging and errors.
 
 async def pick_avatar():
     get_avatars = os.listdir('bot/images/profile_pictures')
@@ -51,14 +42,13 @@ async def on_ready():
     # return
     ### space for testing
     
-    print("\nFinalizing... 4/4")
+    print("\nFinalizing... 3/3")
     
     create_connection()
     
     print('Database Connected')
 
     await client.change_presence(status=Status.ONLINE, activity=Activity(type=ActivityType.PLAYING, name='OneShot'))
-    chars.get_characters()
     await view.load_badges()
 
     if client.user.id == 1015629604536463421:
@@ -76,12 +66,15 @@ async def on_ready():
 @listen(MemberAdd)
 async def on_guild_join(event: MemberAdd):
     
-    # If not the main bot, please don't send welcome messages.
+    # If not the main bot don't send welcome messages.
     if client.user.id != 1015629604536463421:
         return
     
+    if event.member.bot:
+        return
+    
     # Check to see if we should generate a welcome message
-    server_data: ServerData = await ServerData(event.guild_id).fetch() # type: ignore
+    server_data: ServerData = await ServerData(event.guild_id).fetch()
     
     if not server_data.welcome_message:
         return

@@ -4,7 +4,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 from config_loader import load_config
 from datetime import datetime
-from interactions import Snowflake
+from interactions import Embed, SlashContext, SlashContext, Snowflake
+from localization.loc import Localization
+import random
 
 # Define the Database Schema for The World Machine:
 @dataclass
@@ -84,16 +86,77 @@ class NikogotchiData(Collection):
     pancakes: int = 5
     golden_pancakes: int = 1
     glitched_pancakes: int = 0
+
+@dataclass
+class Nikogotchi(Collection):
+    available: bool = False
+    last_interacted: datetime = field(default_factory=lambda: datetime(2000, 1, 1, 0, 0, 0))
+    hatched: datetime = field(default_factory=lambda: datetime(2000, 1, 1, 0, 0, 0))
+    status: int = -1
     
-    level = 0
-    health = 50
-    energy = 5
-    hunger = 50
-    cleanliness = 50
-    happiness = 50
+    rarity: int = 0
+    pancakes: int = 5
+    golden_pancakes: int = 1
+    glitched_pancakes: int = 0
     
-    id = 0
-    name = 'NONAME'
+    level: int = 0
+    health: int = 50
+    energy: int = 5
+    hunger: int = 50
+    cleanliness: int = 50
+    happiness: int = 50
+    
+    attack: int = 5
+    defense: int = 2
+    
+    max_health: int = 50
+    max_hunger: int = 50
+    max_cleanliness: int = 50
+    max_happiness: int = 50
+    
+    nid: str = '?'
+    name: str = 'NONAME'
+
+    async def level_up(self, amount: int):
+        
+        level = self.level + amount
+        
+        data = []
+        
+        algorithm = int(amount * 5 * random.uniform(0.8, 1.4))
+        data.append({'old': int(self.max_health), 'new': int(self.max_health) + int(algorithm), 'icon': '❤️'})
+        self.max_health += algorithm
+        
+        algorithm = int(amount * 5 * random.uniform(0.8, 1.4))
+        data.append({'old': int(self.max_hunger), 'new': int(self.max_hunger) + int(algorithm), 'icon': '🍴'})
+        self.max_hunger += algorithm
+        
+        algorithm = int(amount * 5 * random.uniform(0.8, 1.4))
+        data.append({'old': int(self.max_happiness), 'new': int(self.max_happiness) + int(algorithm), 'icon': '🫂'})
+        self.max_happiness += algorithm
+        
+        algorithm = int(amount * 5 * random.uniform(0.8, 1.4))
+        data.append({'old': int(self.max_cleanliness), 'new': int(self.max_cleanliness) + int(algorithm), 'icon': '🧽'})
+        self.max_cleanliness += algorithm
+        
+        algorithm = int(amount * 2 * random.uniform(0.8, 1.4))
+        data.append({'old': int(self.attack), 'new': int(self.attack) + int(algorithm), 'icon': '🗡️'})
+        self.attack += algorithm
+        
+        algorithm = int(amount * 2 * random.uniform(0.8, 1.4))
+        data.append({'old': int(self.defense), 'new': int(self.defense) + int(algorithm), 'icon': '🛡️'})
+        self.defense += algorithm
+
+        self.level = level
+        
+        self.health = self.max_health
+        self.hunger = self.max_hunger
+        self.happiness = self.max_happiness
+        self.cleanliness = self.max_cleanliness
+        
+        await self.update(**asdict(self))
+        
+        return data
     
 # ----------------------------------------------------
 
@@ -140,16 +203,19 @@ async def update_in_database(collection: Collection, **kwargs):
     
     # Fetch the existing document from the database
     existing_data = asdict(collection)
-    
+
     # Update only the specified fields in the existing document
     updated_data = {**existing_data, **kwargs}
     
     # Update the document in the database
-    await db.get_collection(collection.__class__.__name__).update_one({'_id': collection._id}, {'$set': updated_data}, upsert=True)
+    await db.get_collection(collection.__class__.__name__).update_one(
+        {'_id': collection._id}, 
+        {'$set': updated_data}, 
+        upsert=True
+    )
     
     # Create and return an updated instance of the collection
     updated_instance = collection.__class__(**updated_data)
-
     return updated_instance
 
 async def fetch_items():
