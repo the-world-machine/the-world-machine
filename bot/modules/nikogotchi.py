@@ -636,7 +636,7 @@ class NikogotchiModule(Extension):
                 pancakes -= 1
                 dialogue = random.choice(loc.l(f'nikogotchi.dialogue.{nikogotchi.nid}.fed'))
                 
-        await nikogotchi_data.update(
+        await nikogotchi.update(
             pancakes = pancakes,
             golden_pancakes = golden_pancakes,
             glitched_pancakes = glitched_pancakes
