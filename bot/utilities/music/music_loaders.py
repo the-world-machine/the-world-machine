@@ -1,4 +1,4 @@
-from lavalink.models import (DeferredAudioTrack, LoadResult, LoadType, PlaylistInfo, Source)
+from lavalink import DeferredAudioTrack, LoadResult, LoadType, PlaylistInfo, Source
 
 from utilities.music.spotify_api import Spotify
 from config_loader import load_config

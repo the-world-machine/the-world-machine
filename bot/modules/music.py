@@ -10,7 +10,6 @@ from interactions import *
 from interactions.api.events import *
 from interactions_lavalink import Lavalink, Player
 from interactions_lavalink.events import TrackStart
-from lavalink.models import LoadResult
 
 import utilities.bot_icons as icons
 from utilities.music.music_loaders import CustomSearch
@@ -44,7 +43,7 @@ class MusicModule(Extension):
         node_information: dict = load_config('music', 'lavalink')
 
         # Connecting to local lavalink server
-        self.lavalink.add_node(node_information['ip'], node_information['port'], node_information['password'], "us")
+        self.lavalink.add_node(node_information['ip'], node_information['port'], node_information['password'], "eu")
         
         if self.lavalink is None:
             assert('Unable to grab Lavalink Object.')
@@ -60,14 +59,14 @@ class MusicModule(Extension):
 
         emojis = {
             'empty': {
-                'start': '<:thebeginningofthesong:1117957176724557824>',
-                'middle': '<:themiddleofthesong:1117957179463438387>',
-                'end': '<:theendofthesong:1117957159938961598>'
+                'start': icons.bar_start_empty,
+                'middle': icons.bar_empty,
+                'end': icons.bar_end_empty
             },
             'filled': {
-                'start': '<:thebeginningofthesong:1117957177987051530>',
-                'middle': '<:themiddleofthesong:1117957181220864120>',
-                'end': '<:theendofthesong:1117957174015041679>'
+                'start': icons.bar_start_filled,
+                'middle': icons.bar_filled,
+                'end': icons.bar_end_filled
             }
         }
 
@@ -90,11 +89,13 @@ class MusicModule(Extension):
             progress_bar_l.append(bar_fill)
 
         progress_bar = ''.join(progress_bar_l)
-
-        current = lavalink.format_time(player.position) # type: ignore
+        
+        time = lavalink.parse_time(player.position)
+        
+        current = lavalink.format_time(player.position)
         total = lavalink.format_time(track.duration)
 
-        description = f'From **{track.author}**\n\n{progress_bar}\n{current} <:Sun:1026207773559619644> {total}'
+        description = f'From **{track.author}**\n\n{current} <:Sun:1026207773559619644> {total}\n{progress_bar}\n\n'
 
         embed = Embed(title=track.title, description=description, url=track.uri, color=0x8b00cc)
         embed.set_author(name=player_status)
@@ -196,17 +197,25 @@ class MusicModule(Extension):
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
                                        ephemeral=True)
 
+        player = None
+        tries = 0
+        
+        # Connecting to voice channel and getting player instance
+        while player is None:
+            try:
+                player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
+            except:
+                
+                if tries > 2:
+                    return await fancy_message(ctx, "[ An error has occurred, please try again later. ]", color=0xff0000)
+                
+                self.assign_node()
+                tries += 1
+            
+        
         message = await fancy_message(ctx, f"[ Loading search results... {icons.icon_loading} ]")
 
-        # Connecting to voice channel and getting player instance
-        player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
-        
-        if player is None:
-            self.assign_node
-            
-            player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
-
-        result: LoadResult = await self.lavalink.client.get_tracks(song, check_local=True)
+        result = await self.lavalink.client.get_tracks(song, check_local=True)
         tracks = result.tracks
 
         if len(tracks) == 0:

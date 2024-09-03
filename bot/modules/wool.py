@@ -58,7 +58,7 @@ class WoolModule(Extension):
         
     @wool.subcommand(sub_cmd_description='Give someone your wool.')
     @slash_option(description='Who to give your wool to...', name='user', required=True, opt_type=OptionType.USER)
-    @slash_option(description='The amount to give, as long as you can afford it.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=-1, max_value=999999)
+    @slash_option(description='The amount to give, as long as you can afford it.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=-1, max_value=999_999_999_999)
     async def give(self, ctx: SlashContext, user: User, amount: int):
         
         if user.id == ctx.author.id:
@@ -194,7 +194,7 @@ class WoolModule(Extension):
         await fancy_message(ctx, text)
         
     @wool.subcommand()
-    @slash_option(description='The amount of wool to gamble.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=100, max_value=999_999)
+    @slash_option(description='The amount of wool to gamble.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=100, max_value=999_999_999_999)
     async def gamble(self, ctx: SlashContext, amount: int):
         '''Waste your wool away with slots. Totally not a scheme by Magpie.'''
         
