@@ -55,9 +55,9 @@ class UserData(Collection):
         'Increment a value within the UserData object.'
         value = asdict(self)[key]
         
-        if not isinstance(value, int):
-            raise TypeError(f'Value for key "{key}" is not an integer.')
-        
+        if type(value) == float:
+            int(value)
+
         return await self.update(**{key: value + amount})
     
     async def manage_wool(self, amount: int):
