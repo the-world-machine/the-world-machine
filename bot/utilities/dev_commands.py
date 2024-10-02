@@ -1,11 +1,12 @@
 import json
 import re
 from interactions import Message, User
+from utilities.shop.fetch_shop_data import reset_shop_data
 from config_loader import load_config
 import database
 import ast
 
-def get_collection(collection: str, _id: str):
+async def get_collection(collection: str, _id: str):
     key_to_collection: dict[str, database.Collection] = {
         'user': database.UserData(_id),
         'nikogotchi': database.Nikogotchi(_id),
@@ -37,6 +38,30 @@ async def execute_dev_command(message: Message):
     
     command_type = command_parts[0]
     
+    if command_type == 'shop':
+        
+        action = command_parts[1]
+        
+        items = await database.fetch_items()
+        shop = items['shop']
+        
+        if action == 'view':
+            result = '```\n'
+                
+            for key in shop.keys():
+                result += f'{key}: {str(shop[key])}\n'
+                
+            result += '```'
+            
+            await message.reply(result)
+        
+        if action == 'reset':
+            await reset_shop_data('en-US')
+            
+            await message.reply(
+                f'`[ Successfully reset shop. ]`'
+            )
+    
     if command_type == 'db':
         try:
             action = command_parts[1]
@@ -53,7 +78,7 @@ async def execute_dev_command(message: Message):
 
                 data = json.loads(str_data)
 
-                collection = await database.fetch_from_database(get_collection(collection, _id))
+                collection = await database.fetch_from_database(await get_collection(collection, _id))
                 
                 await collection.update(**data)
                 
@@ -66,7 +91,10 @@ async def execute_dev_command(message: Message):
                 _id = command_parts[3]
                 value = command_parts[4]
                 
-                collection = await database.fetch_from_database(get_collection(collection, _id))
+                if collection == 'shop':
+                    collection = await get_collection(collection, 0)
+                else:
+                    collection = await database.fetch_from_database(await get_collection(collection, _id))
                 
                 await message.reply(
                     f'`[ The value of {value} is {str(collection.__dict__[value])}. ]`'
@@ -76,7 +104,7 @@ async def execute_dev_command(message: Message):
                 collection = command_parts[2]
                 _id = command_parts[3]
                 
-                collection = await database.fetch_from_database(get_collection(collection, _id))
+                collection = await database.fetch_from_database(await get_collection(collection, _id))
                 
                 data = collection.__dict__
                 
@@ -94,7 +122,7 @@ async def execute_dev_command(message: Message):
                 _id = command_parts[2]
                 amount = int(command_parts[3])
                 
-                collection: database.UserData = await database.fetch_from_database(get_collection('user', _id))
+                collection: database.UserData = await database.fetch_from_database(await get_collection('user', _id))
                 
                 await collection.manage_wool(amount)
                 
