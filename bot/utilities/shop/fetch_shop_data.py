@@ -1,14 +1,9 @@
 from datetime import datetime
 import random
-from turtle import back
-import aiofiles
-import json
 
 from database import fetch_items, update_shop
-from utilities.shop.fetch_items import fetch_background, fetch_treasure
 from localization.loc import Localization
 from dataclasses import dataclass
-import json
 
 @dataclass
 class DictItem:
