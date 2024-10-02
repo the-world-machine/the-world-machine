@@ -54,9 +54,13 @@ class NikogotchiModule(Extension):
         await self.save_nikogotchi(new_data, uid)
         return new_data
 
-    async def get_nikogotchi(self, uid: int) -> Nikogotchi:
-        data: Nikogotchi = await Nikogotchi(uid).fetch() 
-        return data
+    async def get_nikogotchi(self, uid: int) -> Union[Nikogotchi, None]:
+        data: Nikogotchi = await Nikogotchi(uid).fetch()
+        
+        if data.status > -1:
+            return data
+        else:
+            return None
         
     async def save_nikogotchi(self, nikogotchi: Nikogotchi, uid: int):
         
@@ -70,7 +74,7 @@ class NikogotchiModule(Extension):
         
         nikogotchi_data = await Nikogotchi(uid).fetch()
         
-        await nikogotchi_data.update(alive=False)
+        await nikogotchi_data.update(status=-1)
 
     def nikogotchi_buttons(self, owner_id: int, locale: str):
         prefix = 'action_'
@@ -284,7 +288,7 @@ class NikogotchiModule(Extension):
                 last_interacted = datetime.now(),
                 hatched = datetime.now(),
                 available = False,
-                status=0
+                status=2
             )
 
             nikogotchi = await self.get_nikogotchi(ctx.author.id)
@@ -626,7 +630,7 @@ class NikogotchiModule(Extension):
                 health_increase = 9999
                 
                 glitched_pancakes -= 1
-                levelled_up = await nikogotchi.level_up(10)
+                levelled_up = await nikogotchi.level_up(5)
                 dialogue = loc.l('nikogotchi.components.feed.immortal')
         else:
             if pancakes <= 0:
@@ -715,12 +719,13 @@ class NikogotchiModule(Extension):
         uid = user.id
 
         nikogotchi = await self.get_nikogotchi(uid)
-        metadata = await fetch_nikogotchi_metadata(nikogotchi.nid)
         
         loc = Localization(ctx.locale)
 
         if nikogotchi is None:
             return await fancy_message(ctx, loc.l('nikogotchi.other.other_invalid'), ephemeral=True, color=0xff0000)
+        
+        metadata = await fetch_nikogotchi_metadata(nikogotchi.nid)
 
         age = await self.get_nikogotchi_age(uid)
 
@@ -747,15 +752,16 @@ class NikogotchiModule(Extension):
         nikogotchi_one = await self.get_nikogotchi(ctx.author.id)
         nikogotchi_two = await self.get_nikogotchi(user.id)
         
-        one_data = await fetch_nikogotchi_metadata(nikogotchi_one.nid)
-        two_data = await fetch_nikogotchi_metadata(nikogotchi_two.nid)
-        
         loc = Localization(ctx.locale)
         
         if nikogotchi_one is None:
             return await fancy_message(ctx, loc.l('nikogotchi.other.you_invalid'), ephemeral=True, color=0xff0000)
         if nikogotchi_two is None:
             return await fancy_message(ctx, loc.l('nikogotchi.other.other_invalid'), ephemeral=True, color=0xff0000)
+        
+        one_data = await fetch_nikogotchi_metadata(nikogotchi_one.nid)
+        two_data = await fetch_nikogotchi_metadata(nikogotchi_two.nid)
+        
 
         await fancy_message(ctx, loc.l('nikogotchi.other.trade.waiting', user=user.mention), ephemeral=True)
 

@@ -201,9 +201,10 @@ class ShopModule(Extension):
         owned_treasure[treasure_id] = owned_treasure.get(treasure_id, 0) + amount
         
         await user_data.update(
-            wool=int(user_data.wool - price),
             owned_treasures=owned_treasure
         )
+        
+        await user_data.manage_wool(-price)
         
         return await update(localization.l('shop.traded', item_name=name, amount=int(amount), price=int(price)))
         
@@ -246,8 +247,9 @@ class ShopModule(Extension):
         
         await user.update(
             owned_backgrounds=owned_backgrounds,
-            wool=user.wool - bg.cost
         )
+        
+        await user.manage_wool(-bg.cost)
         
         await update(localization.l('shop.traded', price=bg.cost, amount=1, item_name=localization.l(f'items.backgrounds.{bg_id}')))
 
@@ -282,9 +284,9 @@ class ShopModule(Extension):
             return await update(localization.l('shop.traded_fail'))
         
         await nikogotchi.update(available=True, rarity=capsule_id)
-        await user_data.update(wool=user_data.wool - nikogotchi_capsule.cost)
+        await user_data.manage_wool(-50_000)
         
-        await update(localization.l('shop.nikogotchi.result', amount=nikogotchi_capsule.cost, capsule_name=capsule_loc))
+        await update(localization.l('shop.nikogotchi.result', amount=50_000, capsule_name=capsule_loc))
         
     r_buy_object = re.compile(r'buy_([^\d]+)_(\d+)')
     @component_callback(r_buy_object)
@@ -331,7 +333,7 @@ class ShopModule(Extension):
         
         await nikogotchi_data.update(**{item.id: json_data[item.id] + 1})
         
-        await user_data.update(wool=user_data.wool - item.cost)
+        await user_data.manage_wool(-item.cost)
         await update()
         
         

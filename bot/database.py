@@ -226,7 +226,7 @@ async def update_in_database(collection: Collection, **kwargs):
         {'$set': updated_data}, 
         upsert=True
     )
-    
+
     # Create and return an updated instance of the collection
     updated_instance = collection.__class__(**updated_data)
     return updated_instance
