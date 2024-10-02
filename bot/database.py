@@ -61,10 +61,17 @@ class UserData(Collection):
         return await self.update(**{key: value + amount})
     
     async def manage_wool(self, amount: int):
-        if self.wool + amount <= 0:
-            amount = 0
+        
+        wool = self.wool + amount
+        
+        if wool <= 0:
+            wool = 0
             
-        return await self.increment_value('wool', amount)
+        if wool >= 999999999999999999:
+            wool = 999999999999999999
+        
+        return await self.update(wool=int(wool))
+    
 @dataclass
 class ServerData(Collection):
     transmit_channel: str = None
@@ -189,8 +196,14 @@ async def fetch_from_database(collection: Collection) -> Collection:
     if result is None:
         await new_entry(collection)
         return await fetch_from_database(collection)
+
+    collection_dict = {}
     
-    return collection.__class__(**result)
+    for key in result.keys():
+        if collection.__dict__.get(key, None) is not None:
+            collection_dict[key] = result[key]
+    
+    return collection.__class__(**collection_dict)
 
 async def new_entry(collection: Collection):
     
@@ -224,3 +237,11 @@ async def fetch_items():
     data = await db.get_collection('ItemData').find_one({"access": 'ItemData'})
     
     return data
+
+async def update_shop(data: dict):
+    db = get_database()
+    
+    await db.get_collection('ItemData').update_one(
+        {"access": 'ItemData'},
+        {"$set": {"shop": data}}
+    )

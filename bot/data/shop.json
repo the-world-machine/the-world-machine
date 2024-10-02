@@ -1,16 +1,16 @@
 {
-    "last_reset_date": "2024-09-03 00:00:00",
+    "last_reset_date": "2024-10-02 00:00:00",
     "backgrounds": [
-        "Barrens",
-        "The Author",
-        "Catwalk"
+        "Library",
+        "Factory",
+        "Refuge"
     ],
     "treasures": [
-        "journal",
-        "amber",
-        "shirt"
+        "sun",
+        "card",
+        "bottle"
     ],
-    "stock_price": 1.2,
-    "stock_value": 0.4,
+    "stock_price": 1.0,
+    "stock_value": 0.3,
     "motd": 0
 }

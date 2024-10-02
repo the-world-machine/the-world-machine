@@ -158,17 +158,18 @@ class WoolModule(Extension):
         value: float
         
     slots = [
-        Slot(1026207765661761596, 0.2),
-        Slot(1026181554919182416, 0.3),
-        Slot(1026181503597678602, 0.4),
-        Slot(1026181557230256128, 0.8),
-        Slot(1026181556051648634, 1.0),
-        Slot(1026207773559619644, 1.2),
-        Slot(1026199772232695838, 1.4),
+        Slot(1290847840397951047, 0.2),
+        Slot(1290847480237391955, 0.3),
+        Slot(1290847574315499530, 0.4),
+        Slot(1290848009315287090, 0.8),
+        Slot(1290847890545180682, 1.0),
+        Slot(1290847718566137979, 1.2),
+        Slot(1290847647372017786, 1.4),
+        Slot(1290847782906761277, 2.0),
         
-        Slot(1147182669562654851, -1.0),
-        Slot(1147182669562654851, -1.0),
-        Slot(1147182669562654851, -1.0)
+        Slot(1291071376517501119, -1.0),
+        Slot(1291071376517501119, -1.0),
+        Slot(1291071376517501119, -1.0)
     ]
     
     slot_value = 10
@@ -194,7 +195,7 @@ class WoolModule(Extension):
         await fancy_message(ctx, text)
         
     @wool.subcommand()
-    @slash_option(description='The amount of wool to gamble.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=100, max_value=999_999_999_999)
+    @slash_option(description='The amount of wool to gamble.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=100)
     async def gamble(self, ctx: SlashContext, amount: int):
         '''Waste your wool away with slots. Totally not a scheme by Magpie.'''
         

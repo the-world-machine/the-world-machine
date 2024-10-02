@@ -1,8 +1,9 @@
 
 from interactions import *
-from interactions.api.events import MemberAdd, Ready
+from interactions.api.events import MemberAdd, Ready, MessageCreate
 import interactions.ext.prefixed_commands as prefixed_commands
 
+from utilities.dev_commands import execute_dev_command
 from database import ServerData, create_connection
 from config_loader import *
 import load_commands
@@ -81,5 +82,9 @@ async def on_guild_join(event: MemberAdd):
 
     # Generate welcome textbox.
     await TextboxModule.generate_welcome_message(event.guild, event.member, server_data.welcome_message)
+    
+@listen(MessageCreate)
+async def on_message_create(event: MessageCreate):
+    await execute_dev_command(event.message)
 
 client.start(load_config('token'))

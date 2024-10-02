@@ -2,6 +2,7 @@
 bot/data/config.yaml
 bot/data/last_shop_reset_date.json
 bot/data/explosions.txt
+bot/data/shop.json
 
 bot/images/*.png
 

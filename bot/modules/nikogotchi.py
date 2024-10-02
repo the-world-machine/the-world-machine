@@ -6,6 +6,8 @@ import re
 import time
 from typing import Union
 
+import utilities.bot_icons as icons
+
 from dateutil import relativedelta
 from interactions import *
 from interactions.api.events import Component
@@ -113,14 +115,14 @@ class NikogotchiModule(Extension):
                                         found_treasure: list[dict], n: Nikogotchi, levelled_up = []):
         progress_bar = {
             'empty': {
-                'start': '<:thebeginningofthesong:1117957176724557824>',
-                'middle': '<:themiddleofthesong:1117957179463438387>',
-                'end': '<:theendofthesong:1117957159938961598>'
+                'start': icons.progress_start_empty,
+                'middle': icons.progress_empty,
+                'end': icons.progress_end_empty
             },
             'filled': {
-                'start': '<:thebeginningofthesong:1117957177987051530>',
-                'middle': '<:themiddleofthesong:1117957181220864120>',
-                'end': '<:theendofthesong:1117957174015041679>'
+                'start': icons.progress_start_filled,
+                'middle': icons.progress_filled,
+                'end': icons.progress_end_filled
             }
         }
         

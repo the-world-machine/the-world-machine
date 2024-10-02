@@ -14,6 +14,8 @@ class ShopModule(Extension):
     
     daily_shop: ShopData = None
     
+    max_buy_sell_limit = 1000000000000000000000000
+    
     async def load_shop(self, loc: str):
         
         if self.daily_shop is not None:
@@ -21,7 +23,7 @@ class ShopModule(Extension):
         
         data = await fetch_shop_data()
         
-        old_time = data.last_reset_date
+        old_time = data.last_updated
         now = datetime.now()
         
         should_reset = now > old_time + timedelta(days=1)
@@ -49,7 +51,7 @@ class ShopModule(Extension):
          
         await ctx.defer(edit_origin=True)
         
-        await self.load_shop(ctx.guild_id)
+        await self.load_shop(ctx.locale)
         
         treasure = ctx.values[0]
         
@@ -62,7 +64,7 @@ class ShopModule(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        await self.load_shop(ctx.guild_id)
+        await self.load_shop(ctx.locale)
         
         embed, components = await self.embed_manager(ctx, 'Sell_Treasures', selected_treasure=None)
         
@@ -76,7 +78,7 @@ class ShopModule(Extension):
         
         localization = Localization(ctx.locale)
         
-        await self.load_shop(ctx.guild_id)
+        await self.load_shop(ctx.locale)
         
         match = self.r_treasure_sell.search(ctx.custom_id)
         
@@ -95,7 +97,7 @@ class ShopModule(Extension):
         
         amount_of_treasure = owned_treasure[treasure_id]
         
-        treasure = DictItem(nid=treasure_id, **all_treasures[treasure_id], type=0)
+        treasure = all_treasures[treasure_id]
         
         result_text = ''
         
@@ -120,21 +122,22 @@ class ShopModule(Extension):
         sell_price = 0
             
         if amount_to_sell == 'all':
-            amount = amount_of_treasure
+            amount = int(amount_of_treasure)
             
-            sell_price = int(amount_of_treasure * treasure.cost * stock_price)
+            sell_price = int(amount_of_treasure * treasure['price'] * stock_price)
             owned_treasure[treasure_id] = 0
         else:
             amount = 1
             
-            sell_price = int(treasure.cost * stock_price)
+            sell_price = int(treasure['price'] * stock_price)
             owned_treasure[treasure_id] -= 1
             
         result_text = localization.l('shop.traded_sell', item_name=treasure_loc['name'], amount=amount, price=sell_price)
             
+        await user_data.manage_wool(sell_price)
+        
         await user_data.update(
             owned_treasures=owned_treasure,
-            wool=user_data.wool + sell_price
         )
         
         await update()
@@ -147,7 +150,7 @@ class ShopModule(Extension):
         
         localization = Localization(ctx.locale)
         
-        await self.load_shop(ctx.guild_id)
+        await self.load_shop(ctx.locale)
         
         user_data: UserData = await UserData(ctx.author.id).fetch()
         
@@ -161,11 +164,11 @@ class ShopModule(Extension):
         
         all_treasures = await fetch_treasure()
         
-        treasure = DictItem(nid=treasure_id, **all_treasures[treasure_id], type=0)
+        treasure = all_treasures[treasure_id]
         
         result_text = ''
         
-        treasure_price = treasure.cost * self.daily_shop.stock_price
+        treasure_price = int(treasure['price'] * self.daily_shop.stock_price)
         
         async def update(text: str):
             embed, components = await self.embed_manager(ctx, 'Treasures', selected_treasure=treasure_id)
@@ -180,19 +183,15 @@ class ShopModule(Extension):
         price = 0
         amount = 0
         
-        treasure_loc: dict = localization.l(f'items.treasures.{treasure.nid}')
+        treasure_loc: dict = localization.l(f'items.treasures.{treasure_id}')
         
         name = treasure_loc['name']
         
         if amount_to_buy == 'All':
-            while True:
-                current_balance -= treasure_price
-                
-                if current_balance <= 0:
-                    break
-                
-                price += int(treasure_price)
-                amount += 1
+            
+            amount = min(self.max_buy_sell_limit, current_balance // treasure_price)
+            price = treasure_price * amount
+            
         else:
             price = int(treasure_price)
             amount = 1
@@ -202,11 +201,11 @@ class ShopModule(Extension):
         owned_treasure[treasure_id] = owned_treasure.get(treasure_id, 0) + amount
         
         await user_data.update(
-            wool=user_data.wool - price,
+            wool=int(user_data.wool - price),
             owned_treasures=owned_treasure
         )
         
-        return await update(localization.l('shop.traded', item_name=name, amount=amount, price=price))
+        return await update(localization.l('shop.traded', item_name=name, amount=int(amount), price=int(price)))
         
     r_buy_bg = re.compile(r'buy_bg_(.*)_(\d+)')
     @component_callback(r_buy_bg)
@@ -340,7 +339,7 @@ class ShopModule(Extension):
     async def main_shop_callbacks(self, ctx: ComponentContext):
         await ctx.defer(edit_origin=True)
         
-        await self.load_shop(ctx.guild_id)
+        await self.load_shop(ctx.locale)
         
         embed, components = await self.embed_manager(ctx, ctx.custom_id, page=0)
             
@@ -353,7 +352,7 @@ class ShopModule(Extension):
     @component_callback(r_page)
     async def page_callback(self, ctx: ComponentContext):
         
-        await self.load_shop(ctx.guild_id)
+        await self.load_shop(ctx.locale)
         
         await ctx.defer(edit_origin=True)
         
@@ -389,7 +388,7 @@ class ShopModule(Extension):
     
     async def embed_manager(self, ctx: SlashContext, category: str, **kwargs):
 
-        await self.load_shop(ctx.guild_id)
+        await self.load_shop(ctx.locale)
         
         localization = Localization(ctx.locale)
         
@@ -620,37 +619,37 @@ class ShopModule(Extension):
             all_treasures = await fetch_treasure()
             
             if selected_treasure is not None:
-                selected_treasure = DictItem(nid=selected_treasure, **all_treasures[selected_treasure], type=0)
-                selected_treasure_loc: dict = localization.l(f'items.treasures.{selected_treasure.nid}')
                 
-                amount_selected = owned.get(selected_treasure.nid, 0)
+                get_selected_treasure = all_treasures[selected_treasure]
+                selected_treasure_loc: dict = localization.l(f'items.treasures.{selected_treasure}')
                 
-                buy_price_one = int(selected_treasure.cost * self.daily_shop.stock_price)
+                amount_selected = owned.get(selected_treasure, 0)
+                
+                buy_price_one = int(get_selected_treasure['price'] * self.daily_shop.stock_price)
                 
                 current_balance = user_data.wool
                 
                 amount = 0
                 
-                while True:
-                    current_balance -= buy_price_one
-                    
-                    if current_balance <= 0:
-                        break
-                    
-                    buy_price_all += int(buy_price_one)
-                    amount += 1
+                i = 0
+                
+                max_items = min(self.max_buy_sell_limit, current_balance // buy_price_one)
+                
+                amount = int(max_items)
+                buy_price_all = int(max_items * buy_price_one)
                 
                 treasure_details = localization.l(
                     'shop.treasures.selected_treasure',
-                    treasure_icon=f'<:treasure:{selected_treasure.image}>',
+                    treasure_icon=f'<:treasure:{get_selected_treasure["emoji"]}>',
                     treasure_name=selected_treasure_loc['name'],
                     owned=localization.l('shop.owned', amount=amount_selected),
                     price_one=buy_price_one,
                     price_all=buy_price_all,
+                    limit=self.max_buy_sell_limit,
                     amount = amount
                 )
             
-            treasure_stock = self.daily_shop.treasure_stock
+            treasure_stock: list[str] = self.daily_shop.treasure_stock
 
             buttons: list[Button] = []
             bottom_buttons: list[Button] = []
@@ -663,31 +662,36 @@ class ShopModule(Extension):
             
             for treasure in treasure_stock:
                 
-                amount_owned = localization.l('shop.owned', amount=owned.get(treasure.nid, 0))
-                treasure_loc: dict = localization.l(f'items.treasures.{treasure.nid}')
+                get_treasure = all_treasures[treasure]
+                
+                amount_owned = localization.l('shop.owned', amount=owned.get(treasure, 0))
+                treasure_loc: dict = localization.l(f'items.treasures.{treasure}')
                 
                 treasure_list.append(
                     StringSelectOption(
-                        label=localization.l('shop.treasures.option', name=treasure_loc['name'], price=treasure.cost),
+                        label=localization.l('shop.treasures.option', name=treasure_loc['name'], price=get_treasure['price']),
                         description=treasure_loc['description'],
-                        value=treasure.nid,
-                        emoji=PartialEmoji(id=treasure.image)
+                        value=treasure,
+                        emoji=PartialEmoji(id=get_treasure['emoji'])
                     )
                 )
             
-            if selected_treasure is not None:   
+            if selected_treasure is not None:
+                
+                get_selected_treasure = all_treasures[selected_treasure]
+                
                 button = Button(
                     label=b_trade,
-                    emoji=PartialEmoji(id=selected_treasure.image),
+                    emoji=PartialEmoji(id=get_selected_treasure['emoji']),
                     style=ButtonStyle.BLURPLE,
-                    custom_id=f'treasure_buy_{selected_treasure.nid}_One'
+                    custom_id=f'treasure_buy_{selected_treasure}_One'
                 )
                 
                 button_all = Button(
                     label=localization.l('shop.buttons.buy_all'),
-                    emoji=PartialEmoji(id=selected_treasure.image),
+                    emoji=PartialEmoji(id=get_selected_treasure['emoji']),
                     style=ButtonStyle.BLURPLE,
-                    custom_id=f'treasure_buy_{selected_treasure.nid}_All'
+                    custom_id=f'treasure_buy_{selected_treasure}_All'
                 )
                     
                 if wool < buy_price_one:
@@ -755,23 +759,26 @@ class ShopModule(Extension):
             all_treasures = await fetch_treasure()
             
             if selected_treasure is not None:
-                selected_treasure = DictItem(nid=selected_treasure, **all_treasures[selected_treasure], type=0)
-                selected_treasure_loc: dict = localization.l(f'items.treasures.{selected_treasure.nid}')
                 
-                sell_price_one = int(selected_treasure.cost * self.daily_shop.stock_price)
-                sell_price_all = int(selected_treasure.cost * self.daily_shop.stock_price * owned[selected_treasure.nid])
+                get_selected_treasure = all_treasures[selected_treasure]
+                selected_treasure_loc: dict = localization.l(f'items.treasures.{selected_treasure}')
                 
-                amount_selected = owned.get(selected_treasure.nid, 0)
+                sell_price_one = int(get_selected_treasure['price'] * self.daily_shop.stock_price)
+                sell_price_all = int(get_selected_treasure['price'] * self.daily_shop.stock_price * owned[selected_treasure])
                 
-                treasure_details = localization.l(
-                    'shop.treasures.selected_treasure',
-                    treasure_icon=f'<:treasure:{selected_treasure.image}>',
-                    treasure_name=selected_treasure_loc['name'],
-                    owned=localization.l('shop.owned', amount=amount_selected),
-                    price_one=sell_price_one,
-                    price_all=sell_price_all,
-                    amount=amount_selected
-                )
+                amount_selected = int(owned.get(selected_treasure, 0))
+                
+                if amount_selected > 0:
+                
+                    treasure_details = localization.l(
+                        'shop.treasures.selected_treasure',
+                        treasure_icon=f'<:treasure:{get_selected_treasure["emoji"]}>',
+                        treasure_name=selected_treasure_loc['name'],
+                        owned=localization.l('shop.owned', amount=amount_selected),
+                        price_one=sell_price_one,
+                        price_all=sell_price_all,
+                        amount=amount_selected
+                    )
             
             treasure_selection = []
             
@@ -780,11 +787,11 @@ class ShopModule(Extension):
                 if amount <= 0:
                     continue
                 
-                treasure = DictItem(nid=treasure_nid, **all_treasures[treasure_nid], type=0)
+                treasure = all_treasures[treasure_nid]
                 
                 treasure_loc = localization.l(f'items.treasures.{treasure_nid}')
                 
-                emoji=PartialEmoji(id=int(treasure.image))
+                emoji=PartialEmoji(id=int(treasure['emoji']))
                 
                 treasure_selection.append(
                     
@@ -801,7 +808,7 @@ class ShopModule(Extension):
             buttons = []
             
             if selected_treasure is not None:
-                treasure_id = selected_treasure.nid
+                treasure_id = selected_treasure
                 
                 buttons = [
                     Button(
