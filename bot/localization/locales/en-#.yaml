@@ -3,7 +3,7 @@ general:
   loading: "[ Waiting... [loading_icon] ]"
 
   buttons:
-    _yes: "Yes"
+    _yes: "Yеs"
     _no: "No"
 
 # ---------------------------------------------------------------
