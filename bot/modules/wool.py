@@ -58,7 +58,7 @@ class WoolModule(Extension):
         
     @wool.subcommand(sub_cmd_description='Give someone your wool.')
     @slash_option(description='Who to give your wool to...', name='user', required=True, opt_type=OptionType.USER)
-    @slash_option(description='The amount to give, as long as you can afford it.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=-1, max_value=999_999_999_999)
+    @slash_option(description='The amount to give, as long as you can afford it.', name='amount', required=True, opt_type=OptionType.INTEGER, min_value=-1)
     async def give(self, ctx: SlashContext, user: User, amount: int):
         
         if user.id == ctx.author.id:
@@ -158,18 +158,51 @@ class WoolModule(Extension):
         value: float
         
     slots = [
-        Slot(1290847840397951047, 0.2),
-        Slot(1290847480237391955, 0.3),
-        Slot(1290847574315499530, 0.4),
-        Slot(1290848009315287090, 0.8),
-        Slot(1290847890545180682, 1.0),
-        Slot(1290847718566137979, 1.2),
-        Slot(1290847647372017786, 1.4),
-        Slot(1290847782906761277, 2.0),
+        Slot(1290847840397951047, 0.1),
+        Slot(1290847480237391955, 0.15),
+        Slot(1290847574315499530, 0.2),
+        Slot(1290848009315287090, 0.5),
+        Slot(1290847840397951047, 0.1),
+        Slot(1290847480237391955, 0.15),
+        Slot(1290847574315499530, 0.2),
+        Slot(1290848009315287090, 0.5),
+        Slot(1290847890545180682, 0.8),
+        Slot(1290847718566137979, 1.0),
+        Slot(1290847647372017786, 1.12),
+        Slot(1290847782906761277, 1.5),
         
         Slot(1291071376517501119, -1.0),
         Slot(1291071376517501119, -1.0),
         Slot(1291071376517501119, -1.0)
+    ]
+    
+    awesome_slots = [
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        Slot(1291071376517501119, -1),
+        
+        Slot(1290847647372017786, 1)
     ]
     
     slot_value = 10
@@ -213,7 +246,7 @@ class WoolModule(Extension):
         slots = []
         
         for i in range(3):
-            selected_slots = self.slots.copy()
+            selected_slots = self.slots.copy() if amount != 69420 else self.awesome_slots.copy()
             random.shuffle(selected_slots)
             
             slots.append(selected_slots)
@@ -337,9 +370,15 @@ class WoolModule(Extension):
             slot_c_value = slot.value
             
             await asyncio.sleep(1)
-                
+        
+        jackpot = False
+        
         if slot_a_value == slot_b_value == slot_c_value:
             jackpot_bonus = 100
+            jackpot = True
+            
+            if slot_a_value == -1 and slot_b_value == -1 and slot_c_value == -1:
+                jackpot = False
         else:
             jackpot_bonus = 1
                 
@@ -349,6 +388,9 @@ class WoolModule(Extension):
         
         if win_amount < 0:
             win_amount = 0
+            
+        if jackpot and amount == 69420:
+            win_amount = 999_999_999_999_999
 
         await user_data.manage_wool(win_amount)
         

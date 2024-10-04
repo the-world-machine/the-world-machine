@@ -45,9 +45,6 @@ def fetch_language(locale: str):
         with open(f'bot/localization/locales/{locale_value}.yaml', 'r', encoding='utf-8') as f:
             return safe_load(f)
     else:
-        
-        print(f'Failed to load localization for {locale}.')
-        
         with open(f'bot/localization/locales/en-#.yaml', 'r', encoding='utf-8') as f:
             return safe_load(f)
     
