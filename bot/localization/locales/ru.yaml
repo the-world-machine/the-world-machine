@@ -1,6 +1,6 @@
 ---
 general:
-  loading: "[ Ждите... [loading_icon] ]"
+  loading: "[ Обождите... [loading_icon] ]"
 
   buttons:
     _yes: "Да"
