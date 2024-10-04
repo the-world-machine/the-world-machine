@@ -226,8 +226,8 @@ class ShopModule(Extension):
         bg_id = match.group(1)
         page = int(match.group(2))
         
-        bg_data = await fetch_background()
-        bg = DictItem(nid=bg_id, **bg_data[bg_id])
+        all_bgs = await fetch_background()
+        get_background = all_bgs[bg_id]
         
         owned_backgrounds = user.owned_backgrounds
         
@@ -237,21 +237,21 @@ class ShopModule(Extension):
             
             await ctx.send(embed=embed, components=components, ephemeral=True)
         
-        if bg.nid in owned_backgrounds:
+        if bg_id in owned_backgrounds:
             return await update(localization.l('shop.traded_fail'))
         
-        if user.wool < bg.cost:
+        if user.wool < get_background['price']:
             return await update(localization.l('shop.traded_fail'))
         
-        owned_backgrounds.append(bg.nid)
+        owned_backgrounds.append(bg_id)
         
         await user.update(
             owned_backgrounds=owned_backgrounds,
         )
         
-        await user.manage_wool(-bg.cost)
+        await user.manage_wool(-get_background['price'])
         
-        await update(localization.l('shop.traded', price=bg.cost, amount=1, item_name=localization.l(f'items.backgrounds.{bg_id}')))
+        await update(localization.l('shop.traded', price=get_background['price'], amount=1, item_name=localization.l(f'items.backgrounds.{bg_id}')))
 
     @component_callback('nikogotchi_buy')
     async def buy_nikogotchi_callback(self, ctx: ComponentContext):
@@ -557,11 +557,14 @@ class ShopModule(Extension):
             
             bg_page = kwargs['page']
             
-            background: DictItem = self.daily_shop.background_stock[bg_page]
+            background = self.daily_shop.background_stock[bg_page]
+            all_bgs = await fetch_background()
+            get_background = all_bgs[background]
+            
             user_backgrounds = user_data.owned_backgrounds
             
-            background_name = localization.l(f'items.backgrounds.{background.nid}')
-            background_description = localization.l('shop.backgrounds.main', bg_name=background_name, amount=background.cost, user_wool=user_wool)
+            background_name = localization.l(f'items.backgrounds.{background}')
+            background_description = localization.l('shop.backgrounds.main', bg_name=background_name, amount=background['price'], user_wool=user_wool)
             
             embed = Embed(
                 title=background_name,
@@ -580,7 +583,7 @@ class ShopModule(Extension):
                 Button(
                     label=b_trade,
                     style=ButtonStyle.GREEN,
-                    custom_id=f'buy_bg_{background.nid}_{bg_page}'
+                    custom_id=f'buy_bg_{background}_{bg_page}'
                 ),
                 go_back,
                 Button(
@@ -597,7 +600,7 @@ class ShopModule(Extension):
                 buy_button.style = ButtonStyle.GRAY
                 buy_button.label = b_poor
             
-            if background.nid in user_backgrounds:
+            if background in user_backgrounds:
                 buy_button.disabled = True
                 buy_button.style = ButtonStyle.RED
                 buy_button.label = b_owned
