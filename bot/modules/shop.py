@@ -564,7 +564,7 @@ class ShopModule(Extension):
             user_backgrounds = user_data.owned_backgrounds
             
             background_name = localization.l(f'items.backgrounds.{background}')
-            background_description = localization.l('shop.backgrounds.main', bg_name=background_name, amount=background['price'], user_wool=user_wool)
+            background_description = localization.l('shop.backgrounds.main', bg_name=background_name, amount=get_background['price'], user_wool=user_wool)
             
             embed = Embed(
                 title=background_name,
