@@ -171,9 +171,9 @@ class WoolModule(Extension):
         Slot(1290847647372017786, 1.12),
         Slot(1290847782906761277, 1.5),
         
-        Slot(1291071376517501119, -1.0),
-        Slot(1291071376517501119, -1.0),
-        Slot(1291071376517501119, -1.0)
+        Slot(1291071376517501119, -0.2),
+        Slot(1291071376517501119, -0.2),
+        Slot(1291071376517501119, -0.2)
     ]
     
     awesome_slots = [
@@ -218,11 +218,12 @@ class WoolModule(Extension):
         Here is the following slots you can roll and their value:
         '''
         
+        existing_slots = []
+        
         for slot in self.slots:
             
-            existing_slots = []
             
-            if slot.emoji != 1147182669562654851:
+            if slot.emoji != 1291071376517501119:
                 
                 if slot.emoji in existing_slots:
                     continue
@@ -231,7 +232,7 @@ class WoolModule(Extension):
                 
                 text += f'\n- <:icon:{slot.emoji}> **{int(slot.value * 100)} points**'
             
-        text += f'\n\n- <:penguin:1147182669562654851> **-100 point penalty.**\n\nPoints are added up and them multiplied by your bet. You also get double points when you hit a jackpot.'
+        text += f'\n\n- <:penguin:1291071376517501119> **-20 point penalty.**\n\nPoints are added up and them multiplied by your bet. You also get double points when you hit a jackpot.'
 
         await fancy_message(ctx, text)
         
