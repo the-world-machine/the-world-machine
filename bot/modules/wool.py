@@ -220,7 +220,15 @@ class WoolModule(Extension):
         
         for slot in self.slots:
             
+            existing_slots = []
+            
             if slot.emoji != 1147182669562654851:
+                
+                if slot.emoji in existing_slots:
+                    continue
+                
+                existing_slots.append(slot.emoji)
+                
                 text += f'\n- <:icon:{slot.emoji}> **{int(slot.value * 100)} points**'
             
         text += f'\n\n- <:penguin:1147182669562654851> **-100 point penalty.**\n\nPoints are added up and them multiplied by your bet. You also get double points when you hit a jackpot.'
