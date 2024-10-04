@@ -209,7 +209,7 @@ class NikogotchiModule(Extension):
                 
                 amount = found_treasure.count(treasure)
 
-                treasures += f'<:any:{treasure["image"]}> {treasure["name"]} - **x{amount}**\n'
+                treasures += f'<:any:{treasure["emoji"]}> {treasure["name"]} - **x{amount}**\n'
                 
                 looked_over_treasures.append(treasure)
 
@@ -823,7 +823,7 @@ class NikogotchiModule(Extension):
             
             name = treasure_loc[treasure_nid]['name']
             
-            treasure_string += f'<:emoji:{item["image"]}> {name}: **{owned_treasures.get(treasure_nid, 0)}x**\n\n'
+            treasure_string += f'<:emoji:{item["emoji"]}> {name}: **{owned_treasures.get(treasure_nid, 0)}x**\n\n'
 
         embed.description = str(Localization(ctx.locale).l('treasure.description', user=user.mention, treasure=treasure_string))
 
