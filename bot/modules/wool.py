@@ -11,6 +11,11 @@ from datetime import datetime, timedelta
 
 import random
 
+@dataclasses.dataclass
+class Slot:
+    emoji: int
+    value: float
+
 
 class WoolModule(Extension):
 
@@ -151,11 +156,6 @@ class WoolModule(Extension):
             footer=EmbedFooter(text=value),
             color=color
         ))
-    
-    @dataclasses.dataclass
-    class Slot:
-        emoji: int
-        value: float
         
     slots = [
         Slot(1290847840397951047, 0.1),
@@ -175,36 +175,7 @@ class WoolModule(Extension):
         Slot(1291071376517501119, -0.2),
         Slot(1291071376517501119, -0.2)
     ]
-    
-    awesome_slots = [
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        Slot(1291071376517501119, -1),
-        
-        Slot(1290847647372017786, 1)
-    ]
-    
+
     slot_value = 10
     
     @wool.subcommand()
@@ -255,14 +226,14 @@ class WoolModule(Extension):
         slots = []
         
         for i in range(3):
-            selected_slots = self.slots.copy() if amount != 69420 else self.awesome_slots.copy()
+            selected_slots = self.slots.copy()
             random.shuffle(selected_slots)
             
             slots.append(selected_slots)
                 
-        def generate_column(column: list[list[self.Slot]], i: int):
+        def generate_column(column: list[list[Slot]], i: int):
             
-            def image(slot: self.Slot):
+            def image(slot: Slot):
                 return f'<:slot:{slot.emoji}>'
             
             slot_a = 0
@@ -379,32 +350,23 @@ class WoolModule(Extension):
             slot_c_value = slot.value
             
             await asyncio.sleep(1)
-        
-        jackpot = False
-        
+
         if slot_a_value == slot_b_value == slot_c_value:
-            jackpot_bonus = 100
-            jackpot = True
-            
-            if slot_a_value == -1 and slot_b_value == -1 and slot_c_value == -1:
-                jackpot = False
+            additional_scoring = 100
         else:
-            jackpot_bonus = 1
+            additional_scoring = 1
                 
         win_amount = int(
-            (slot_a_value + slot_b_value + slot_c_value) * jackpot_bonus * (amount / 2)
+            (slot_a_value + slot_b_value + slot_c_value) * additional_scoring * (amount / 2)
         )
         
         if win_amount < 0:
             win_amount = 0
             
-        if jackpot and amount == 69420:
-            win_amount = 999_999_999_999_999
-
         await user_data.manage_wool(win_amount)
         
         if win_amount > 0:
-            if jackpot_bonus > 1:
+            if additional_scoring > 1:
                 result_embed.color = 0xFFFF00
                 result_embed.set_footer(
                     text=f"JACKPOT! 🎉 {ctx.author.username} won back {fnum(abs(win_amount))} wool!"
