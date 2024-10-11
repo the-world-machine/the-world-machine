@@ -36,7 +36,7 @@ Python 3.11.5
 ```
 
 ### Step 1: Download Dependencies.
-Download Python 3.11 and set it as your main interpreter in your code editor. To download dependencies, run this in your console:
+To download dependencies, run this in your console:
 ```commandline
 pip install -r requirements.txt
 ```
