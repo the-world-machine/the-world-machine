@@ -4,7 +4,6 @@ import json
 from uuid import uuid4
 import os
 from utilities.fancy_send import fancy_message, fancy_embed
-from utilities.bot_icons import icon_loading
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import aiohttp

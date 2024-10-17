@@ -1,7 +1,7 @@
 from interactions import *
 from utilities.fancy_send import *
 import utilities.profile.badge_manager as badge_manager
-from utilities.bot_icons import *
+from bot.utilities.emojis import *
 
 
 class _Module(Extension):

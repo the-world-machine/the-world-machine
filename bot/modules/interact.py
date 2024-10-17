@@ -1,6 +1,6 @@
 from interactions import *
 from utilities.fancy_send import *
-from utilities.bot_icons import *
+from bot.utilities.emojis import *
 from localization.loc import Localization
 
 class InteractModule(Extension):

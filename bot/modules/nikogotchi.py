@@ -6,7 +6,7 @@ import re
 import time
 from typing import Union
 
-import utilities.bot_icons as icons
+import bot.utilities.emojis as icons
 
 from dateutil import relativedelta
 from interactions import *
@@ -16,7 +16,6 @@ from utilities.nikogotchi_metadata import *
 from localization.loc import Localization
 from utilities.shop.fetch_items import fetch_treasure
 from database import NikogotchiData, UserData, Nikogotchi
-from utilities.bot_icons import icon_loading
 from utilities.fancy_send import *
 
 class NikogotchiModule(Extension):
@@ -728,6 +727,7 @@ class NikogotchiModule(Extension):
         metadata = await fetch_nikogotchi_metadata(nikogotchi.nid)
 
         age = await self.get_nikogotchi_age(uid)
+        age = loc.l('nikogotchi.status.age', years=age.years, months=age.months, days=age.days)
 
         embed = Embed(
             title=nikogotchi.name,
@@ -735,11 +735,11 @@ class NikogotchiModule(Extension):
         )
 
         embed.author = EmbedAuthor(
-            name=f'Owned by {user.username}',
+            name=str(loc.l('nikogotchi.other.view.description', user=user.username)),
             icon_url=user.avatar.url
         )
-
-        embed.description = str(loc.l('nikogotchi.other.view.description', years=age.years, months=age.months, days=age.days, health=nikogotchi.health))
+        
+        embed.description = str(loc.l('nikogotchi.other.view.description', age=age, health=nikogotchi.health, max_health=nikogotchi.max_health))
 
         embed.set_image(url=metadata.image_url)
 
