@@ -2,7 +2,7 @@ from genericpath import exists
 from typing import Union
 from yaml import safe_load
 import io
-import utilities.bot_icons as icons
+import bot.utilities.emojis as emojis
 from dataclasses import dataclass
 
 languages = {}
@@ -50,12 +50,9 @@ def fetch_language(locale: str):
     
 def assign_variables(result: str, **variables: str):
     
-    general_icons = {
-        'wool_icon': icons.icon_wool,
-        'loading_icon': icons.icon_loading
-    }
+    emoji_dict = {f'emoji:{name.replace("icon_", "")}': getattr(emojis, name) for name in dir(emojis)}
     
-    for name, data in {**variables, **general_icons}.items():
+    for name, data in {**variables, **emoji_dict}.items():
         
         if type(data) != str:
             data = fnum(data)

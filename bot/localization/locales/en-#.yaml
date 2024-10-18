@@ -1,6 +1,6 @@
 ---
 general:
-  loading: "[ Waiting... [loading_icon] ]"
+  loading: "[ Waiting... [emoji:loading] ]"
 
   buttons:
     _yes: "Yes"
@@ -9,9 +9,9 @@ general:
 # ---------------------------------------------------------------
 
 shop:
-  loading: "[ Loading Shop... [loading_icon] ]"
+  loading: "[ Loading Shop... [emoji:loading] ]"
 
-  user_wool: "**Current Balance:** [wool_icon]**[wool]**"
+  user_wool: "**Current Balance: [emoji:wool][wool]**"
   owned: "**Currently Owned:** [amount]"
 
   buttons:
@@ -24,7 +24,7 @@ shop:
   main_title: Welcome!
 
   main: >
-    Hey, Hey! Welcome to my emporium. I'm willing to trade many shiny and colorful treasures, backgrounds, capsules and more in exchange for your [wool_icon]**Wool**... think of it as a currency eh?
+    Hey, Hey! Welcome to my emporium. I'm willing to trade many shiny and colorful treasures, backgrounds, capsules and more in exchange for your [emoji:wool]**Wool**... think of it as a currency eh?
 
 
     To get started, simply open one of the categories shown below and then trade away! Keep in mind that there are some items that change **daily**, so keep an eye out on those!
@@ -43,8 +43,8 @@ shop:
     - You're asking about what happened to that one trader before me? I wouldn't know. *I wouldn't know at all...* # During the World Machine Edition AMA Nightmargin jokingly said that Magpie hid a body which has not been found yet. Considering the fact that the purple trader is nowhere to be found in the remake, it is the most likely victim of this alleged crime.
     - "Do you like my bottle collection? I like my bottle collection. What do you mean it's all \"Hard Liquor\"? Is that what it says?" # Magpie's drink of choice is hard liquor, but only so he can collect the bottles afterwards.
 
-  traded: "> Successfully traded [price] Wool for [amount] [item_name](s)!"
-  traded_sell: "> Sucessfully traded [amount] [item_name](s) for [price] Wool!"
+  traded: "> Successfully traded [emoji:wool]**[price]** for [amount] [item_name](s)!"
+  traded_sell: "> Sucessfully traded [amount] [item_name](s) for [emoji:wool]**[price]**!"
   traded_fail: "> You cannot trade this. Please refresh the shop!"
 
   stocks: >
@@ -68,7 +68,7 @@ shop:
       *AHEM* existential dread aside, feeding them with pancakes and taking good care of them will allow you to gather treasures! Which you can trade to me! Pretty cool right?
 
 
-      So why not trade for a capsule today? Only [wool_icon]**[cost]**!
+      So why not trade for a capsule today? Only [emoji:wool]**[cost]**!
 
 
       *Do keep in mind that you can only have* ***one capsule*** *per Nikogotchi.*
@@ -77,7 +77,7 @@ shop:
       [user_wool]
 
     result: >
-      > You gave Magpie [amount] Wool, then he turns the gatchapon machine and...
+      > You gave Magpie [emoji:wool]**[amount]**, then he turns the gatchapon machine and...
 
       > He gives you a [capsule_name]! 
 
@@ -101,15 +101,14 @@ shop:
     title: Backgrounds
 
     main: >
-      Do you want to trade the **'[bg_name]'** background for [wool_icon]**[amount]**?
+      Do you want to trade the **'[bg_name]'** background for [emoji:wool]**[amount]**?
 
 
-      *Keep in mind that these can always be equipped in the profile settings in the website.*
-
+      -# note: *you can equip these on [our site, in the profile settings](https://theworldmachine.xyz/profile).*
 
       [user_wool]
     
-    result: "> Successfully traded [amount] for [name]!"
+    result: "> Successfully traded [emoji:wool]**[amount]** for [name]!"
 
   treasures:
 
@@ -121,7 +120,7 @@ shop:
     treasure_not_selected: "*You haven't selected any treasures to trade...*"
 
     buy_main: >
-      You want to trade your [wool_icon]Wool for treasures? Then you've come to the right place! I've got plenty of treasures I've found, or treasure other users have traded in!
+      You want to trade your [emoji:wool]**Wool** for treasures? Then you've come to the right place! I've got plenty of treasures I've found, or treasure other users have traded in!
 
 
       [stock_market]
@@ -148,9 +147,9 @@ shop:
       *[owned]*
 
 
-      **Trade One**: [wool_icon][price_one]
+      **Trade One**: [emoji:wool]**[price_one]**
 
-      **Trade All**: [wool_icon][price_all] (x[amount])
+      **Trade All**: [emoji:wool]**[price_all]** (x[amount])
 
     placeholder: What do you want to trade in?
     cannot_sell: You have nothing to trade in...
@@ -281,7 +280,7 @@ treasure:
 
 nikogotchi:
 
-  loading: "[ Loading Nikogotchi... [loading_icon] ]"
+  loading: "[ Loading Nikogotchi... [emoji:loading] ]"
   invalid: "[ You don't have a Nikogotchi! You can buy a capsule from the shop to unlock a random one! ]"
 
   error_title: No Nikogotchi
@@ -294,7 +293,7 @@ nikogotchi:
     alula: Alula
     calamus: Calamus
     magpie: Magpie
-    lamplighter: Lampligher
+    lamplighter: Lamplighter
     ling: Ling
     kip: Kip
     penguin: Penguin
@@ -317,7 +316,7 @@ nikogotchi:
       owned: Owned by [user]
 
       description: >
-        **Age**: [years] years, [months] months, and [days] days.
+        **Age**: [age]
 
 
         **Health**: [health]/50
@@ -329,7 +328,7 @@ nikogotchi:
         
         Do you want to trade your Nikogotchi ([name_two]) with them?
 
-      waiting: "[ Sent [user] a trade offer! Waiting on their response... [loading_icon] ]"
+      waiting: "[ Sent [user] a trade offer! Waiting on their response... [emoji:loading] ]"
       declined: "[ Your trade request has been declined... ]"
       success_decline: "[ Trade request successfully declined. ]"
       success: "[ Successfully traded with [user]! Say hello to **[name]**! ]"
@@ -348,7 +347,7 @@ nikogotchi:
     hungry: 🥞 [name] is feeling hungry...
     treasure: ⛏️ [name] is currently finding treasures for you!
 
-    age: "***[years]*** *years*, ***[months]*** *months*, and ***[days]*** *days*"
+    age: "**[years]**y. **[months]**mo. **[days]**d."
 
     danger: 🚨 [name] is at low health! Use Golden Pancakes to restore their health! 🚨
 

@@ -6,12 +6,12 @@ icon_sun = '<:sun:1290848333610618967>'
 
 # Music
 # Progress Bar
-bar_empty = '<:empty:1280362590379446293>'
-bar_filled = '<:filled:1280362609648074792>'
-bar_start_empty = '<:start_empty:1280362762651828255>'
-bar_start_filled = '<:start_filled:1280362778946699275>'
-bar_end_empty = '<:end_empty:1280362634591338537>'
-bar_end_filled = '<:end_filled:1280362656364105800>'
+bar_empty_start = '<:start_empty:1280362762651828255>'
+bar_empty_middle = '<:empty:1280362590379446293>'
+bar_empty_end = '<:end_empty:1280362634591338537>'
+bar_filled_middle = '<:filled:1280362609648074792>'
+bar_filled_start = '<:start_filled:1280362778946699275>'
+bar_filled_end = '<:end_filled:1280362656364105800>'
 
 vibe = "<a:vibe:1290847354542489660>"
 sleep = "<:sleepy:1290849529670664283>"

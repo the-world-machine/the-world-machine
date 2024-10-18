@@ -11,7 +11,7 @@ from interactions.api.events import *
 from interactions_lavalink import Lavalink, Player
 from interactions_lavalink.events import TrackStart
 
-import utilities.bot_icons as icons
+import bot.utilities.emojis as emojis
 from utilities.music.music_loaders import CustomSearch
 from utilities.fancy_send import *
 # Utilities
@@ -57,19 +57,6 @@ class MusicModule(Extension):
         if track is None:
             return
 
-        emojis = {
-            'empty': {
-                'start': icons.bar_start_empty,
-                'middle': icons.bar_empty,
-                'end': icons.bar_end_empty
-            },
-            'filled': {
-                'start': icons.bar_start_filled,
-                'middle': icons.bar_filled,
-                'end': icons.bar_end_filled
-            }
-        }
-
         progress_bar_length = 10
         current_time = round((player.position / track.duration) * progress_bar_length)
 
@@ -80,11 +67,11 @@ class MusicModule(Extension):
                 bar_section = 'start'
             elif i == progress_bar_length - 1:
                 bar_section = 'end'
-
+ 
             if i < current_time:
-                bar_fill = emojis['filled'][bar_section]
+                bar_fill = emojis[f'bar_filled_{bar_section}']
             else:
-                bar_fill = emojis['empty'][bar_section]
+                bar_fill = emojis[f'bar_empty_{bar_section}']
 
             progress_bar_l.append(bar_fill)
 
@@ -213,7 +200,7 @@ class MusicModule(Extension):
                 tries += 1
             
         
-        message = await fancy_message(ctx, f"[ Loading search results... {icons.icon_loading} ]")
+        message = await fancy_message(ctx, f"[ Loading search results... {emojis.icon_loading} ]")
 
         result = await self.lavalink.client.get_tracks(song, check_local=True)
         tracks = result.tracks
@@ -266,7 +253,7 @@ class MusicModule(Extension):
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
                                        ephemeral=True)
 
-        message = await fancy_message(ctx, f"[ Loading search results... {icons.icon_loading} ]")
+        message = await fancy_message(ctx, f"[ Loading search results... {emojis.icon_loading} ]")
 
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
 
