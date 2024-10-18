@@ -3,7 +3,7 @@ import random
 from interactions import *
 from utilities.shop.fetch_items import fetch_background, fetch_item, fetch_treasure
 from utilities.fancy_send import *
-from bot.utilities.emojis import *
+from utilities.emojis import *
 from utilities.shop.fetch_shop_data import DictItem, Item, ShopData, fetch_shop_data, reset_shop_data
 from datetime import datetime, timedelta
 from database import Nikogotchi, UserData

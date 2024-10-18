@@ -11,7 +11,7 @@ from interactions.api.events import *
 from interactions_lavalink import Lavalink, Player
 from interactions_lavalink.events import TrackStart
 
-import bot.utilities.emojis as emojis
+import utilities.emojis as emojis
 from utilities.music.music_loaders import CustomSearch
 from utilities.fancy_send import *
 # Utilities

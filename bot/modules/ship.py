@@ -2,7 +2,7 @@ import random
 
 from interactions import *
 
-import bot.utilities.emojis as icons
+import utilities.emojis as icons
 from utilities.fancy_send import *
 
 

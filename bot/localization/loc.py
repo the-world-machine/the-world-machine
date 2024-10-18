@@ -2,7 +2,7 @@ from genericpath import exists
 from typing import Union
 from yaml import safe_load
 import io
-import bot.utilities.emojis as emojis
+import utilities.emojis as emojis
 from dataclasses import dataclass
 
 languages = {}

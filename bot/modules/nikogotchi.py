@@ -6,7 +6,7 @@ import re
 import time
 from typing import Union
 
-import bot.utilities.emojis as icons
+import utilities.emojis as icons
 
 from dateutil import relativedelta
 from interactions import *

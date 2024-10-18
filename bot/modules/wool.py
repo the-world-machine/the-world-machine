@@ -4,7 +4,7 @@ from interactions import *
 from utilities.fancy_send import fancy_message
 import database as db
 import utilities.profile.badge_manager as badge_manager
-import bot.utilities.emojis as icons
+import utilities.emojis as icons
 from localization.loc import fnum
 
 from datetime import datetime, timedelta
