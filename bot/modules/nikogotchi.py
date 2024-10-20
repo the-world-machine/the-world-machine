@@ -6,8 +6,7 @@ import re
 import time
 from typing import Union
 
-import utilities.emojis as icons
-
+from utilities.emojis import emojis
 from dateutil import relativedelta
 from interactions import *
 from interactions.api.events import Component
@@ -116,19 +115,7 @@ class NikogotchiModule(Extension):
 
     async def get_main_nikogotchi_embed(self, locale: str, age: relativedelta.relativedelta, dialogue: str,
                                         found_treasure: list[dict], n: Nikogotchi, levelled_up = []):
-        progress_bar = {
-            'empty': {
-                'start': icons.progress_start_empty,
-                'middle': icons.progress_empty,
-                'end': icons.progress_end_empty
-            },
-            'filled': {
-                'start': icons.progress_start_filled,
-                'middle': icons.progress_filled,
-                'end': icons.progress_end_filled
-            }
-        }
-        
+
         loc = Localization(locale)
 
         progress_bar_length = 5
@@ -154,11 +141,11 @@ class NikogotchiModule(Extension):
                     bar_section = 'start'
                 elif i == progress_bar_length - 1:
                     bar_section = 'end'
-
+    
                 if i < value:
-                    bar_fill = progress_bar['filled'][bar_section]
+                    bar_fill = emojis[f'progress_filled_{bar_section}']
                 else:
-                    bar_fill = progress_bar['empty'][bar_section]
+                    bar_fill = emojis[f'progress_empty_{bar_section}']
 
                 progress_bar_l.append(bar_fill)
 
@@ -398,10 +385,11 @@ class NikogotchiModule(Extension):
             nikogotchi.health = round(nikogotchi.health - time_difference * 0.5)
 
         if nikogotchi.health <= 0:
+            age = loc.l('nikogotchi.status.age', years=age.years, months=age.months, days=age.days)
             embed = Embed(
                 title=loc.l('nikogotchi.died_title', name=nikogotchi.name),
                 color=0x696969,
-                description=loc.l('nikogotchi.died', name=nikogotchi.name, years=age.years, months=age.months, days=age.days, time_difference=time_difference)
+                description=loc.l('nikogotchi.died', name=nikogotchi.name, age=age, time_difference=time_difference)
             )
             
             await self.delete_nikogotchi(uid)
@@ -735,7 +723,7 @@ class NikogotchiModule(Extension):
         )
 
         embed.author = EmbedAuthor(
-            name=str(loc.l('nikogotchi.other.view.description', user=user.username)),
+            name=str(loc.l('nikogotchi.other.view.owned', user=user.username)),
             icon_url=user.avatar.url
         )
         

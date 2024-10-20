@@ -71,13 +71,13 @@ shop:
       So why not trade for a capsule today? Only [emoji:wool]**[cost]**!
 
 
-      *Do keep in mind that you can only have* ***one capsule*** *per Nikogotchi.*
+      *Do keep in mind that you can only have **one capsule** per Nikogotchi.*
     
 
       [user_wool]
 
     result: >
-      > You gave Magpie [emoji:wool]**[amount]**, then he turns the gatchapon machine and...
+      > You gave Magpie [amount] Wool, then he turns the gatchapon machine and...
 
       > He gives you a [capsule_name]! 
 
@@ -276,7 +276,9 @@ treasure:
 
     [treasure]
 
-    Earn more treasure through Nikogotchis or purchasing them from the shop!
+    -# *note: you can earn more treasure by trading in the shop or using Nikogotchis!*
+
+# ---------------------------------------------------------------
 
 nikogotchi:
 
@@ -369,7 +371,7 @@ nikogotchi:
       golden_pancakes: Feed Golden Pancake (x[amount])
       glitched_pancakes: Feed ??? (x[amount])
 
-      no_food: No Food!
+      no_food: No Food! 😔 Get some at the shop
 
       invalid: You can't feed your Nikogotchi this! Please refresh!
 
@@ -377,12 +379,12 @@ nikogotchi:
 
   finding_treasure: "Your Nikogotchi is now finding treasure! Just be aware that their stats will decrease faster than normal, so make sure to call them back when they're done!"
 
-  died_title: "[name] Passed away..."
+  died_title: "[name] passed away..."
   died: >
-    [name] lived a full life of [years] years, [months] months, and [days] days.
+    [name] lived a full life which lasted for: [age].
 
 
-    > Hours since last taken care of: **[time_difference] Hours**
+    > Hours since last taken care of: **[time_difference]**
 
 
     Nikogotchis rely on your love and attention, so keep trying to give them the best care possible!

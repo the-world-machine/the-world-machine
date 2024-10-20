@@ -3,7 +3,7 @@ import random
 from interactions import *
 from utilities.shop.fetch_items import fetch_background, fetch_item, fetch_treasure
 from utilities.fancy_send import *
-from utilities.emojis import *
+from utilities.emojis import emojis
 from utilities.shop.fetch_shop_data import DictItem, Item, ShopData, fetch_shop_data, reset_shop_data
 from datetime import datetime, timedelta
 from database import Nikogotchi, UserData
@@ -524,7 +524,7 @@ class ShopModule(Extension):
                 amount_owned = localization.l('shop.owned', amount=owned)
                 pancake_loc: dict = localization.l(f'items.pancakes.{pancake.id}')
                 
-                pancake_text += f"<:pancake:{pancake.image}>  **{pancake_loc['name']}** - {icon_wool}{fnum(pancake.cost)} - {amount_owned}\n{pancake_loc['description']}\n"
+                pancake_text += f"<:pancake:{pancake.image}>  **{pancake_loc['name']}** - {emojis['icon_wool']}{fnum(pancake.cost)} - {amount_owned}\n{pancake_loc['description']}\n"
                 
                 button = Button(
                     label=b_trade,

@@ -23,7 +23,7 @@ client = Client(
 
 prefixed_commands.setup(client, default_prefix='*')
 
-print("\nLoading Commands... 2/3")
+print("\nLoading Commands... - - - - - 2/3")
 
 load_commands.load_commands(client)
 
@@ -34,6 +34,7 @@ async def pick_avatar():
     avatar = File('bot/images/profile_pictures/' + random_avatar)
 
     await client.user.edit(avatar=avatar)
+    return random_avatar
 
 
 @listen(Ready)
@@ -43,32 +44,35 @@ async def on_ready():
     # return
     ### space for testing
     
-    print("\nFinalizing... 3/3")
+    print("\nFinalizing... - - - - - - - - 3/3")
     
     create_connection()
     
     print('Database Connected')
 
-    await client.change_presence(status=Status.ONLINE, activity=Activity(type=ActivityType.PLAYING, name='OneShot'))
+    await client.change_presence(status=Status.ONLINE, activity=Activity(type=ActivityType.CUSTOM, name=load_config('status')))
     await view.load_badges()
 
-    if client.user.id == 1015629604536463421:
-        await pick_avatar()
-    else:
-        try:
-            await client.user.edit(avatar=File('bot/images/unstable.png'))
-        except:
-            pass
+    if load_config('do-avatar-rolling', ignore_None=True): 
+        print("Rolling avatar", end=" ... ")
+        if client.user.id == int(load_config('bot-id')):
+            used = await pick_avatar()
+            print(f"used {used}")
+        else:
+            try:
+                await client.user.edit(avatar=File('bot/images/unstable.png'))
+                print("used unstable")
+            except:
+                print("failure")
+                pass
         
-    print("\n----------------------------------------")
-    print("\nThe World Machine is ready!\n\n")
+    print("\n- - - - - - - - - - - - - - - - -")
+    print("\n   The World Machine is ready!\n\n")
 
 # Whenever a user joins a guild...
 @listen(MemberAdd)
 async def on_guild_join(event: MemberAdd):
-    
-    # If not the main bot don't send welcome messages.
-    if client.user.id != 1015629604536463421:
+    if client.user.id != int(load_config('bot-id')):
         return
     
     if event.member.bot:
