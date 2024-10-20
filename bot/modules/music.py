@@ -9,9 +9,9 @@ import lavalink
 from interactions import *
 from interactions.api.events import *
 from interactions_lavalink import Lavalink, Player
-from interactions_lavalink.events import TrackStart
+from interactions_lavalink.events import TrackStart, TrackException
 
-import utilities.emojis as emojis
+from utilities.emojis import emojis
 from utilities.music.music_loaders import CustomSearch
 from utilities.fancy_send import *
 # Utilities
@@ -200,7 +200,7 @@ class MusicModule(Extension):
                 tries += 1
             
         
-        message = await fancy_message(ctx, f"[ Loading search results... {emojis.icon_loading} ]")
+        message = await fancy_message(ctx, f"[ Loading search results... {emojis['icon_loading']} ]")
 
         result = await self.lavalink.client.get_tracks(song, check_local=True)
         tracks = result.tracks
@@ -210,10 +210,10 @@ class MusicModule(Extension):
             return await fancy_message(ctx, "[ No results found. ]", color=0xff0000, ephemeral=True)
 
         player.store('Channel', ctx.channel)
-
+        player.store('Message', message)
+        
         [player.add(track, requester=int(ctx.author.id)) for track in tracks]
 
-        await message.delete()
         if player.is_playing:
             add_to_queue_embed = self.added_to_playlist_embed(ctx, player, tracks[0])
 
@@ -253,7 +253,7 @@ class MusicModule(Extension):
             return await fancy_message(ctx, "[ You're not connected to a voice channel. ]", color=0xff0000,
                                        ephemeral=True)
 
-        message = await fancy_message(ctx, f"[ Loading search results... {emojis.icon_loading} ]")
+        message = await fancy_message(ctx, f"[ Loading search results... {emojis['icon_loading']} ]")
 
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
 
@@ -520,7 +520,25 @@ class MusicModule(Extension):
         channel: GuildText = player.fetch('Channel')
 
         await self.on_player(event.player, channel)
-
+          
+    @listen()
+    async def on_track_error(self, event: TrackException):
+        
+        player: Player = event.player
+        
+        message: Message = player.fetch('Message')
+        player.store('Error', True)
+        
+        embed = Embed(
+            title='An error occurred when playing this track.',
+            description=f'Please try again later.',
+            color=0x696969
+        )
+        
+        print(f'Error occurred when playing a track. "{event.message}"')
+        
+        await message.edit(content=emojis['sleep'], embed=embed, components=[])
+        
     @listen()
     async def voice_state_update(self, event: VoiceUserLeave):
         player: Player = self.lavalink.get_player(event.channel.guild.id)
@@ -657,6 +675,7 @@ class MusicModule(Extension):
         player_uid = str(uuid.uuid4())
 
         player.store('uid', player_uid)
+        message: Message = player.fetch('Message')
 
         main_buttons = self.get_buttons()
 
@@ -664,7 +683,7 @@ class MusicModule(Extension):
         player_state = 'Now Playing...'
         embed = await self.get_playing_embed(player_state, player, True)
 
-        message = await channel.send(content=niko, embed=embed, components=main_buttons)
+        message = await message.edit(content=niko, embed=embed, components=main_buttons)
 
         stopped_track = player.current
 
@@ -702,20 +721,33 @@ class MusicModule(Extension):
                 message = await message.edit(content=niko, embed=embed, components=main_buttons)
 
                 await asyncio.sleep(1)
+                
+        if player.fetch('Error'):
+            return
 
-        embed = Embed(
-            title=stopped_track.title,
-            url=stopped_track.uri,
-            description=f'From **{stopped_track.author}**',
-            color=0x696969
-        )
+        if stopped_track is None:
+        
+            embed = Embed(
+                title='An error occurred when playing this track.',
+                description=f'Please try again later.',
+                color=0x696969
+            )
+            
+            embed.set_author(name="Stopped Playing...")
+            
+        else:
+            embed = Embed(
+                title=stopped_track.title,
+                url=stopped_track.uri,
+                description=f'From **{stopped_track.author}**',
+                color=0x696969
+            )
 
-        embed.set_author(name="Stopped Playing...")
-        embed.set_thumbnail(self.get_cover_image(stopped_track.identifier))
-
-        requester = await self.bot.fetch_user(stopped_track.requester)
-
-        embed.set_footer(text='Requested by ' + requester.username, icon_url=requester.avatar_url)
+            embed.set_author(name="Stopped Playing...")
+            embed.set_thumbnail(self.get_cover_image(stopped_track.identifier))
+            
+            requester = await self.bot.fetch_user(stopped_track.requester)
+            embed.set_footer(text='Requested by ' + requester.username, icon_url=requester.avatar_url)
 
         message = await message.edit(content='<:nikosleepy:1027492467337080872>', embed=embed, components=[])
 

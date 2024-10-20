@@ -1,14 +1,12 @@
 token: ...
+bot-id: "..." # Recommended to use the production bot ID. 
+
 status: sitting atop the Tower
-do-avatar-rolling: # yes/no
+do-avatar-rolling: true # Only affect bots that have been put in bot-id
+
 database: mongodb+srv://localhost
-deepl: ...
+pteyrodactl-api: ... # Used for developer commands.
 
-open-ai: ...
-sparked-host: ...
-sentry: ...
-
-prod-bot-id: "1015629604536463421"
 dev-command-user-list: 
     - "user ids"
 music:

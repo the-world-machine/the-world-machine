@@ -55,7 +55,7 @@ async def on_ready():
 
     if load_config('do-avatar-rolling', ignore_None=True): 
         print("Rolling avatar", end=" ... ")
-        if client.user.id == int(load_config('prod-bot-id')):
+        if client.user.id == int(load_config('bot-id')):
             used = await pick_avatar()
             print(f"used {used}")
         else:
@@ -72,7 +72,7 @@ async def on_ready():
 # Whenever a user joins a guild...
 @listen(MemberAdd)
 async def on_guild_join(event: MemberAdd):
-    if client.user.id != int(load_config('prod-bot-id')):
+    if client.user.id != int(load_config('bot-id')):
         return
     
     if event.member.bot:

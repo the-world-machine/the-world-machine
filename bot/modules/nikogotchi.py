@@ -7,7 +7,6 @@ import time
 from typing import Union
 
 from utilities.emojis import emojis
-
 from dateutil import relativedelta
 from interactions import *
 from interactions.api.events import Component
@@ -142,7 +141,7 @@ class NikogotchiModule(Extension):
                     bar_section = 'start'
                 elif i == progress_bar_length - 1:
                     bar_section = 'end'
-
+    
                 if i < value:
                     bar_fill = emojis[f'progress_filled_{bar_section}']
                 else:
@@ -724,7 +723,7 @@ class NikogotchiModule(Extension):
         )
 
         embed.author = EmbedAuthor(
-            name=str(loc.l('nikogotchi.other.view.description', user=user.username)),
+            name=str(loc.l('nikogotchi.other.view.owned', user=user.username)),
             icon_url=user.avatar.url
         )
         
