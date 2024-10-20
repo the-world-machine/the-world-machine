@@ -210,10 +210,10 @@ class MusicModule(Extension):
             return await fancy_message(ctx, "[ No results found. ]", color=0xff0000, ephemeral=True)
 
         player.store('Channel', ctx.channel)
-        player.store('Message', message)
         
         [player.add(track, requester=int(ctx.author.id)) for track in tracks]
 
+        await message.delete()
         if player.is_playing:
             add_to_queue_embed = self.added_to_playlist_embed(ctx, player, tracks[0])
 
@@ -526,7 +526,7 @@ class MusicModule(Extension):
         
         player: Player = event.player
         
-        message: Message = player.fetch('Message')
+        channel = player.fetch('Channel')
         player.store('Error', True)
         
         embed = Embed(
@@ -537,7 +537,7 @@ class MusicModule(Extension):
         
         print(f'Error occurred when playing a track. "{event.message}"')
         
-        await message.edit(content=emojis['sleep'], embed=embed, components=[])
+        await channel.send(content=emojis['sleep'], embed=embed, components=[])
         
     @listen()
     async def voice_state_update(self, event: VoiceUserLeave):
@@ -675,7 +675,6 @@ class MusicModule(Extension):
         player_uid = str(uuid.uuid4())
 
         player.store('uid', player_uid)
-        message: Message = player.fetch('Message')
 
         main_buttons = self.get_buttons()
 
@@ -683,7 +682,7 @@ class MusicModule(Extension):
         player_state = 'Now Playing...'
         embed = await self.get_playing_embed(player_state, player, True)
 
-        message = await message.edit(content=niko, embed=embed, components=main_buttons)
+        message = await channel.send(content=niko, embed=embed, components=main_buttons)
 
         stopped_track = player.current
 
