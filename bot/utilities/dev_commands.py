@@ -24,14 +24,15 @@ async def execute_dev_command(message: Message):
     if not str(message.author.id) in load_config('dev-command-user-list'):
         return
     
-    message_to_parse = message.content
+    if not message.content:
+        return
     
     # This is not a valid command if brackets do not surround the message.
-    if not (message_to_parse[0] == '[' or message_to_parse[-1] == ']'):
+    if not (message.content[0] == '[' or message.content[-1] == ']'):
         return
     
     # Remove the brackets
-    command_content = message_to_parse[1:-1].strip()
+    command_content = message.content[1:-1].strip()
     
     # Split the command into parts
     command_parts = command_content.split()
