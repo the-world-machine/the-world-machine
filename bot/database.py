@@ -7,6 +7,10 @@ from datetime import datetime
 from interactions import Embed, SlashContext, SlashContext, Snowflake
 from localization.loc import Localization
 import random
+import dns.resolver
+dns.resolver.default_resolver=dns.resolver.Resolver(configure=False)
+dns.resolver.default_resolver.nameservers=['8.8.8.8']
+
 
 # Define the Database Schema for The World Machine:
 @dataclass
