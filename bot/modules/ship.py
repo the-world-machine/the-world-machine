@@ -23,7 +23,6 @@ class ShippingModule(Extension):
             user = await self.bot.fetch_user(int(parsed_id))
 
             whomst = user.display_name
-        print(who, whomst)
         if who == ctx.author.display_name and who == whomst:
             return await fancy_message(ctx, "[ Do you need a hug? ]", color=0xff0000, ephemeral=True)
 

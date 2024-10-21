@@ -563,7 +563,6 @@ class ShopModule(Extension):
             
             background = self.daily_shop.background_stock[bg_page]
             all_bgs = await fetch_background()
-            print("||||| ", background, self.daily_shop.background_stock, bg_page, sep="\n")
             fetched_background = all_bgs[background]
             
             user_backgrounds = user_data.owned_backgrounds
