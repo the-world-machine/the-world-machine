@@ -229,6 +229,7 @@ class NikogotchiModule(Extension):
         return embed
 
     @slash_command(description="All things about your Nikogotchi!")
+    @integration_types(guild=True, user=True)
     async def nikogotchi(self, ctx: SlashContext):
         pass
 
@@ -700,8 +701,10 @@ class NikogotchiModule(Extension):
         await fancy_message(ctx, f'[ Successfully renamed **{old_name}** to **{nikogotchi.name}**! ]', ephemeral=True)
 
     @nikogotchi.subcommand(sub_cmd_description='Show off your Nikogotchi, or view someone else\'s.!')
-    @slash_option('user', description='The user to view.', opt_type=OptionType.USER, required=True)
-    async def show(self, ctx: SlashContext, user: User):
+    @slash_option('user', description='The user to view.', opt_type=OptionType.USER)
+    async def show(self, ctx: SlashContext, user: User = None):
+        if user is None:
+            user = ctx.user
 
         uid = user.id
 
@@ -733,7 +736,7 @@ class NikogotchiModule(Extension):
 
         await ctx.send(embed=embed)
 
-    @nikogotchi.subcommand(sub_cmd_description='Trade your Nikogotchi with someone else!')
+    """@nikogotchi.subcommand(sub_cmd_description='Trade your Nikogotchi with someone else!')
     @slash_option('user', description='The user to trade with.', opt_type=OptionType.USER, required=True)
     async def trade(self, ctx: SlashContext, user: User):
 
@@ -789,16 +792,18 @@ class NikogotchiModule(Extension):
 
             embed = await fancy_embed(loc.l('nikogotchi.other.trade.success_decline'))
 
-            await button_ctx.edit_origin(embed=embed, components=[])
+            await button_ctx.edit_origin(embed=embed, components=[])"""
 
-    @slash_command(description='View the treasure you currently have, or someone else\'s!')
-    @slash_option('user', description='The user to view.', opt_type=OptionType.USER, required=True)
-    async def treasure(self, ctx: SlashContext, user: User):
-        embed = Embed(
-            title=str(Localization(ctx.locale).l('treasure.title', user=user.username)),
-            color=0x8b00cc,
-        )
+    @slash_command(description='View what treasure you or someone else has!')
+    @integration_types(guild=True, user=True)
+    @slash_option('user', description='The person you would like to see treasure of', opt_type=OptionType.USER)
+    async def treasures(self, ctx: SlashContext, user: User = None):
+        loc = Localization(ctx.locale)
 
+        if user is None:
+            user = ctx.user
+        if user.bot:
+            return await ctx.send(loc.l('treasure.bots', bot=user.mention), ephemeral=True)
         all_treasures = await fetch_treasure()
         treasure_string = ''
         
@@ -807,12 +812,13 @@ class NikogotchiModule(Extension):
 
         for treasure_nid, item in all_treasures.items():
             
-            treasure_loc: dict = Localization(ctx.locale).l(f'items.treasures')
+            treasure_loc: dict = loc.l(f'items.treasures')
             
             name = treasure_loc[treasure_nid]['name']
-            
-            treasure_string += f'<:emoji:{item["emoji"]}> {name}: **{owned_treasures.get(treasure_nid, 0)}x**\n\n'
 
-        embed.description = str(Localization(ctx.locale).l('treasure.description', user=user.mention, treasure=treasure_string))
-
-        await ctx.send(embed=embed)
+            treasure_string += loc.l('treasure.item', amount=owned_treasures.get(treasure_nid, 0), icon=emojis[f"treasure_{treasure_nid}"], name=name)+"\n"
+        
+        await ctx.send(embed=Embed(
+            description=str(loc.l('treasure.message', user=user.mention, treasures=treasure_string)),
+            color=0x8b00cc,
+        ))

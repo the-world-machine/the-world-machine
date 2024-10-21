@@ -101,14 +101,17 @@ shop:
     title: Backgrounds
 
     main: >
-      Do you want to trade the **'[bg_name]'** background for [emoji:wool]**[amount]**?
+      Do you want to trade [emoji:wool]**[amount]** for this background?
 
-
-      -# note: *you can equip these on [our site, in the profile settings](https://theworldmachine.xyz/profile).*
 
       [user_wool]
     
-    result: "> Successfully traded [emoji:wool]**[amount]** for [name]!"
+    owned: > 
+      Thanks! You can equip this background on [the site, in the profile settings](https://theworldmachine.xyz/profile)
+
+
+      [user_wool]
+    traded: "> Successfully traded for the **«[name]»** background!"
 
   treasures:
 
@@ -151,8 +154,9 @@ shop:
 
       **Trade All**: [emoji:wool]**[price_all]** (x[amount])
 
-    placeholder: What do you want to trade in?
-    cannot_sell: You have nothing to trade in...
+    placeholder_trade: Choose a treasure to trade...
+    placeholder_trade_in: Choose a treasure to trade in...
+    cannot_sell: You have no treasure to trade in.
 
 # ---------------------------------------------------------------
 
@@ -269,14 +273,14 @@ interact:
 # ---------------------------------------------------------------
 
 treasure:
-  title: "[user]'s Treasure"
-  description: >
-    Here is [user]'s treasure!
+  bots: "[ [bot] doesn't have any treasure ]"
+  item: "* **`[amount]`** [icon] [name]"
+  message: >
+    ### [user]'s treasures
     
+    [treasures]
 
-    [treasure]
-
-    -# *note: you can earn more treasure by trading in the shop or using Nikogotchis!*
+    -# note: you can earn more treasure by trading in the shop or using Nikogotchis!
 
 # ---------------------------------------------------------------
 
@@ -290,6 +294,7 @@ nikogotchi:
 
   name:
     niko: Niko
+    nikonlanger: Nikonlanger
     prophet_bot: Prophet Bot
     silver: Silver
     alula: Alula
@@ -402,6 +407,28 @@ nikogotchi:
     [stats]
 
   dialogue:
+    niko:
+      fed:
+        - "Ah... Pancakes!"
+        - "Wow, these are just a good as the ones my mama makes!"
+        - "Please tell me there are hazelnuts in this one!"
+        - "PANCAKES!"
+        - "Yummy!"
+      pet:
+        - "Wow... thank you!"
+        - "Aw, that feels nice!"
+        - "*purr*"
+      cleaned:
+        - "Feeling pretty refreshed!"
+        - "Squeaky clean!"
+        - "My fur's all nice and fluffy!"
+    nikonlanger:
+      fed:
+        - "yum"
+      pet:
+        - ","
+      cleaned:
+        - "so qlean so qeeled"
     prophet_bot:
       fed:
         - "[My purpose is not to eat. But thank you.]"
@@ -534,18 +561,3 @@ nikogotchi:
       cleaned:
         - "[Cleaning me up? That's unexpected, but it feels... refreshing.]"
         - "[I suppose even digital entities need a bit of care sometimes. You have my gratitude.]"
-    niko:
-      fed:
-        - "Ah... Pancakes!"
-        - "Wow, these are just a good as the ones my mama makes!"
-        - "Please tell me there are hazelnuts in this one!"
-        - "PANCAKES!"
-        - "Yummy!"
-      pet:
-        - "Wow... thank you!"
-        - "Aw, that feels nice!"
-        - "*purr*"
-      cleaned:
-        - "Feeling pretty refreshed!"
-        - "Squeaky clean!"
-        - "My fur's all nice and fluffy!"
