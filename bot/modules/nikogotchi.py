@@ -388,7 +388,7 @@ class NikogotchiModule(Extension):
         if nikogotchi.health <= 0:
             age = loc.l('nikogotchi.status.age', years=age.years, months=age.months, days=age.days)
             embed = Embed(
-                title=loc.l('nikogotchi._title', name=nikogotchi.name),
+                title=loc.l('nikogotchi.died_title', name=nikogotchi.name),
                 color=0x696969,
                 description=loc.l('nikogotchi.died', name=nikogotchi.name, age=age, time_difference=int(time_difference))
             )
