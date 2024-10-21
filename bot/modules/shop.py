@@ -251,7 +251,7 @@ class ShopModule(Extension):
         
         await user.manage_wool(-get_background['price'])
         
-        await update(localization.l('shop.traded', price=get_background['price'], amount=1, item_name=localization.l(f'items.backgrounds.{bg_id}')))
+        await update(localization.l('shop.backgrounds.traded', price=get_background['price'], amount=1, item_name=localization.l(f'items.backgrounds.{bg_id}')))
 
     @component_callback('nikogotchi_buy')
     async def buy_nikogotchi_callback(self, ctx: ComponentContext):
@@ -294,7 +294,7 @@ class ShopModule(Extension):
         
         await ctx.defer(edit_origin=True)
         
-        localization = Localization(ctx.locale)
+        loc = Localization(ctx.locale)
         
         user_data: UserData = await UserData(ctx.author.id).fetch()
         nikogotchi_data: Nikogotchi = await Nikogotchi(ctx.author.id).fetch()
@@ -313,6 +313,7 @@ class ShopModule(Extension):
             
             embed, components = await self.embed_manager(ctx, item_category)
             
+            embed.color = 0x02f2c6
             embed.set_footer(result_text)
             
             return await ctx.edit(embed=embed, components=components)
@@ -321,13 +322,13 @@ class ShopModule(Extension):
         item = item['pancakes'][item_id]
         item = Item(**item)
         
-        item_loc: dict = localization.l(f'items.pancakes.{item.id}')
+        item_loc: dict = loc.l(f'items.pancakes.{item.id}')
             
         if user_data.wool < item.cost:
-            result_text = localization.l('shop.traded_fail')
+            result_text = loc.l('shop.traded_fail')
             return await update()
         
-        result_text = localization.l('shop.traded', price=item.cost, amount=1, item_icon=f'<:icon:{item.image}>', item_name=item_loc['name'])
+        result_text = loc.l('shop.traded', price=item.cost, amount=1, item_icon=f'<:icon:{item.image}>', item_name=item_loc['name'])
         
         json_data = asdict(nikogotchi_data)
         
@@ -425,7 +426,8 @@ class ShopModule(Extension):
             embed = Embed(
                 title=title,
                 description=description,
-                thumbnail=magpie
+                thumbnail=magpie,
+                color=0x02f2c6
             )
             
             buttons = [
@@ -502,7 +504,8 @@ class ShopModule(Extension):
             embed = Embed(
                 title=title,
                 description=description,
-                thumbnail=magpie
+                thumbnail=magpie,
+                color=0x02f2c6
             )
             
             return embed, buttons
@@ -548,7 +551,8 @@ class ShopModule(Extension):
             embed = Embed(
                 title=title,
                 description=description,
-                thumbnail=magpie
+                thumbnail=magpie,
+                color=0x02f2c6
             )
             
             return embed, buttons
@@ -559,20 +563,22 @@ class ShopModule(Extension):
             
             background = self.daily_shop.background_stock[bg_page]
             all_bgs = await fetch_background()
-            get_background = all_bgs[background]
+            print("||||| ", background, self.daily_shop.background_stock, bg_page, sep="\n")
+            fetched_background = all_bgs[background]
             
             user_backgrounds = user_data.owned_backgrounds
             
             background_name = localization.l(f'items.backgrounds.{background}')
-            background_description = localization.l('shop.backgrounds.main', bg_name=background_name, amount=get_background['price'], user_wool=user_wool)
+            background_description = localization.l('shop.backgrounds.main', amount=fetched_background['price'], user_wool=user_wool)
             
             embed = Embed(
                 title=background_name,
                 description=background_description,
-                thumbnail=magpie
+                thumbnail=magpie,
+                color=0x02f2c6
             )
             
-            embed.set_image(url=background.image)
+            embed.set_image(url=fetched_background["image"])
             
             buttons = [
                 Button(
@@ -595,12 +601,13 @@ class ShopModule(Extension):
             
             buy_button = buttons[1]
             
-            if wool < background.cost:
+            if wool < fetched_background['price']:
                 buy_button.disabled = True
                 buy_button.style = ButtonStyle.GRAY
                 buy_button.label = b_poor
             
             if background in user_backgrounds:
+                embed.description = localization.l('shop.backgrounds.owned', user_wool=user_wool)
                 buy_button.disabled = True
                 buy_button.style = ButtonStyle.RED
                 buy_button.label = b_owned
@@ -726,7 +733,8 @@ class ShopModule(Extension):
             embed = Embed(
                 title=title,
                 description=description,
-                thumbnail=magpie
+                thumbnail=magpie,
+                color=0x02f2c6
             )
             
             select_menu = None
@@ -734,7 +742,7 @@ class ShopModule(Extension):
             if len(treasure_list) > 0:
                 select_menu = StringSelectMenu(
                     *treasure_list,
-                    placeholder=localization.l('shop.treasures.placeholder'),
+                    placeholder=localization.l('shop.treasures.placeholder_trade'),
                     custom_id=f'select_treasure',
                 )
             else:
@@ -841,7 +849,8 @@ class ShopModule(Extension):
                    
                     user_wool=user_wool
                 ),
-                thumbnail=magpie
+                thumbnail=magpie,
+                color=0x02f2c6
             )
             
             select_menu = None
@@ -849,7 +858,7 @@ class ShopModule(Extension):
             if len(treasure_selection) > 0:
                 select_menu = StringSelectMenu(
                     *treasure_selection,
-                    placeholder=localization.l('shop.treasures.placeholder'),
+                    placeholder=localization.l('shop.treasures.placeholder_trade_in'),
                     custom_id=f'select_treasure_sell',
                 )
             else:

@@ -2,7 +2,7 @@
 aiohttp==3.8.3
 humanfriendly==10.0
 lavalink==4.0.4
-discord-py-interactions==5.12.1
+discord-py-interactions==5.13.1
 interactions-lavalink==2.0.0
 openai==0.27.0
 Pillow==9.5.0

@@ -18,14 +18,14 @@ emojis = {
   "sleep": "<:sleepy:1290849529670664283>",
 
   # Treasure Icons
-  "treasure_novelty_shirt": "<:treasure_novelty_shirt:1290848009315287090>",
-  "treasure_library_card": "<:treasure_library_card:1290847890545180682>",
+  "treasure_shirt": "<:treasure_shirt:1290848009315287090>",
+  "treasure_card": "<:treasure_card:1290847890545180682>",
   "treasure_bottle": "<:treasure_bottle:1290847840397951047>",
   "treasure_clover": "<:treasure_clover:1290847782906761277>",
-  "treasure_dice": "<:treasure_dice:1290847718566137979>",
+  "treasure_die": "<:treasure_die:1290847718566137979>",
   "treasure_sun": "<:treasure_sun:1290847647372017786>",
-  "treasure_amulet": "<:treasure_amulet:1290847574315499530>",
-  "treasure_feather": "<:treasure_feather:1290847530980212756>",
+  "treasure_amber": "<:treasure_amber:1290847574315499530>",
+  "treasure_pen": "<:treasure_pen:1290847530980212756>",
   "treasure_journal": "<:treasure_journal:1290847480237391955>",
 
   # Progress Bars
